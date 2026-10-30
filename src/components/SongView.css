@@ -1,0 +1,104 @@
+.cp-song {
+  font-size: 18px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.cp-header {
+  margin-bottom: 1em;
+}
+.cp-title {
+  font-size: 1.5em;
+  margin: 0;
+  line-height: 1.2;
+}
+.cp-subtitle {
+  margin: 0.2em 0 0;
+  color: var(--muted);
+}
+.cp-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  list-style: none;
+  padding: 0;
+  margin: 0.6em 0 0;
+  font-size: 0.8em;
+}
+.cp-info li {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.15em 0.7em;
+}
+
+.cp-section {
+  margin-bottom: 1em;
+}
+.cp-section--chorus {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.7em;
+}
+.cp-label {
+  font-size: 0.75em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.25em;
+}
+
+.cp-line {
+  margin-bottom: 0.15em;
+  white-space: pre-wrap;
+}
+/* Words wrap; a chord stays glued to its syllable inside a word. */
+.cp-line--chords {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.3em;
+  row-gap: 0.2em;
+  white-space: normal;
+}
+.cp-word {
+  display: inline-flex;
+  white-space: pre;
+}
+.cp-atom {
+  display: inline-flex;
+  flex-direction: column;
+}
+.cp-chord {
+  font-weight: 700;
+  color: var(--accent);
+  padding-right: 0.3em;
+}
+.cp-chord--empty {
+  padding-right: 0;
+}
+
+.cp-comment {
+  display: inline-block;
+  margin: 0.2em 0;
+  font-size: 0.85em;
+  padding: 0.15em 0.5em;
+  border-radius: 4px;
+}
+.cp-comment--normal {
+  background: var(--surface-2);
+}
+.cp-comment--italic {
+  font-style: italic;
+  padding-left: 0;
+}
+.cp-comment--boxed {
+  border: 1px solid var(--border);
+}
+.cp-empty {
+  height: 0.6em;
+}
+.cp-tab {
+  font-family: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+  font-size: 0.8em;
+  margin: 0;
+  overflow-x: auto;
+}
