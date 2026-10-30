@@ -357,6 +357,87 @@ y que mi bendición fue oír tu voz:
 {chorus}
 `;
 
+// The band's own song. Chords from the chord document: the first two lines
+// are the verse and the pre-coro, the rest is the chorus, and "C" closes it.
+const ENCONTRARTE = `{title: Encontrarte}
+{key: C}
+
+{start_of_verse: Estrofa 1}
+[C] [G] [Am] [F] [*x2]
+El río corre con fuerza vana,
+buscando un oro que nunca sacia.
+No hacemos show, no hacemos fiesta,
+es el servicio que da respuesta.
+
+Buscamos al hermano en su dolor,
+en ese encuentro habita el Señor.
+Es el comienzo de este caminar,
+¡tantas historias para entregar!
+{end_of_verse}
+
+{start_of_prechorus: Pre-coro}
+[G] [Am] [F] [*x2] [*…] [G]
+No queremos luces que encandilen hoy,
+sino abrazos verdaderos donde voy.
+El éxito del mundo es una gran mentira,
+¡servir al hermano es lo que da vida!
+{end_of_prechorus}
+
+{start_of_chorus: Estribillo}
+[C] [G] [Am] [F]
+[Am] [Bb] [F] [Am] [Bb] [G]
+[F] [Am] [F] [G]
+[F] [Am] [*solo piano][G]
+¡HOY! Caminamos en contra corriente,
+¡HOY! en el vacío encontramos vida.
+En el encuentro está la verdad,
+donde hay amor, Dios está.
+Contra este mundo de pura ilusión,
+somos los puentes de su corazón.
+Viviendo en Contra, es en el hermano
+donde voy a ENCONTRARTE.
+{end_of_chorus}
+
+{start_of_solo: Solo}
+[C] [G] [Am] [F]
+{end_of_solo}
+
+{start_of_verse: Estrofa 2}
+[C] [G] [Am] [F] [*x2]
+No somos del mundo pero estamos acá,
+su corriente no nos va a arrastrar.
+Por cada alma que se siente sola,
+seremos el encuentro que une ahora.
+{end_of_verse}
+
+{start_of_prechorus: Pre-coro}
+[G] [Am] [F] [*x2] [*…] [G]
+En contra del odio, el perdón es la clave.
+En contra del miedo, la fe vencerá.
+No es un concierto, es un grito del alma,
+¡el Evangelio siempre sonará!
+{end_of_prechorus}
+
+{start_of_chorus: Estribillo}
+[C] [G] [Am] [F]
+[Am] [Bb] [F] [Am] [Bb] [G]
+[F] [Am] [F] [G]
+[F] [Am] [*solo piano][G]
+¡HOY! Caminamos contra la corriente,
+¡HOY! en el vacío encontramos la vida.
+En el encuentro está la verdad,
+donde hay amor, Dios está.
+Contra este mundo de pura ilusión,
+somos los puentes de su corazón.
+Viviendo en contra es en el hermano
+donde voy a ENCONTRARTE.
+{end_of_chorus}
+
+{start_of_outro: Final}
+[C]
+{end_of_outro}
+`;
+
 // Lyrics as they come in the REPERTORIO document. "llévame" and "estribo"
 // are kept with the names the document gives them.
 const DIOS_DE_LA_VIDA = `{title: Dios de la vida}
@@ -432,6 +513,7 @@ const WITH_LYRICS: BandSong[] = [
   { title: 'Soplo de Dios', content: SOPLO_DE_DIOS, aliases: [] },
   { title: 'Reflejo de Dios', content: REFLEJO_DE_DIOS, aliases: [] },
   { title: 'Dios de la vida', content: DIOS_DE_LA_VIDA, aliases: [] },
+  { title: 'Encontrarte', content: ENCONTRARTE, aliases: [] },
 ];
 
 /** Every band song: the ones with lyrics, plus the chord-only ones from both chord documents. */
