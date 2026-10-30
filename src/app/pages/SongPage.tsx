@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { parseChordPro } from '../../chordpro/parser';
 import { writeChordPro } from '../../chordpro/writer';
+import { FullscreenButton } from '../../components/FullscreenButton';
 import { Icon } from '../../components/Icon';
 import { transposeSong } from '../../music/transposer';
 import { SongPanel } from '../SongPanel';
@@ -34,6 +35,7 @@ export function SongPage({ id }: { id: number }) {
         </a>
         <span className="page__spacer" />
         <div className="page__actions">
+          <FullscreenButton />
           {transpose !== 0 && (
             <button className="btn" onClick={saveTransposed}>
               <Icon name="save" size={18} /> Guardar tono

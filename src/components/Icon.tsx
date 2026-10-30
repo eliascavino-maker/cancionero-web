@@ -16,6 +16,8 @@ const PATHS = {
   more: 'M5.5 12h.01M12 12h.01M18.5 12h.01',
   up: 'M12 19V5M6 11l6-6 6 6',
   down: 'M12 5v14M6 13l6 6 6-6',
+  expand: 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5',
+  shrink: 'M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5',
   grip: 'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',
   left: 'M19 12H5M11 6l-6 6 6 6',
   right: 'M5 12h14M13 6l6 6-6 6',

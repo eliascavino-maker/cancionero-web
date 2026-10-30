@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { FullscreenButton } from '../../components/FullscreenButton';
 import { Icon } from '../../components/Icon';
 import { SongPanel } from '../SongPanel';
 import { navigate, useLibrary, useLive } from '../hooks';
@@ -59,6 +60,7 @@ export function PlayerPage({ setlistId, index }: { setlistId: number; index: num
         >
           <Icon name="next" size={20} />
         </button>
+        <FullscreenButton />
       </header>
       <SongPanel
         key={entry.item.id}

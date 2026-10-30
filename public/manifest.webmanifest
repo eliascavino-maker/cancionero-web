@@ -1,0 +1,11 @@
+{
+  "name": "Cancionero",
+  "short_name": "Cancionero",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "background_color": "#0c0c0f",
+  "theme_color": "#0c0c0f",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
