@@ -138,3 +138,40 @@
   background: var(--bg-raised);
   overflow-x: auto;
 }
+
+/* "Mover acordes" mode: chords become buttons. */
+.cp-chord--movable {
+  align-self: flex-start;
+  margin: 0 0.15em 0 0;
+  padding: 0 0.2em;
+  border: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 6px;
+  background: none;
+  font: inherit;
+  font-family: var(--font-chord);
+  font-weight: 700;
+  font-size: 0.95em;
+  line-height: 1.15;
+  color: var(--accent);
+  cursor: pointer;
+}
+.cp-chord--selected {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* Tappable tempo chip: opens the BPM editor. */
+.cp-info li.cp-info__tempo {
+  padding: 0;
+}
+.cp-info__tempo button {
+  padding: 4px 12px;
+  border: 1px dashed var(--faint);
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}

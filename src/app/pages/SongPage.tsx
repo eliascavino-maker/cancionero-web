@@ -52,6 +52,7 @@ export function SongPage({ id }: { id: number }) {
         transpose={transpose}
         onTransposeChange={setTranspose}
         songKey={String(song.id)}
+        onContentChange={(c) => lib.saveSong(c, song.id)}
       />
     </div>
   );

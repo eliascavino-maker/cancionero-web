@@ -262,7 +262,7 @@ export function parseChordPro(source: string): Song {
   const lines = source.split(/\r\n|\r|\n/);
   if (lines.length && lines[lines.length - 1] === '') lines.pop();
 
-  for (const raw of lines) {
+  for (const [index, raw] of lines.entries()) {
     const line = raw.trimEnd();
     const trimmed = line.trim();
 
@@ -286,7 +286,7 @@ export function parseChordPro(source: string): Song {
       apply(d, b);
       continue;
     }
-    b.add(parseLyricLine(line));
+    b.add({ ...parseLyricLine(line), source: index });
   }
   return b.build();
 }

@@ -27,7 +27,8 @@ export interface ChordSegment {
 export type CommentStyle = 'normal' | 'italic' | 'boxed';
 
 export type SongLine =
-  | { type: 'lyric'; segments: ChordSegment[] }
+  /** `source`: 0-based line number in the ChordPro text (set by `parseChordPro`). */
+  | { type: 'lyric'; segments: ChordSegment[]; source?: number }
   | { type: 'comment'; text: string; style: CommentStyle }
   /** Raw line inside a tab or grid section. */
   | { type: 'tab'; text: string }

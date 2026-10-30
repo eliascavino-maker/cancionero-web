@@ -9,6 +9,7 @@ import {
   isPreformatted,
   lyricsOf,
 } from '../chordpro/song';
+import type { ChordRef } from '../chordpro/moveChord';
 import { splitIntoWords } from './words';
 import './SongView.css';
 
@@ -18,25 +19,47 @@ export interface SongViewOptions {
   showChords?: boolean;
   /** `{chorus}` repeats the previous chorus in full instead of only its label. */
   expandChorusReferences?: boolean;
+  /** Makes chords tappable to pick one (for moving it). */
+  chordEdit?: ChordEdit;
+}
+
+export interface ChordEdit {
+  selected?: ChordRef | null;
+  onSelect: (ref: ChordRef) => void;
 }
 
 // Keeps an empty cell one line tall so rows stay aligned.
 const ZWSP = '​';
 
-export function ChordLyricLine({ line, showChords = true }: { line: LyricLine; showChords?: boolean }) {
+export function ChordLyricLine({
+  line,
+  showChords = true,
+  chordEdit,
+}: {
+  line: LyricLine;
+  showChords?: boolean;
+  chordEdit?: ChordEdit;
+}) {
   if (!showChords || !hasChords(line)) {
     return <div className="cp-line">{lyricsOf(line) || ZWSP}</div>;
   }
   const chordsOnly = lyricsOf(line).trim() === '';
+  const source = chordEdit ? line.source : undefined;
+  // Chords appear in the same order as in the source line.
+  let chordIndex = 0;
   return (
     <div className="cp-line cp-line--chords">
       {splitIntoWords(line.segments).map((word, w) => (
         <span className="cp-word" key={w}>
           {word.map((atom, a) => (
             <span className="cp-atom" key={a}>
-              <span className={atom.chord === undefined ? 'cp-chord cp-chord--empty' : 'cp-chord'}>
-                {atom.chord ?? ZWSP}
-              </span>
+              {atom.chord === undefined ? (
+                <span className="cp-chord cp-chord--empty">{ZWSP}</span>
+              ) : source !== undefined ? (
+                <EditableChord chord={atom.chord} at={{ line: source, index: chordIndex++ }} edit={chordEdit!} />
+              ) : (
+                <span className="cp-chord">{atom.chord}</span>
+              )}
               {!chordsOnly && <span className="cp-lyric">{atom.text || ZWSP}</span>}
             </span>
           ))}
@@ -46,14 +69,27 @@ export function ChordLyricLine({ line, showChords = true }: { line: LyricLine; s
   );
 }
 
-function SongHeader({ metadata }: { metadata: SongMetadata }) {
+function EditableChord({ chord, at, edit }: { chord: string; at: ChordRef; edit: ChordEdit }) {
+  const selected = edit.selected?.line === at.line && edit.selected.index === at.index;
+  return (
+    <button
+      type="button"
+      className={selected ? 'cp-chord cp-chord--movable cp-chord--selected' : 'cp-chord cp-chord--movable'}
+      aria-pressed={selected}
+      aria-label={`Acorde ${chord}`}
+      onClick={() => edit.onSelect(at)}
+    >
+      {chord}
+    </button>
+  );
+}
+
+function SongHeader({ metadata, onTempoClick }: { metadata: SongMetadata; onTempoClick?: () => void }) {
   const subtitle = [...metadata.subtitles, artistOf(metadata)].filter(Boolean).join(' · ');
-  const info = [
-    metadata.key && `Tono: ${metadata.key}`,
-    metadata.capo ? `Capo ${metadata.capo}` : undefined,
-    metadata.tempo && `♩ ${metadata.tempo}`,
-    metadata.time,
-  ].filter(Boolean) as string[];
+  const tempo = metadata.tempo ? `♩ ${metadata.tempo}` : onTempoClick ? '♩ BPM' : undefined;
+  const before = [metadata.key && `Tono: ${metadata.key}`, metadata.capo ? `Capo ${metadata.capo}` : undefined];
+  const after = [metadata.time];
+  const info = [...before, tempo, ...after].filter(Boolean) as string[];
 
   return (
     <header className="cp-header">
@@ -61,9 +97,17 @@ function SongHeader({ metadata }: { metadata: SongMetadata }) {
       {subtitle && <p className="cp-subtitle">{subtitle}</p>}
       {info.length > 0 && (
         <ul className="cp-info">
-          {info.map((i) => (
-            <li key={i}>{i}</li>
-          ))}
+          {info.map((i) =>
+            i === tempo && onTempoClick ? (
+              <li key={i} className="cp-info__tempo">
+                <button type="button" aria-label="Cambiar BPM" onClick={onTempoClick}>
+                  {i}
+                </button>
+              </li>
+            ) : (
+              <li key={i}>{i}</li>
+            ),
+          )}
         </ul>
       )}
     </header>
@@ -86,7 +130,7 @@ function defaultLabel(s: SongSection): string | undefined {
 function Line({ line, opts, lastChorus }: { line: SongLine; opts: SongViewOptions; lastChorus?: SongSection }) {
   switch (line.type) {
     case 'lyric':
-      return <ChordLyricLine line={line} showChords={opts.showChords} />;
+      return <ChordLyricLine line={line} showChords={opts.showChords} chordEdit={opts.chordEdit} />;
     case 'comment':
       return <div className={`cp-comment cp-comment--${line.style}`}>{line.text}</div>;
     case 'tab':
@@ -138,7 +182,12 @@ function Section(props: { section: SongSection; opts: SongViewOptions; lastChoru
 }
 
 /** Song sheet: header, sections, chords drawn above the lyrics. */
-export function SongView({ song, showHeader = true, ...opts }: { song: Song; showHeader?: boolean } & SongViewOptions) {
+export function SongView({
+  song,
+  showHeader = true,
+  onTempoClick,
+  ...opts
+}: { song: Song; showHeader?: boolean; onTempoClick?: () => void } & SongViewOptions) {
   let lastChorus: SongSection | undefined;
   const sections = song.sections.map((section, i) => {
     if (section.kind === 'chorus') lastChorus = section;
@@ -146,7 +195,7 @@ export function SongView({ song, showHeader = true, ...opts }: { song: Song; sho
   });
   return (
     <article className="cp-song" style={{ fontSize: opts.fontSize ? `${opts.fontSize}px` : undefined }}>
-      {showHeader && <SongHeader metadata={song.metadata} />}
+      {showHeader && <SongHeader metadata={song.metadata} onTempoClick={onTempoClick} />}
       {sections}
     </article>
   );

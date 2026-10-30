@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { type ChordRef, type MoveDirection, moveChord } from '../chordpro/moveChord';
 import { parseChordPro } from '../chordpro/parser';
+import { MAX_BPM, MIN_BPM, bpmFromTaps, clampBpm, parseBpm, setTempo } from '../chordpro/tempo';
 import { Icon } from '../components/Icon';
 import { SongView } from '../components/SongView';
 import { effectiveKey, normalize, transposeSong } from '../music/transposer';
@@ -20,20 +22,65 @@ import { type Prefs, usePrefs } from './hooks';
  * auto-scroll.
  *
  * `songKey` identifies the song to remember its scroll speed.
+ * With `onContentChange`, chords can be moved by hand ("Mover acordes").
  */
 export function SongPanel({
-  content,
+  content: savedContent,
   transpose,
   onTransposeChange,
   songKey,
+  onContentChange,
 }: {
   content: string;
   transpose: number;
   onTransposeChange: (n: number) => void;
   songKey?: string;
+  onContentChange?: (content: string) => void;
 }) {
   const [prefs, setPrefs] = usePrefs();
+
+  // ----- editing the text (moving chords, BPM). Edits show at once; saves
+  // arrive later and are ignored if they are our own, so quick taps never jump back.
+  const [content, setContent] = useState(savedContent);
+  const sent = useRef(new Set<string>());
+  useEffect(() => {
+    if (!sent.current.has(savedContent)) setContent(savedContent);
+  }, [savedContent]);
+  const edit = (next: string) => {
+    if (next === content) return;
+    setContent(next);
+    sent.current.add(next);
+    onContentChange?.(next);
+  };
+
+  const [moving, setMoving] = useState(false);
+  const [selected, setSelected] = useState<ChordRef | null>(null);
+  const tryMove = (dir: MoveDirection) => (selected ? moveChord(content, selected, dir) : null);
+  const move = (dir: MoveDirection) => {
+    const r = tryMove(dir);
+    if (!r) return;
+    edit(r.content);
+    setSelected(r.ref);
+  };
+
+  const [editingTempo, setEditingTempo] = useState(false);
+  const taps = useRef<number[]>([]);
+
+  const stopMoving = () => {
+    setMoving(false);
+    setSelected(null);
+    setEditingTempo(false);
+  };
+
   const parsed = useMemo(() => parseChordPro(content), [content]);
+  const bpm = parseBpm(parsed.metadata.tempo);
+  const setBpm = (n: number) => edit(setTempo(content, clampBpm(n)));
+  const tap = () => {
+    const now = performance.now();
+    taps.current = [...taps.current.slice(-7), now];
+    const tapped = bpmFromTaps(taps.current);
+    if (tapped !== null) setBpm(tapped);
+  };
   const shown = useMemo(() => transposeSong(parsed, transpose), [parsed, transpose]);
   const key = effectiveKey(shown);
   const set = (p: Partial<Prefs>) => setPrefs({ ...prefs, ...p });
@@ -53,6 +100,10 @@ export function SongPanel({
     setPlaying(!playing);
   };
   const changeSpeed = (delta: number) => saveLevel(Math.max(0, Math.min(SPEED_LEVELS.length - 1, level + delta)));
+
+  useEffect(() => {
+    if (playing) stopMoving();
+  }, [playing]);
 
   useAutoScroll(playing, speed, () => setPlaying(false));
   useWakeLock(playing);
@@ -85,8 +136,101 @@ export function SongPanel({
   return (
     <div className="song-panel">
       <div className="song-panel__sheet" data-testid="sheet" onPointerDown={() => playing && setPlaying(false)}>
-        <SongView song={shown} fontSize={prefs.fontSize} showChords={prefs.showChords} />
+        <SongView
+          song={shown}
+          fontSize={prefs.fontSize}
+          showChords={prefs.showChords || moving}
+          chordEdit={moving ? { selected, onSelect: setSelected } : undefined}
+          onTempoClick={
+            onContentChange
+              ? () => {
+                  stopMoving();
+                  setPlaying(false);
+                  taps.current = [];
+                  setEditingTempo(true);
+                }
+              : undefined
+          }
+        />
       </div>
+      {editingTempo ? (
+        <div className="toolbar" role="toolbar" aria-label="Cambiar BPM">
+          <div className="toolbar__row">
+            <div className="toolbar__group" role="group" aria-label="BPM">
+              <button
+                className="icon-btn"
+                aria-label="Menos BPM"
+                disabled={bpm !== null && bpm <= MIN_BPM}
+                onClick={() => setBpm((bpm ?? 101) - 1)}
+              >
+                <Icon name="minus" />
+              </button>
+              <label className="speed bpm-field">
+                <input
+                  key={bpm ?? 'none'}
+                  type="number"
+                  inputMode="numeric"
+                  min={MIN_BPM}
+                  max={MAX_BPM}
+                  aria-label="BPM"
+                  placeholder="—"
+                  defaultValue={bpm ?? ''}
+                  onFocus={(e) => e.target.select()}
+                  onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                  onBlur={(e) => {
+                    const n = Number.parseInt(e.target.value, 10);
+                    if (n > 0) setBpm(n);
+                    else e.target.value = bpm === null ? '' : String(bpm);
+                  }}
+                />
+                <small>bpm</small>
+              </label>
+              <button
+                className="icon-btn"
+                aria-label="Más BPM"
+                disabled={bpm !== null && bpm >= MAX_BPM}
+                onClick={() => setBpm((bpm ?? 99) + 1)}
+              >
+                <Icon name="plus" />
+              </button>
+            </div>
+            <button className="btn tap-btn" onClick={tap}>
+              Tap
+            </button>
+            <span className="toolbar__spacer" />
+            <button className="btn btn--primary" onClick={stopMoving}>
+              Listo
+            </button>
+          </div>
+        </div>
+      ) : moving ? (
+        <div className="toolbar" role="toolbar" aria-label="Mover acordes">
+          <div className="toolbar__row">
+            {selected ? (
+              <div className="toolbar__group" role="group" aria-label="Mover el acorde">
+                <button className="icon-btn" aria-label="Antes" title="Antes" disabled={!tryMove('left')} onClick={() => move('left')}>
+                  <Icon name="left" />
+                </button>
+                <button className="icon-btn" aria-label="Después" title="Después" disabled={!tryMove('right')} onClick={() => move('right')}>
+                  <Icon name="right" />
+                </button>
+                <button className="icon-btn" aria-label="Línea de arriba" title="Línea de arriba" disabled={!tryMove('up')} onClick={() => move('up')}>
+                  <Icon name="up" />
+                </button>
+                <button className="icon-btn" aria-label="Línea de abajo" title="Línea de abajo" disabled={!tryMove('down')} onClick={() => move('down')}>
+                  <Icon name="down" />
+                </button>
+              </div>
+            ) : (
+              <span className="toolbar__hint">Tocá un acorde para moverlo</span>
+            )}
+            <span className="toolbar__spacer" />
+            <button className="btn btn--primary" onClick={stopMoving}>
+              Listo
+            </button>
+          </div>
+        </div>
+      ) : (
       <div className="toolbar" role="toolbar" aria-label="Controles de la canción">
         <div className="toolbar__row">
           <div className="segmented" role="group" aria-label="Vista">
@@ -97,6 +241,11 @@ export function SongPanel({
               Acordes
             </button>
           </div>
+          {onContentChange && prefs.showChords && (
+            <button className="icon-btn" aria-label="Mover acordes" title="Mover acordes" onClick={() => setMoving(true)}>
+              <Icon name="move" />
+            </button>
+          )}
           <span className="toolbar__spacer" />
           {prefs.showChords && (
             <div className="toolbar__group" role="group" aria-label="Tono">
@@ -170,6 +319,7 @@ export function SongPanel({
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

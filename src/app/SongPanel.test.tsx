@@ -58,6 +58,51 @@ e|--3--|
     expect(screen.getByText('Intro')).toBeInTheDocument();
   });
 
+  it('Mover acordes: pick a chord, move it, save the text', () => {
+    const saved: string[] = [];
+    render(
+      <SongPanel content={'[G]Hola [D]mundo'} transpose={2} onTransposeChange={() => {}} onContentChange={(c) => saved.push(c)} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Mover acordes' }));
+    expect(screen.getByText('Tocá un acorde para moverlo')).toBeInTheDocument();
+    // Shown transposed (+2), saved in the original key.
+    fireEvent.click(screen.getByRole('button', { name: 'Acorde E' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Antes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Antes' }));
+    expect(saved).toEqual(['[G]Hola[D] mundo', '[G]Hol[D]a mundo']);
+    expect(screen.getByRole('button', { name: 'Acorde E' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Listo' }));
+    expect(screen.queryByRole('button', { name: 'Acorde E' })).toBeNull();
+  });
+
+  it('BPM: tap the tempo chip, change it, save', () => {
+    const saved: string[] = [];
+    render(
+      <SongPanel content={'{title: X}\n{tempo: 90}\n[C]la'} transpose={0} onTransposeChange={() => {}} onContentChange={(c) => saved.push(c)} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar BPM' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Más BPM' }));
+    expect(saved).toEqual(['{title: X}\n{tempo: 91}\n[C]la']);
+    expect(screen.getByRole('spinbutton', { name: 'BPM' })).toHaveValue(91);
+    expect(screen.getByText('♩ 91')).toBeInTheDocument();
+
+    // Typing a number saves it when leaving the field (out of range is clamped).
+    const field = screen.getByRole('spinbutton', { name: 'BPM' });
+    fireEvent.change(field, { target: { value: '128' } });
+    fireEvent.blur(field);
+    expect(saved.at(-1)).toBe('{title: X}\n{tempo: 128}\n[C]la');
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'BPM' }), { target: { value: '999' } });
+    fireEvent.blur(screen.getByRole('spinbutton', { name: 'BPM' }));
+    expect(screen.getByText('♩ 300')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Listo' }));
+    expect(screen.getByRole('button', { name: 'Desplazar automáticamente' })).toBeInTheDocument();
+  });
+
+  it('no Mover acordes without a place to save', () => {
+    renderPanel();
+    expect(screen.queryByRole('button', { name: 'Mover acordes' })).toBeNull();
+  });
+
   it('play toggles and touching the sheet pauses', () => {
     renderPanel();
     const play = screen.getByRole('button', { name: 'Desplazar automáticamente' });

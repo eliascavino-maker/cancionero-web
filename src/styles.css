@@ -425,21 +425,24 @@ button.card:hover {
 /* ------------------------------------------------------------ song panel */
 
 .song-panel__sheet {
-  padding: 4px 0 200px;
+  padding: 4px 0 150px;
 }
 
+/* Compact bar: two short rows on phones, a single row on wider screens. */
 .toolbar {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--nav-h) + 12px + env(safe-area-inset-bottom));
+  bottom: calc(var(--nav-h) + 8px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  width: min(780px, calc(100% - 24px));
+  width: min(780px, calc(100% - 16px));
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 2px;
+  padding: 4px 6px;
   border: 1px solid var(--border);
-  border-radius: 22px;
+  border-radius: 18px;
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -451,9 +454,40 @@ button.card:hover {
   bottom: calc(12px + env(safe-area-inset-bottom));
 }
 .toolbar__row {
+  flex: 1 1 260px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+}
+.toolbar .icon-btn {
+  width: 38px;
+  height: 38px;
+}
+.toolbar .segmented {
+  padding: 3px;
+}
+.toolbar .segmented button {
+  min-height: 30px;
+  padding: 0 12px;
+  font-size: 0.9rem;
+}
+.toolbar .key-display {
+  min-width: 48px;
+  height: 38px;
+}
+.toolbar .key-display strong {
+  font-size: 1.15rem;
+}
+.toolbar .key-display small,
+.toolbar .speed small {
+  font-size: 0.62rem;
+}
+.toolbar .play-btn {
+  width: 42px;
+  height: 42px;
+}
+.toolbar .speed {
+  min-width: 44px;
 }
 .toolbar__group {
   display: flex;
@@ -462,6 +496,37 @@ button.card:hover {
 }
 .toolbar__spacer {
   flex: 1;
+}
+.bpm-field input {
+  width: 3.4em;
+  padding: 2px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+.bpm-field input::-webkit-outer-spin-button,
+.bpm-field input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.bpm-field input:focus {
+  outline: 2px solid var(--accent);
+  border-color: transparent;
+}
+.tap-btn {
+  min-width: 72px;
+  touch-action: manipulation;
+}
+.toolbar__hint {
+  padding: 0 8px;
+  font-size: 0.9rem;
+  color: var(--muted);
 }
 .toolbar__divider {
   width: 1px;
@@ -577,6 +642,9 @@ button.card:hover {
 .is-scrolling .toolbar__row:not(.toolbar__row--play) {
   display: none;
 }
+.is-scrolling .toolbar__row--play {
+  flex: none;
+}
 .is-scrolling .toolbar__row--play > :not(.play-btn) {
   display: none;
 }
@@ -636,9 +704,113 @@ button.card:hover {
 .editor__preview {
   padding: 4px 2px;
 }
+.editor__pane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
 .editor--edit .editor__preview,
-.editor--preview .editor__source {
+.editor--preview .editor__pane {
   display: none;
+}
+
+/* "Pegar letra": title fields + one big box for the lyrics. */
+.paste__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.paste__fields input {
+  flex: 1 1 140px;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  color: var(--text);
+  font: inherit;
+}
+.paste__fields .paste__title {
+  flex-basis: 100%;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.paste__fields .paste__key {
+  flex: 0 1 90px;
+}
+.paste__fields input:focus,
+.paste__text:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.paste__text {
+  width: 100%;
+  min-height: 55vh;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  color: var(--text);
+  /* Monospace so chords stay over the right syllable. */
+  font-family: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.paste__text::placeholder {
+  font-family: var(--font-ui);
+  color: var(--faint);
+}
+.paste__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+.paste__note {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.structure {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.structure__item {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.structure__item--chorus {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.structure__item--prechorus,
+.structure__item--bridge {
+  color: var(--text);
+  background: var(--surface-3);
+}
+.link-btn {
+  align-self: flex-start;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.link-btn:hover {
+  color: var(--text);
 }
 @media (min-width: 960px) {
   .page--editor {
@@ -654,7 +826,10 @@ button.card:hover {
     grid-template-columns: 1fr 1fr;
   }
   .editor--edit .editor__preview,
-  .editor--preview .editor__source {
+  .editor--preview .editor__pane {
+    display: flex;
+  }
+  .editor--edit .editor__preview {
     display: block;
   }
   .editor__preview {
