@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { parseChordPro } from '../chordpro/parser';
+import { Icon } from '../components/Icon';
 import { SongView } from '../components/SongView';
 import { effectiveKey, normalize, transposeSong } from '../music/transposer';
 import {
@@ -56,6 +57,12 @@ export function SongPanel({
   useAutoScroll(playing, speed, () => setPlaying(false));
   useWakeLock(playing);
 
+  // Immersive while scrolling: CSS hides menus and shrinks the toolbar.
+  useEffect(() => {
+    document.documentElement.classList.toggle('is-scrolling', playing);
+    return () => document.documentElement.classList.remove('is-scrolling');
+  }, [playing]);
+
   // Touching the sheet or scrolling by hand pauses; Space toggles.
   useEffect(() => {
     const pause = () => setPlaying(false);
@@ -90,10 +97,11 @@ export function SongPanel({
               Acordes
             </button>
           </div>
+          <span className="toolbar__spacer" />
           {prefs.showChords && (
             <div className="toolbar__group" role="group" aria-label="Tono">
               <button className="icon-btn" aria-label="Bajar medio tono" onClick={() => onTransposeChange(normalize(transpose - 1))}>
-                −
+                <Icon name="minus" />
               </button>
               <button
                 className="key-display"
@@ -105,34 +113,40 @@ export function SongPanel({
                 <small>{transpose === 0 ? 'original' : transpose > 0 ? `+${transpose}` : transpose}</small>
               </button>
               <button className="icon-btn" aria-label="Subir medio tono" onClick={() => onTransposeChange(normalize(transpose + 1))}>
-                +
+                <Icon name="plus" />
               </button>
             </div>
           )}
         </div>
-        <div className="toolbar__row">
-          <div className="toolbar__group" role="group" aria-label="Desplazamiento automático">
+        <div className="toolbar__row toolbar__row--play">
+          <button
+            className="play-btn"
+            aria-pressed={playing}
+            aria-label={playing ? 'Pausar desplazamiento' : 'Desplazar automáticamente'}
+            onClick={togglePlay}
+          >
+            <Icon name={playing ? 'pause' : 'play'} size={26} />
+          </button>
+          <div className="toolbar__group" role="group" aria-label="Velocidad">
             <button
-              className="icon-btn icon-btn--play"
-              aria-pressed={playing}
-              aria-label={playing ? 'Pausar desplazamiento' : 'Desplazar automáticamente'}
-              onClick={togglePlay}
+              className="icon-btn icon-btn--small"
+              aria-label="Más lento"
+              disabled={!auto && level === 0}
+              onClick={() => changeSpeed(-1)}
             >
-              {playing ? '⏸' : '▶'}
+              <Icon name="minus" size={18} />
             </button>
-            <button className="icon-btn" aria-label="Más lento" disabled={!auto && level === 0} onClick={() => changeSpeed(-1)}>
-              🐢
-            </button>
-            <span className="speed" aria-live="polite" title="Velocidad">
-              {auto ? 'auto' : `vel. ${level + 1}`}
+            <span className="speed" aria-live="polite">
+              <strong>{auto ? 'auto' : level + 1}</strong>
+              <small>velocidad</small>
             </span>
             <button
-              className="icon-btn"
+              className="icon-btn icon-btn--small"
               aria-label="Más rápido"
               disabled={!auto && level === SPEED_LEVELS.length - 1}
               onClick={() => changeSpeed(1)}
             >
-              🐇
+              <Icon name="plus" size={18} />
             </button>
           </div>
           <span className="toolbar__spacer" />
@@ -140,18 +154,18 @@ export function SongPanel({
             <button
               className="icon-btn"
               aria-label="Letra más chica"
-              disabled={prefs.fontSize <= 12}
+              disabled={prefs.fontSize <= 14}
               onClick={() => set({ fontSize: prefs.fontSize - 2 })}
             >
-              A−
+              <Icon name="textSmaller" />
             </button>
             <button
               className="icon-btn"
               aria-label="Letra más grande"
-              disabled={prefs.fontSize >= 40}
+              disabled={prefs.fontSize >= 44}
               onClick={() => set({ fontSize: prefs.fontSize + 2 })}
             >
-              A+
+              <Icon name="textLarger" />
             </button>
           </div>
         </div>

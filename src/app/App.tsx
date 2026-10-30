@@ -1,4 +1,6 @@
-import { useRoute } from './hooks';
+import { useEffect } from 'react';
+import { Icon } from '../components/Icon';
+import { usePrefs, useRoute } from './hooks';
 import { EditorPage } from './pages/EditorPage';
 import { LibraryPage } from './pages/LibraryPage';
 import { PlayerPage } from './pages/PlayerPage';
@@ -29,8 +31,14 @@ function Page({ route }: { route: string }) {
 
 export function App() {
   const route = useRoute();
+  const [prefs] = usePrefs();
   const section = route.startsWith('/setlist') || route.startsWith('/play') ? 'setlists' : 'library';
   const stage = route.startsWith('/play');
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = prefs.theme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', prefs.theme === 'dark' ? '#0c0c0f' : '#faf8f4');
+  }, [prefs.theme]);
 
   return (
     <div className={stage ? 'app app--stage' : 'app'}>
@@ -40,9 +48,11 @@ export function App() {
       {!stage && (
         <nav className="nav" aria-label="Secciones">
           <a href="#/" aria-current={section === 'library' ? 'page' : undefined}>
-            Biblioteca
+            <Icon name="music" />
+            Canciones
           </a>
           <a href="#/setlists" aria-current={section === 'setlists' ? 'page' : undefined}>
+            <Icon name="list" />
             Setlists
           </a>
         </nav>

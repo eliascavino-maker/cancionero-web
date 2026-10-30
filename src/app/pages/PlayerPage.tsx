@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Icon } from '../../components/Icon';
 import { SongPanel } from '../SongPanel';
 import { navigate, useLibrary, useLive } from '../hooks';
 
@@ -33,32 +34,31 @@ export function PlayerPage({ setlistId, index }: { setlistId: number; index: num
   if (!data) return null;
   const entry = data.entries[index];
   if (!entry) return <p className="empty">No hay canción en esa posición.</p>;
+  const next = data.entries[index + 1];
 
   return (
     <div className="page page--song">
-      <header className="page__header">
-        <a className="back" href={`#/setlist/${setlistId}`} aria-label="Volver al setlist">
-          ←
+      <header className="page__header page__header--sticky">
+        <a className="icon-btn" href={`#/setlist/${setlistId}`} aria-label="Salir del modo en vivo">
+          <Icon name="close" />
         </a>
+        <button className="icon-btn icon-btn--filled" aria-label="Canción anterior" disabled={index === 0} onClick={() => go(index - 1)}>
+          <Icon name="prev" size={20} />
+        </button>
         <div className="player__title">
-          <strong>{entry.song.title}</strong>
-          <small>
+          <strong>
             {index + 1}/{count} · {data.setlist?.name}
-          </small>
+          </strong>
+          <small>{next ? `Sigue: ${next.song.title}` : 'Última canción'}</small>
         </div>
-        <div className="page__actions">
-          <button className="icon-btn" aria-label="Canción anterior" disabled={index === 0} onClick={() => go(index - 1)}>
-            ⏮
-          </button>
-          <button
-            className="icon-btn"
-            aria-label="Canción siguiente"
-            disabled={index >= count - 1}
-            onClick={() => go(index + 1)}
-          >
-            ⏭
-          </button>
-        </div>
+        <button
+          className="icon-btn icon-btn--filled"
+          aria-label="Canción siguiente"
+          disabled={index >= count - 1}
+          onClick={() => go(index + 1)}
+        >
+          <Icon name="next" size={20} />
+        </button>
       </header>
       <SongPanel
         key={entry.item.id}

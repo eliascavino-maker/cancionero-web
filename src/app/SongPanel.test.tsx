@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { SPEED_LEVELS, nearestLevel, parseDuration } from './autoscroll';
 import { SongPanel } from './SongPanel';
+import { resetPrefsForTests } from './hooks';
 
 describe('parseDuration', () => {
   it.each([
@@ -24,7 +25,10 @@ describe('nearestLevel', () => {
 });
 
 describe('SongPanel', () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => {
+    localStorage.clear();
+    resetPrefsForTests();
+  });
 
   const song = `{title: X}
 {key: G}
@@ -71,13 +75,13 @@ e|--3--|
 
   it('speed is remembered per song', () => {
     const { unmount } = renderPanel();
-    expect(screen.getByText('vel. 4')).toBeInTheDocument();
+    expect(screen.getByText('4', { selector: '.speed strong' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Más rápido' }));
-    expect(screen.getByText('vel. 5')).toBeInTheDocument();
+    expect(screen.getByText('5', { selector: '.speed strong' })).toBeInTheDocument();
     unmount();
 
     renderPanel(song, '1');
-    expect(screen.getByText('vel. 5')).toBeInTheDocument();
+    expect(screen.getByText('5', { selector: '.speed strong' })).toBeInTheDocument();
   });
 
   it('{duration} gives an automatic speed until changed', () => {

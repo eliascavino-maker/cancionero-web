@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { parseChordPro } from '../../chordpro/parser';
+import { Icon } from '../../components/Icon';
 import { SongView } from '../../components/SongView';
 import { newSongTemplate } from '../../data/sample';
 import { navigate, useLibrary } from '../hooks';
@@ -28,13 +29,18 @@ export function EditorPage({ id }: { id?: number }) {
   return (
     <div className="page page--editor">
       <header className="page__header">
-        <a className="back" href={id === undefined ? '#/' : `#/song/${id}`} aria-label="Cancelar">
-          ←
+        <a className="icon-btn" href={id === undefined ? '#/' : `#/song/${id}`} aria-label="Cancelar">
+          <Icon name="back" />
         </a>
         <h1>{id === undefined ? 'Nueva canción' : 'Editar'}</h1>
         <div className="page__actions">
-          <button className="btn" onClick={() => fileInput.current?.click()}>
-            Abrir archivo
+          <button
+            className="icon-btn"
+            aria-label="Abrir archivo"
+            title="Abrir archivo .cho / .chopro / .txt"
+            onClick={() => fileInput.current?.click()}
+          >
+            <Icon name="file" />
           </button>
           <input
             ref={fileInput}
@@ -52,13 +58,20 @@ export function EditorPage({ id }: { id?: number }) {
           </button>
         </div>
       </header>
-      <div className="tabs" role="tablist">
-        <button role="tab" aria-selected={tab === 'edit'} onClick={() => setTab('edit')}>
-          ChordPro
-        </button>
-        <button role="tab" aria-selected={tab === 'preview'} onClick={() => setTab('preview')}>
-          Vista previa
-        </button>
+      <div className="tabs">
+        <div className="segmented" role="tablist">
+          <button role="tab" aria-selected={tab === 'edit'} aria-pressed={tab === 'edit'} onClick={() => setTab('edit')}>
+            ChordPro
+          </button>
+          <button
+            role="tab"
+            aria-selected={tab === 'preview'}
+            aria-pressed={tab === 'preview'}
+            onClick={() => setTab('preview')}
+          >
+            Vista previa
+          </button>
+        </div>
       </div>
       <div className={`editor editor--${tab}`}>
         <textarea

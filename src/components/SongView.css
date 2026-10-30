@@ -1,62 +1,88 @@
 .cp-song {
-  font-size: 18px;
-  line-height: 1.25;
+  font-size: 22px;
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
 
 .cp-header {
-  margin-bottom: 1em;
+  margin: 4px 0 1.2em;
 }
 .cp-title {
-  font-size: 1.5em;
+  font-size: 1.45em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
   margin: 0;
-  line-height: 1.2;
 }
 .cp-subtitle {
-  margin: 0.2em 0 0;
+  margin: 0.25em 0 0;
+  font-size: 0.8em;
   color: var(--muted);
 }
 .cp-info {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4em;
+  gap: 6px;
   list-style: none;
   padding: 0;
-  margin: 0.6em 0 0;
-  font-size: 0.8em;
+  margin: 0.7em 0 0;
+  font-size: max(13px, 0.6em);
+  font-weight: 600;
 }
 .cp-info li {
-  border: 1px solid var(--border);
+  padding: 4px 12px;
   border-radius: 999px;
-  padding: 0.15em 0.7em;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.cp-info li:first-child {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .cp-section {
-  margin-bottom: 1em;
+  margin-bottom: 1.1em;
 }
 .cp-section--chorus {
-  border-left: 3px solid var(--accent);
-  padding-left: 0.7em;
+  position: relative;
+  padding: 0.5em 0.8em 0.55em 0.9em;
+  margin-left: -0.3em;
+  border-radius: 12px;
+  background: var(--accent-soft);
+}
+.cp-section--chorus::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  bottom: 0.6em;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent);
 }
 .cp-label {
-  font-size: 0.75em;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  display: inline-block;
+  font-size: max(11px, 0.52em);
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 0.25em;
+  color: var(--faint);
+  margin-bottom: 0.35em;
+}
+.cp-section--chorus > .cp-label {
+  color: var(--accent);
 }
 
 .cp-line {
-  margin-bottom: 0.15em;
+  margin-bottom: 0.2em;
   white-space: pre-wrap;
 }
 /* Words wrap; a chord stays glued to its syllable inside a word. */
 .cp-line--chords {
   display: flex;
   flex-wrap: wrap;
-  column-gap: 0.3em;
-  row-gap: 0.2em;
+  column-gap: 0.28em;
+  row-gap: 0.15em;
   white-space: normal;
 }
 .cp-word {
@@ -68,9 +94,12 @@
   flex-direction: column;
 }
 .cp-chord {
+  font-family: var(--font-chord);
   font-weight: 700;
+  font-size: 0.95em;
+  line-height: 1.15;
   color: var(--accent);
-  padding-right: 0.3em;
+  padding-right: 0.35em;
 }
 .cp-chord--empty {
   padding-right: 0;
@@ -78,27 +107,34 @@
 
 .cp-comment {
   display: inline-block;
-  margin: 0.2em 0;
-  font-size: 0.85em;
-  padding: 0.15em 0.5em;
-  border-radius: 4px;
-}
-.cp-comment--normal {
+  margin: 0.25em 0;
+  font-size: 0.72em;
+  font-weight: 600;
+  padding: 0.3em 0.8em;
+  border-radius: 999px;
   background: var(--surface-2);
+  color: var(--muted);
 }
 .cp-comment--italic {
   font-style: italic;
+  background: none;
   padding-left: 0;
 }
 .cp-comment--boxed {
+  background: none;
   border: 1px solid var(--border);
+  border-radius: 8px;
 }
 .cp-empty {
   height: 0.6em;
 }
 .cp-tab {
   font-family: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
-  font-size: 0.8em;
+  font-size: 0.68em;
+  line-height: 1.35;
   margin: 0;
+  padding: 0.6em 0.8em;
+  border-radius: 10px;
+  background: var(--bg-raised);
   overflow-x: auto;
 }

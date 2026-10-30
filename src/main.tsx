@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
 import { LibraryContext } from './app/hooks';
 import { Library } from './data/library';
+import '@fontsource-variable/inter';
+import '@fontsource/barlow-semi-condensed/600.css';
+import '@fontsource/barlow-semi-condensed/700.css';
 import './styles.css';
 
 const root = createRoot(document.getElementById('root')!);

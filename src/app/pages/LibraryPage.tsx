@@ -1,13 +1,18 @@
 import { useRef, useState } from 'react';
-import { navigate, useLibrary, useLive } from '../hooks';
+import { Icon } from '../../components/Icon';
+import { navigate, useLibrary, useLive, usePrefs } from '../hooks';
 
 export function LibraryPage() {
   const lib = useLibrary();
+  const [prefs, setPrefs] = usePrefs();
   const [query, setQuery] = useState('');
   const songs = useLive((l) => l.listSongs(query), [query]);
   const fileInput = useRef<HTMLInputElement>(null);
+  const menu = useRef<HTMLDetailsElement>(null);
+  const closeMenu = () => menu.current?.removeAttribute('open');
 
   const exportBackup = async () => {
+    closeMenu();
     const data = await lib.exportAll();
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a');
@@ -29,14 +34,34 @@ export function LibraryPage() {
   return (
     <div className="page">
       <header className="page__header">
-        <h1>Biblioteca</h1>
+        <h1>Canciones</h1>
         <div className="page__actions">
-          <button className="btn" onClick={exportBackup}>
-            Exportar
-          </button>
-          <button className="btn" onClick={() => fileInput.current?.click()}>
-            Importar
-          </button>
+          <details className="menu" ref={menu}>
+            <summary className="icon-btn" aria-label="Más opciones">
+              <Icon name="more" />
+            </summary>
+            <div className="menu__panel">
+              <button onClick={exportBackup}>
+                <Icon name="download" /> Exportar respaldo
+              </button>
+              <button
+                onClick={() => {
+                  closeMenu();
+                  fileInput.current?.click();
+                }}
+              >
+                <Icon name="upload" /> Importar respaldo
+              </button>
+              <button
+                onClick={() => {
+                  closeMenu();
+                  setPrefs({ ...prefs, theme: prefs.theme === 'dark' ? 'light' : 'dark' });
+                }}
+              >
+                <Icon name="stage" /> {prefs.theme === 'dark' ? 'Tema claro' : 'Tema oscuro'}
+              </button>
+            </div>
+          </details>
           <input
             ref={fileInput}
             type="file"
@@ -49,32 +74,36 @@ export function LibraryPage() {
             }}
           />
           <button className="btn btn--primary" onClick={() => navigate('/edit/new')}>
-            + Nueva
+            <Icon name="plus" size={20} /> Nueva
           </button>
         </div>
       </header>
-      <input
-        className="search"
-        type="search"
-        placeholder="Buscar por título o artista"
-        aria-label="Buscar"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+
+      <label className="search">
+        <Icon name="search" size={20} />
+        <input
+          type="search"
+          placeholder="Buscar por título o artista"
+          aria-label="Buscar"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </label>
+
       {songs === undefined ? null : songs.length === 0 ? (
         <p className="empty">
-          {query ? `Sin resultados para "${query}".` : 'Todavía no hay canciones. Tocá "+ Nueva" para agregar una.'}
+          {query ? `Sin resultados para "${query}".` : 'Todavía no hay canciones. Tocá "Nueva" para agregar la primera.'}
         </p>
       ) : (
         <ul className="list">
           {songs.map((s) => (
             <li key={s.id}>
-              <a className="list__item" href={`#/song/${s.id}`}>
-                <span className="list__main">
-                  <span className="list__title">{s.title}</span>
-                  {s.artist && <span className="list__sub">{s.artist}</span>}
+              <a className="card" href={`#/song/${s.id}`}>
+                <span className="card__main">
+                  <span className="card__title">{s.title}</span>
+                  {s.artist && <span className="card__sub">{s.artist}</span>}
                 </span>
-                {s.songKey && <span className="list__key">{s.songKey}</span>}
+                {s.songKey && <span className="key-badge">{s.songKey}</span>}
               </a>
             </li>
           ))}

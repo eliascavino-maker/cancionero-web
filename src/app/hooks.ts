@@ -50,9 +50,11 @@ export function navigate(path: string) {
 export interface Prefs {
   fontSize: number;
   showChords: boolean;
+  /** Dark by default: easier to read on a dim stage. */
+  theme: 'dark' | 'light';
 }
 
-const DEFAULT_PREFS: Prefs = { fontSize: 20, showChords: true };
+const DEFAULT_PREFS: Prefs = { fontSize: 22, showChords: true, theme: 'dark' };
 const PREFS_KEY = 'cancionero.prefs';
 
 function readPrefs(): Prefs {
@@ -64,16 +66,32 @@ function readPrefs(): Prefs {
   }
 }
 
-/** Font size and chords on/off, remembered in this browser. */
+// One shared copy, so every screen sees a change at once.
+let currentPrefs: Prefs | null = null;
+const prefListeners = new Set<() => void>();
+const getPrefs = () => (currentPrefs ??= readPrefs());
+const subscribePrefs = (cb: () => void) => {
+  prefListeners.add(cb);
+  return () => prefListeners.delete(cb);
+};
+
+export function setPrefs(p: Prefs) {
+  currentPrefs = p;
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify(p));
+  } catch {
+    // Storage blocked: keep the setting for this visit only.
+  }
+  prefListeners.forEach((l) => l());
+}
+
+/** Tests start from defaults. */
+export function resetPrefsForTests() {
+  currentPrefs = null;
+}
+
+/** Font size, Letra/Acordes and theme, remembered in this browser. */
 export function usePrefs(): [Prefs, (p: Prefs) => void] {
-  const [prefs, setPrefs] = useState(readPrefs);
-  const update = (p: Prefs) => {
-    setPrefs(p);
-    try {
-      localStorage.setItem(PREFS_KEY, JSON.stringify(p));
-    } catch {
-      // Storage blocked: keep the setting for this visit only.
-    }
-  };
-  return [prefs, update];
+  const prefs = useSyncExternalStore(subscribePrefs, getPrefs);
+  return [prefs, setPrefs];
 }
