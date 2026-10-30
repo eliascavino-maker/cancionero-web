@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { parseChordPro } from '../chordpro/parser';
-import { type BandSong, REPERTORIO, bandSongs } from '../data/bandSongs';
+import { BAND_SETLISTS, type BandSong, bandSongs } from '../data/bandSongs';
 import type { SongRecord } from '../data/library';
 import { fold, mergeChart } from '../importer/chart';
 import { useLibrary } from './hooks';
@@ -14,8 +14,6 @@ interface Row {
   include: boolean;
   done?: boolean;
 }
-
-const SETLIST = 'Repertorio';
 
 /** True when the song has sung words (not just chords). */
 function hasLyrics(content: string): boolean {
@@ -31,16 +29,19 @@ export function BandSongsDialog({ onClose }: { onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [rows, setRows] = useState<Row[] | null>(null);
   const [busy, setBusy] = useState(false);
-  const [hasSetlist, setHasSetlist] = useState(true);
-  const [makeSetlist, setMakeSetlist] = useState(true);
-  const [setlistDone, setSetlistDone] = useState(false);
+  // Band setlists not in this browser yet: name → build it?
+  const [newSetlists, setNewSetlists] = useState<Map<string, boolean>>(new Map());
+  const [setlistsDone, setSetlistsDone] = useState(false);
   const finished = rows?.some((r) => r.done);
 
   useEffect(() => {
     const d = dialog.current;
     if (d && typeof d.showModal === 'function') d.showModal();
     else d?.setAttribute('open', '');
-    lib.listSetlists().then((all) => setHasSetlist(all.some((s) => fold(s.setlist.name) === fold(SETLIST))));
+    lib.listSetlists().then((all) => {
+      const have = new Set(all.map((s) => fold(s.setlist.name)));
+      setNewSetlists(new Map(BAND_SETLISTS.filter((b) => !have.has(fold(b.name))).map((b) => [b.name, true])));
+    });
     lib.listSongs().then((all) =>
       setRows(
         songs.map((song) => {
@@ -70,14 +71,15 @@ export function BandSongsDialog({ onClose }: { onClose: () => void }) {
       if (id !== undefined) ids.set(fold(r.song.title), id);
       out.push({ ...r, done: r.include });
     }
-    if (makeSetlist && !hasSetlist) {
-      const setlist = await lib.createSetlist(SETLIST);
-      for (const title of REPERTORIO) {
+    for (const band of BAND_SETLISTS) {
+      if (!newSetlists.get(band.name)) continue;
+      const setlist = await lib.createSetlist(band.name);
+      for (const { title, transpose } of band.songs) {
         const id = ids.get(fold(title));
-        if (id !== undefined) await lib.addSongToSetlist(setlist, id);
+        if (id !== undefined) await lib.addSongToSetlist(setlist, id, transpose);
       }
-      setSetlistDone(true);
     }
+    setSetlistsDone(true);
     setRows(out);
     setBusy(false);
   };
@@ -116,20 +118,20 @@ export function BandSongsDialog({ onClose }: { onClose: () => void }) {
           </li>
         ))}
       </ul>
-      {!hasSetlist && (
-        <label className="import__row import__setlist">
+      {[...newSetlists].map(([name, on]) => (
+        <label key={name} className="import__row import__setlist">
           <span>
             <input
               type="checkbox"
-              checked={makeSetlist}
+              checked={on}
               disabled={finished || busy}
-              onChange={(e) => setMakeSetlist(e.target.checked)}
+              onChange={(e) => setNewSetlists(new Map(newSetlists).set(name, e.target.checked))}
             />{' '}
-            Armar el setlist «{SETLIST}» en orden
+            Armar el setlist «{name}» en orden
           </span>
-          {setlistDone && <span className="import__status import__status--done">Creado</span>}
+          {setlistsDone && on && <span className="import__status import__status--done">Creado</span>}
         </label>
-      )}
+      ))}
       <div className="import__actions">
         {finished ? (
           <button className="btn btn--primary" onClick={() => dialog.current?.close()}>

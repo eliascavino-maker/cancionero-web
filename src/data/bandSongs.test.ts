@@ -1,6 +1,6 @@
 import { parseChordPro } from '../chordpro/parser';
 import { fold } from '../importer/chart';
-import { REPERTORIO, bandSongs } from './bandSongs';
+import { BAND_SETLISTS, REPERTORIO, bandSongs } from './bandSongs';
 
 describe('band songs', () => {
   const songs = bandSongs();
@@ -16,6 +16,7 @@ describe('band songs', () => {
       'Reflejo de Dios',
       'Dios de la vida',
       'Encontrarte',
+      'A una rosa',
       'Fuego de noviembre',
       'Esto que soy',
       'Vida en abundancia',
@@ -36,6 +37,18 @@ describe('band songs', () => {
       'Reciban la paz',
       'Sopla',
       'Luz de la ciudad',
+      'Yo toco solo bombo',
+      'Ave de luz',
+      'La voz de un amigo',
+      'Enganchado de zamba',
+      'La López Pereyra',
+      'Chicharra',
+      'Como pájaros en el aire',
+      'Que alcen sus manos',
+      'Comadre compadre',
+      'Bicho bicho',
+      'Iluminará',
+      'Por qué te amo',
     ]);
     for (const s of songs) expect(parseChordPro(s.content).metadata.title).toBe(s.title);
   });
@@ -71,6 +84,11 @@ describe('band songs', () => {
   it('every song of the repertorio is there', () => {
     const titles = songs.map((s) => fold(s.title));
     for (const t of REPERTORIO) expect(titles).toContain(fold(t));
+  });
+
+  it('every song of every setlist is there', () => {
+    const titles = songs.map((s) => fold(s.title));
+    for (const list of BAND_SETLISTS) for (const { title } of list.songs) expect(titles).toContain(fold(title));
   });
 
   it('chord-only songs can be added to lyrics typed by hand', () => {

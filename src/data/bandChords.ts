@@ -215,7 +215,120 @@ estribillo
 E A E B A E
 
 final
-E D C#m B E
+E D C#m B E A Am E
+`;
+
+/**
+ * The "Peña 24/10" document. Sopla, Luz de la ciudad and Ya no más are left
+ * out (already in REPERTORIO_DOC). Small fixes so it reads well: "PASAJE" and the
+ * repeats in parentheses go on their own lines; the red title (piano doesn't
+ * play) becomes a "Sin piano" note.
+ */
+export const PENA_DOC = `YO TOCO SOLO BOMBO
+intro: (Sin piano) E
+
+estrofa: G - A - B7 - Em
+
+estribillo: Em - B7
+
+interludio: Em - C - Am - F … B7
+
+AVE DE LUZ
+intro: Bm - G - A
+
+estrofa: Bm - Em - G - A
+         Em - G - F# - Bm
+
+estribillo: Bm - G - A - F#m - G
+            Em - C#7 - F#7 - Bm
+
+inter: Bm - G - A
+
+LA VOZ DE UN AMIGO
+intro: B7 - A - G#m - F#m - E
+       B7 - A - B7 - E
+       B7 - A - B7 - E
+
+estrofa: B7 - A - E - B7 - E
+         B7 - A - G#m - F#m - E
+
+ENGANCHADO DE ZAMBA
+estrofa 1: (Sin intro) E - F#7 - B7 - A - E x2
+           E - F#7 - B7 - A - G#m - F#m - E
+
+estribillo 1: E - A - Am - G#m - Gm - F#m - B7 - E
+              B7 - E
+              E - F#7 - B7 - A - G#m - F#m - E
+
+estrofa 2: (Sin intro) E - B - E - A - Am
+           E - B - E - C#7 - F#m - B - E x2
+
+estribillo 2: E - G#7 - C#m - A - Am - E
+              E - B - E - C#7 - F#m - B - E x2
+
+LA LÓPEZ PEREYRA
+estrofa: C - G - C - E7 - Am - F - C - G - C - C7
+         F - C - G - C
+
+CHICHARRA
+intro: C - F - G
+
+estrofa: C - F - C - G - C
+         C - F - C - G - C
+         C - G/B - A - A/G - F - C - G - Bb
+
+COMO PÁJAROS EN EL AIRE
+intro: G - B7 - Em - G - Am - C - D - C - G
+
+estrofa 1: G - D - F - C - G - G - F - C - D - G
+           G - D - F - C - G - B7 - Em - F - C - D - G
+           G - D - F - C - G - B7 - Em - F - C - D - G - G/D# - G/E
+           C - Bm - Dm - G7 - C - Cm - Bm - A - C - D - G
+
+inter: (Pasaje) D - E - A
+
+estrofa 2: A - E - G - D - A - A - G - D - E - A
+           A - E - G - D - A - C#7 - F#m - G - D - E - A
+           A - E - G - D - A - C#7 - F#m - G - D - E - A - A/F - A/F#
+           D - C#m - Em - A7 - D - Dm - C#m - B - D - E - A
+
+QUE ALCEN SUS MANOS
+intro: Dm - Am - Gm - Dm - C
+       Dm - Am - Gm - Dm - C
+       F - C - Gm - Bb - C
+       F - C - Gm - Dm - C
+
+estrofa: C - F - C - G - C
+         C - F - C - G - C
+         C - G/B - A - A/G - F - C - G - Bb
+
+COMADRE COMPADRE
+D - A - Bm - A - D
+G - D - A - Bm
+
+BICHO BICHO
+intro: C - Am - Dm - G
+       C - Am - Dm - G
+
+estrofa: C - Am - F - G
+         C - Am - F - G - Em - F - G … (Silencio)
+
+estribillo: C - Am - Dm - G
+
+ILUMINARÁ
+intro: Gm - F - Cm
+       Gm - F x4
+
+POR QUÉ TE AMO
+intro: F#m - E
+
+estrofa: A - E - D - A - E x2
+         C#m - F#m - C#m - F#m - D - C#m - Bm - E
+
+estribillo: A - E - D - A - E x2
+            A - E - D - E - D - C#m - Bm - E
+
+final: F#m
 `;
 
 /** Paints `from`..end of a line in a color (as the Doc does). */

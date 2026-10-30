@@ -1,6 +1,6 @@
 import { type ChartSong, chartToChordPro, fold, parseChart } from '../importer/chart';
 import { linesFromText } from '../importer/docx';
-import { REPERTORIO_DOC, bandDocLines } from './bandChords';
+import { PENA_DOC, REPERTORIO_DOC, bandDocLines } from './bandChords';
 
 /**
  * The band's songs: the lyric sheets (one PDF per song) combined with the
@@ -502,8 +502,51 @@ export const REPERTORIO = [
   'Luz de la ciudad',
 ];
 
+export interface BandSetlist {
+  name: string;
+  songs: { title: string; transpose?: number }[];
+}
+
+/**
+ * Setlists the band documents describe. In the Peña, Sopla goes up a half
+ * tone (F instead of E: same chords).
+ */
+export const BAND_SETLISTS: BandSetlist[] = [
+  { name: 'Repertorio', songs: REPERTORIO.map((title) => ({ title })) },
+  {
+    name: 'Peña 24/10',
+    songs: [
+      { title: 'Sopla', transpose: 1 },
+      { title: 'Luz de la ciudad' },
+      { title: 'Yo toco solo bombo' },
+      { title: 'Ave de luz' },
+      { title: 'La voz de un amigo' },
+      { title: 'Enganchado de zamba' },
+      { title: 'A una rosa' },
+      { title: 'La López Pereyra' },
+      { title: 'Chicharra' },
+      { title: 'Como pájaros en el aire' },
+      { title: 'Que alcen sus manos' },
+      { title: 'Comadre compadre' },
+      { title: 'Bicho bicho' },
+      { title: 'Iluminará' },
+      { title: 'Por qué te amo' },
+      { title: 'Ya no más' },
+    ],
+  },
+];
+
 /** Names the capitals of the document can't keep. */
-const PROPER: Record<string, string> = { 'Rendid a yahvé': 'Rendid a Yahvé' };
+const PROPER: Record<string, string> = {
+  'Rendid a yahvé': 'Rendid a Yahvé',
+  'La lópez pereyra': 'La López Pereyra',
+};
+
+/** In the Peña doc it has no chords: only a reminder for the setlist. */
+const A_UNA_ROSA = `{title: A una rosa}
+
+[*Solo Sergio]
+`;
 
 const WITH_LYRICS: BandSong[] = [
   { title: 'Cusco', content: CUSCO, aliases: [] },
@@ -514,6 +557,7 @@ const WITH_LYRICS: BandSong[] = [
   { title: 'Reflejo de Dios', content: REFLEJO_DE_DIOS, aliases: [] },
   { title: 'Dios de la vida', content: DIOS_DE_LA_VIDA, aliases: [] },
   { title: 'Encontrarte', content: ENCONTRARTE, aliases: [] },
+  { title: 'A una rosa', content: A_UNA_ROSA, aliases: [] },
 ];
 
 /** Every band song: the ones with lyrics, plus the chord-only ones from both chord documents. */
@@ -530,5 +574,6 @@ export function bandSongs(): BandSong[] {
     ...WITH_LYRICS,
     ...chordsOnly(parseChart(bandDocLines())),
     ...chordsOnly(parseChart(linesFromText(REPERTORIO_DOC))),
+    ...chordsOnly(parseChart(linesFromText(PENA_DOC))),
   ];
 }
