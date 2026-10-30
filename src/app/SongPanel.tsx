@@ -2,7 +2,6 @@ import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import { type ChordRef, type MoveDirection, addAnnotation, moveChord, setAnnotation } from '../chordpro/moveChord';
 import { parseChordPro } from '../chordpro/parser';
 import { emptyParts, setLineVoices, setSectionParts } from '../chordpro/parts';
-import type { SongSection } from '../chordpro/song';
 import { MAX_BPM, MIN_BPM, bpmFromTaps, clampBpm, parseBpm, setTempo } from '../chordpro/tempo';
 import { Icon } from '../components/Icon';
 import { SongView } from '../components/SongView';
@@ -19,20 +18,10 @@ import {
 } from './autoscroll';
 import { type Prefs, usePrefs } from './hooks';
 import { PartsDialog } from './PartsDialog';
+import { StageView, sectionTitle } from './StageView';
+import { isImmersive } from '../components/FullscreenButton';
 import type { VoiceSelection } from '../components/SongView';
 import { ALL, SINGERS, colorOf } from '../data/band';
-
-const SECTION_NAMES: Partial<Record<SongSection['kind'], string>> = {
-  verse: 'Estrofa',
-  chorus: 'Estribillo',
-  bridge: 'Puente',
-};
-
-function sectionTitle(s: SongSection): string {
-  if (s.label) return s.label;
-  if (s.name) return s.name[0].toUpperCase() + s.name.slice(1).replace(/_/g, ' ');
-  return SECTION_NAMES[s.kind] ?? 'Parte sin nombre';
-}
 
 /**
  * Song sheet plus a bottom bar: Letra/Acordes mode, transpose, font size and
@@ -141,8 +130,11 @@ export function SongPanel({
   const speed = auto ? (durationSpeed ?? SPEED_LEVELS[DEFAULT_LEVEL]) : SPEED_LEVELS[savedLevel ?? DEFAULT_LEVEL];
   const level = savedLevel ?? (auto ? nearestLevel(speed) : DEFAULT_LEVEL);
 
+  // Letra in full screen: play shows one part at a time (StageView) instead of scrolling.
+  const [stage, setStage] = useState(false);
   const togglePlay = () => {
     if (!playing && duration !== null && savedLevel === null) setDurationSpeed(speedForDuration(duration));
+    if (!playing && !prefs.showChords && isImmersive()) setStage(true);
     setPlaying(!playing);
   };
   const changeSpeed = (delta: number) => saveLevel(Math.max(0, Math.min(SPEED_LEVELS.length - 1, level + delta)));
@@ -151,8 +143,25 @@ export function SongPanel({
     if (playing) stopMoving();
   }, [playing]);
 
-  useAutoScroll(playing, speed, () => setPlaying(false));
+  useAutoScroll(playing && !stage, speed, () => setPlaying(false));
   useWakeLock(playing);
+
+  // Leaving full screen closes the stage view.
+  useEffect(() => {
+    if (!stage) return;
+    const check = () => {
+      if (!isImmersive()) {
+        setStage(false);
+        setPlaying(false);
+      }
+    };
+    document.addEventListener('fullscreenchange', check);
+    document.addEventListener('webkitfullscreenchange', check);
+    return () => {
+      document.removeEventListener('fullscreenchange', check);
+      document.removeEventListener('webkitfullscreenchange', check);
+    };
+  }, [stage]);
 
   // Immersive while scrolling: CSS hides menus and shrinks the toolbar.
   useEffect(() => {
@@ -226,6 +235,20 @@ export function SongPanel({
           }
         />
       </div>
+      {stage && (
+        <StageView
+          song={shown}
+          playing={playing}
+          onPlayingChange={setPlaying}
+          onClose={() => {
+            setStage(false);
+            setPlaying(false);
+          }}
+          bpm={bpm}
+          pxPerSecond={speed}
+          fontSize={prefs.fontSize}
+        />
+      )}
       {partsSection && (
         <PartsDialog
           key={partsIndex}

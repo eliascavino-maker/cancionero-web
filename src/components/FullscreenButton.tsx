@@ -12,6 +12,12 @@ const canGoFull = () => {
   return typeof el.requestFullscreen === 'function' || typeof el.webkitRequestFullscreen === 'function';
 };
 
+/** Full screen, or opened from the home screen (no browser bars): the stage views. */
+export function isImmersive(): boolean {
+  if (isFull()) return true;
+  return typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches;
+}
+
 export async function toggleFullscreen(): Promise<void> {
   if (isFull()) {
     await (doc().exitFullscreen?.() ?? doc().webkitExitFullscreen?.());
