@@ -252,7 +252,7 @@ textarea {
 /* ------------------------------------------------------------ song panel */
 
 .song-panel__sheet {
-  padding: 8px 0 96px;
+  padding: 8px 0 160px;
 }
 .toolbar {
   position: fixed;
@@ -260,7 +260,7 @@ textarea {
   right: 0;
   bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
   padding: 8px max(16px, calc((100% - 900px) / 2 + 16px));
   background: var(--surface);
@@ -271,8 +271,52 @@ textarea {
   bottom: 0;
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
 }
+.toolbar__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
 .toolbar__spacer {
   flex: 1;
+}
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-right: auto;
+}
+.segmented button {
+  border: 0;
+  background: var(--surface);
+  padding: 8px 14px;
+  min-height: 40px;
+  cursor: pointer;
+}
+.segmented button + button {
+  border-left: 1px solid var(--border);
+}
+.segmented button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.icon-btn--play[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.speed {
+  min-width: 48px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--muted);
 }
 .key-display {
   display: flex;

@@ -28,6 +28,17 @@ falta configurar el servidor.
   Importar reemplaza todo.
 - El editor abre archivos `.cho`, `.chopro`, `.chordpro`, `.pro`, `.txt`.
 
+## Vista de canción
+
+- **Letra / Acordes**: Letra muestra solo la letra (sin acordes, intros ni
+  tablaturas), para quien canta. Acordes muestra los acordes sobre la letra y
+  los controles de tono.
+- **Autoscroll** (▶): baja solo la página. 🐢/🐇 cambian la velocidad, que se
+  recuerda por canción. Si la canción tiene `{duration: 3:30}`, arranca en
+  `auto`: llega al final en ese tiempo. Tocar la pantalla o mover la rueda
+  pausa; la barra espaciadora pausa y reanuda. Mientras se desplaza, la
+  pantalla no se apaga, en los navegadores que lo permiten.
+
 ## Modo escenario
 
 Desde un setlist, **▶ Tocar**. Las flechas ←/→ cambian de canción: sirven

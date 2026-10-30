@@ -107,7 +107,23 @@ function Line({ line, opts, lastChorus }: { line: SongLine; opts: SongViewOption
   }
 }
 
-function Section({ section, opts, lastChorus }: { section: SongSection; opts: SongViewOptions; lastChorus?: SongSection }) {
+/** Lyrics mode: a line with no words (only chords) has nothing to show. */
+function hasWords(line: SongLine): boolean {
+  return line.type !== 'lyric' || lyricsOf(line).trim() !== '';
+}
+
+/** Lines to draw. In lyrics mode, chord-only lines and tabs are dropped. */
+function visibleSection(section: SongSection, showChords: boolean): SongSection | null {
+  if (showChords) return section;
+  if (isPreformatted(section)) return null;
+  const lines = section.lines.filter(hasWords);
+  return lines.some((l) => l.type !== 'empty') ? { ...section, lines } : null;
+}
+
+function Section(props: { section: SongSection; opts: SongViewOptions; lastChorus?: SongSection }) {
+  const { opts, lastChorus } = props;
+  const section = visibleSection(props.section, opts.showChords ?? true);
+  if (!section) return null;
   const label = section.label ?? defaultLabel(section);
   return (
     <section className={`cp-section cp-section--${section.kind}`}>

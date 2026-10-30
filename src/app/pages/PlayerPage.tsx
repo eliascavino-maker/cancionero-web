@@ -65,6 +65,7 @@ export function PlayerPage({ setlistId, index }: { setlistId: number; index: num
         content={entry.song.content}
         transpose={entry.item.transpose}
         onTransposeChange={(n) => lib.setItemTranspose(entry.item.id, n)}
+        songKey={String(entry.song.id)}
       />
     </div>
   );

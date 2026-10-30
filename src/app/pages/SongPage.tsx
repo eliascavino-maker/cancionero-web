@@ -46,7 +46,12 @@ export function SongPage({ id }: { id: number }) {
           </button>
         </div>
       </header>
-      <SongPanel content={song.content} transpose={transpose} onTransposeChange={setTranspose} />
+      <SongPanel
+        content={song.content}
+        transpose={transpose}
+        onTransposeChange={setTranspose}
+        songKey={String(song.id)}
+      />
     </div>
   );
 }
