@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../../components/Icon';
 import { transposeKey } from '../../music/transposer';
+import type { SetlistEntry } from '../../data/library';
 import { navigate, useLibrary, useLive } from '../hooks';
 
 /** Songs of one setlist: reorder, add, remove, play. */
@@ -73,54 +74,7 @@ export function SetlistPage({ id }: { id: number }) {
       {entries.length === 0 ? (
         <p className="empty">Agregá canciones con "Canciones".</p>
       ) : (
-        <ol className="list">
-          {entries.map(({ item, song }, i) => {
-            const key = song.songKey && transposeKey(song.songKey, item.transpose);
-            return (
-              <li key={item.id} className="card">
-                <a className="card__link" href={`#/play/${id}/${i}`}>
-                  <span className="num-badge">{i + 1}</span>
-                  <span className="card__main">
-                    <span className="card__title">{song.title}</span>
-                    <span className="card__sub">
-                      {[song.artist, item.transpose ? `${item.transpose > 0 ? '+' : ''}${item.transpose} semitonos` : null]
-                        .filter(Boolean)
-                        .join(' · ') || ' '}
-                    </span>
-                  </span>
-                  {key && <span className="key-badge">{key}</span>}
-                </a>
-                <span className="card__tools">
-                  <span className="reorder">
-                    <button
-                      className="icon-btn"
-                      aria-label={`Subir ${song.title}`}
-                      disabled={i === 0}
-                      onClick={() => lib.moveSetlistItem(id, i, i - 1)}
-                    >
-                      <Icon name="up" size={16} />
-                    </button>
-                    <button
-                      className="icon-btn"
-                      aria-label={`Bajar ${song.title}`}
-                      disabled={i === entries.length - 1}
-                      onClick={() => lib.moveSetlistItem(id, i, i + 1)}
-                    >
-                      <Icon name="down" size={16} />
-                    </button>
-                  </span>
-                  <button
-                    className="icon-btn icon-btn--small"
-                    aria-label={`Quitar ${song.title}`}
-                    onClick={() => lib.removeSetlistItem(item.id)}
-                  >
-                    <Icon name="close" size={18} />
-                  </button>
-                </span>
-              </li>
-            );
-          })}
-        </ol>
+        <SortableList setlistId={id} entries={entries} />
       )}
 
       <dialog ref={dialog} className="dialog" onClick={(e) => e.target === dialog.current && dialog.current.close()}>
@@ -178,5 +132,151 @@ function SongPicker({ onPick, onClose }: { onPick: (songId: number) => Promise<u
         ))}
       </ul>
     </div>
+  );
+}
+
+interface Drag {
+  from: number;
+  to: number;
+  /** Pointer position, in page coordinates. */
+  y: number;
+}
+
+/** Row sizes measured when the drag starts (page coordinates). */
+interface Geometry {
+  tops: number[];
+  heights: number[];
+  gap: number;
+  /** Where in the row the finger grabbed it. */
+  grab: number;
+}
+
+function moved<T>(list: T[], from: number, to: number): T[] {
+  const out = [...list];
+  const [x] = out.splice(from, 1);
+  out.splice(to, 0, x);
+  return out;
+}
+
+/** The songs of a setlist. Drag the ⠿ handle (finger or mouse) to change the order. */
+function SortableList({ setlistId, entries }: { setlistId: number; entries: SetlistEntry[] }) {
+  const lib = useLibrary();
+  const list = useRef<HTMLOListElement>(null);
+  const geo = useRef<Geometry | null>(null);
+  const [drag, setDrag] = useState<Drag | null>(null);
+  // Order shown until the saved one comes back, so the list doesn't jump.
+  const [pending, setPending] = useState<SetlistEntry[] | null>(null);
+  useEffect(() => setPending(null), [entries]);
+
+  const base = pending ?? entries;
+
+  const move = (from: number, to: number) => {
+    if (to < 0 || to >= base.length || to === from) return;
+    setPending(moved(base, from, to));
+    lib.moveSetlistItem(setlistId, from, to);
+  };
+
+  const start = (e: React.PointerEvent, i: number) => {
+    if (e.button > 0 || !list.current) return;
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    const rows = Array.from(list.current.children) as HTMLElement[];
+    const rects = rows.map((r) => r.getBoundingClientRect());
+    const y = e.clientY + window.scrollY;
+    geo.current = {
+      tops: rects.map((r) => r.top + window.scrollY),
+      heights: rects.map((r) => r.height),
+      gap: rects.length > 1 ? rects[1].top - rects[0].bottom : 8,
+      grab: y - (rects[i].top + window.scrollY),
+    };
+    setDrag({ from: i, to: i, y });
+  };
+
+  const track = (e: React.PointerEvent) => {
+    const g = geo.current;
+    if (!drag || !g) return;
+    // Near the edges of the screen: scroll so long setlists can be reordered.
+    if (e.clientY < 70) window.scrollBy(0, -12);
+    else if (e.clientY > window.innerHeight - 70) window.scrollBy(0, 12);
+    const y = e.clientY + window.scrollY;
+    const center = y - g.grab + g.heights[drag.from] / 2;
+    let to = 0;
+    g.tops.forEach((top, k) => {
+      if (k !== drag.from && center > top + g.heights[k] / 2) to++;
+    });
+    setDrag({ ...drag, to, y });
+  };
+
+  const end = () => {
+    if (drag) move(drag.from, drag.to);
+    setDrag(null);
+    geo.current = null;
+  };
+
+  /** While dragging the rows stay in place in the page; they only slide (moving them would drop the drag). */
+  const place = (k: number): { n: number; shift?: number } => {
+    const g = geo.current;
+    if (!drag || !g) return { n: k };
+    const { from, to } = drag;
+    if (k === from) return { n: to, shift: drag.y - g.grab - g.tops[from] };
+    const room = g.heights[from] + g.gap;
+    if (from < to && k > from && k <= to) return { n: k - 1, shift: -room };
+    if (to < from && k >= to && k < from) return { n: k + 1, shift: room };
+    return { n: k };
+  };
+
+  return (
+    <ol className={`list${drag ? ' list--dragging' : ''}`} ref={list}>
+      {base.map(({ item, song }, i) => {
+        const key = song.songKey && transposeKey(song.songKey, item.transpose);
+        const dragged = drag?.from === i;
+        const { n, shift } = place(i);
+        return (
+          <li
+            key={item.id}
+            className={`card${dragged ? ' card--dragged' : ''}`}
+            style={shift ? { transform: `translateY(${shift}px)` } : undefined}
+          >
+            <a className="card__link" href={`#/play/${setlistId}/${i}`}>
+              <span className="num-badge">{n + 1}</span>
+              <span className="card__main">
+                <span className="card__title">{song.title}</span>
+                <span className="card__sub">
+                  {[song.artist, item.transpose ? `${item.transpose > 0 ? '+' : ''}${item.transpose} semitonos` : null]
+                    .filter(Boolean)
+                    .join(' · ') || ' '}
+                </span>
+              </span>
+              {key && <span className="key-badge">{key}</span>}
+            </a>
+            <span className="card__tools">
+              <button
+                className="icon-btn icon-btn--small"
+                aria-label={`Quitar ${song.title}`}
+                onClick={() => lib.removeSetlistItem(item.id)}
+              >
+                <Icon name="close" size={18} />
+              </button>
+              <button
+                className="icon-btn grip"
+                aria-label={`Mover ${song.title} (arrastrá, o usá las flechas)`}
+                onPointerDown={(e) => start(e, i)}
+                onPointerMove={track}
+                onPointerUp={end}
+                onPointerCancel={end}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') move(i, i - 1);
+                  else if (e.key === 'ArrowDown') move(i, i + 1);
+                  else return;
+                  e.preventDefault();
+                }}
+              >
+                <Icon name="grip" size={22} />
+              </button>
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
