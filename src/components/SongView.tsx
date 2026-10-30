@@ -100,14 +100,17 @@ export function ChordLyricLine({
   chordEdit?: ChordEdit;
   noteEdit?: NoteEdit;
 }) {
-  const hasNotes = line.segments.some(isAnnotation);
+  const chordsOnly = lyricsOf(line).trim() === '';
+  // Notes on the lyrics ("Queda solo Leo") belong to the Letra view; notes on a
+  // chord-only line ("Sin piano", "x2") belong to the chords.
+  const showNotes = showChords ? chordsOnly : true;
+  const hasNotes = showNotes && line.segments.some(isAnnotation);
   const drawChords = showChords && line.segments.some((s) => s.chord !== undefined && !isAnnotation(s));
   const source = line.source;
   const tappable = noteEdit && source !== undefined;
   if (!drawChords && !hasNotes && !tappable) {
     return <div className="cp-line">{lyricsOf(line) || ZWSP}</div>;
   }
-  const chordsOnly = lyricsOf(line).trim() === '';
   // Chords and notes are counted in the same order as in the source line.
   let chordIndex = 0;
 
@@ -118,7 +121,7 @@ export function ChordLyricLine({
           const ref = atom.chord !== undefined && source !== undefined ? { line: source, index: chordIndex++ } : undefined;
           return (
             <span className="cp-atom" key={a}>
-              {atom.annotation && <Note text={atom.chord!} at={ref} chordEdit={chordEdit} noteEdit={noteEdit} />}
+              {atom.annotation && hasNotes && <Note text={atom.chord!} at={ref} chordEdit={chordEdit} noteEdit={noteEdit} />}
               {drawChords &&
                 (atom.chord === undefined || atom.annotation ? (
                   <span className="cp-chord cp-chord--empty">{ZWSP}</span>
@@ -335,7 +338,8 @@ function bracketsFor(section: SongSection, hide: boolean | undefined): { bracket
   const backing = (section.parts?.backing ?? []).filter((n) => !lead.includes(n));
   const keys: string[] = [];
   const rows = section.lines.map((l) => {
-    if (l.type !== 'lyric') return [];
+    // Chord-only lines (a progression on top of a part) are not sung.
+    if (l.type !== 'lyric' || !lyricsOf(l).trim()) return [];
     const own = l.singers ?? lead;
     const row = [...own.map((n) => `v:${n}`), ...backing.filter((n) => !own.includes(n)).map((n) => `c:${n}`)];
     row.forEach((k) => keys.includes(k) || keys.push(k));
@@ -411,7 +415,8 @@ function VoicedLines({
   opts: SongViewOptions;
   lastChorus?: LastChorus;
 }) {
-  const { brackets, slots } = bracketsFor(section, opts.hideParts);
+  // Who sings is part of the Letra view only.
+  const { brackets, slots } = bracketsFor(section, opts.hideParts || (opts.showChords ?? true));
   const lyricSources = original.lines.flatMap((l) => (l.type === 'lyric' && l.source !== undefined ? [l.source] : []));
   const sel = opts.voiceEdit?.selected;
 
@@ -469,7 +474,8 @@ function Section(props: { section: SongSection; index: number; opts: SongViewOpt
   if (!section) return null;
   const label = section.label ?? defaultLabel(section);
   const parts = !opts.hideParts && section.parts && !isEmpty(section.parts) ? section.parts : undefined;
-  const showPlay = parts && parts.play.length > 0;
+  // Who plays is part of the Acordes view only.
+  const showPlay = parts && parts.play.length > 0 && (opts.showChords ?? true);
   const editable = opts.onEditParts && !isPreformatted(section) && section.lines.some((l) => l.type === 'lyric');
   return (
     <section className={`cp-section cp-section--${section.kind}`}>

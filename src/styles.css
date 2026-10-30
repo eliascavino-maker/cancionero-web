@@ -972,3 +972,49 @@ button.card:hover {
   border-color: var(--m);
   color: #111;
 }
+
+/* ---------------------------------------------------------- import chords */
+
+.import__list {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+.import__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.import__row label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.import__row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+.import__title {
+  font-weight: 650;
+}
+.import__status {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.import__status--done {
+  color: var(--accent);
+}
+.import__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

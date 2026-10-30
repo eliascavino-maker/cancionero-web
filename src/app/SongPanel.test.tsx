@@ -174,16 +174,31 @@ e|--3--|
     expect(saved.at(-1)).toBe(
       '{start_of_verse: Estrofa 1}\n{x_band: voz=Sergio; coros=Leo; tocan=Elias}\n[G]Hola\n{end_of_verse}\n\n{start_of_chorus}\n[C]Coro\n{end_of_chorus}\n\n{chorus}',
     );
-    // Voices are drawn as colored brackets next to the lines.
-    expect(screen.getByRole('img', { name: 'Canta: Sergio' })).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'Coro: Leo' })).toBeInTheDocument();
+    // Acordes view: who plays, no voice brackets.
     expect(screen.getByRole('listitem', { name: 'Tocan: Elias' })).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'Canta: Sergio' })).toBeNull();
 
     // "Todos" in the chorus; the repeated chorus shows the same parts.
     fireEvent.click(screen.getAllByRole('button', { name: 'Asignar partes: Estribillo' })[0]);
     fireEvent.click(screen.getByRole('button', { name: 'Todos' }));
     expect(saved.at(-1)).toContain('{start_of_chorus}\n{x_band: tocan=Sergio, Leo, Leandro, Elias}\n[C]Coro');
     expect(screen.getAllByRole('listitem', { name: 'Tocan: todos' })).toHaveLength(2);
+
+    // Letra view: voices as colored brackets, no "Tocan".
+    fireEvent.click(within(screen.getByRole('toolbar', { name: 'Partes de la banda' })).getByRole('button', { name: 'Listo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Letra' }));
+    expect(screen.getByRole('img', { name: 'Canta: Sergio' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Coro: Leo' })).toBeInTheDocument();
+    expect(screen.queryByRole('listitem', { name: 'Tocan: Elias' })).toBeNull();
+  });
+
+  it('notes on the lyrics show in Letra only; notes on chord lines in Acordes only', () => {
+    renderPanel('[G]Hola [*Silencio largo]mundo\n[*Sin piano][C] [D]', '4');
+    expect(screen.queryByText('Silencio largo')).toBeNull();
+    expect(screen.getByText('Sin piano')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Letra' }));
+    expect(screen.getByText('Silencio largo')).toBeInTheDocument();
+    expect(screen.queryByText('Sin piano')).toBeNull();
   });
 
   it('play toggles and touching the sheet pauses', () => {

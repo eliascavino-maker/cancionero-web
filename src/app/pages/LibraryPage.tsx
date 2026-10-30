@@ -1,5 +1,9 @@
 import { useRef, useState } from 'react';
 import { Icon } from '../../components/Icon';
+import { type ChartSong, parseChart } from '../../importer/chart';
+import { readDocument } from '../../importer/docx';
+import { BandSongsDialog } from '../BandSongsDialog';
+import { ImportChartDialog } from '../ImportChartDialog';
 import { navigate, useLibrary, useLive, usePrefs } from '../hooks';
 
 export function LibraryPage() {
@@ -8,6 +12,17 @@ export function LibraryPage() {
   const [query, setQuery] = useState('');
   const songs = useLive((l) => l.listSongs(query), [query]);
   const fileInput = useRef<HTMLInputElement>(null);
+  const docInput = useRef<HTMLInputElement>(null);
+  const [chart, setChart] = useState<ChartSong[] | null>(null);
+  const [bandOpen, setBandOpen] = useState(false);
+
+  const importDocument = async (file: File) => {
+    try {
+      setChart(parseChart(await readDocument(file)));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'No se pudo leer el documento.');
+    }
+  };
   const menu = useRef<HTMLDetailsElement>(null);
   const closeMenu = () => menu.current?.removeAttribute('open');
 
@@ -41,6 +56,22 @@ export function LibraryPage() {
               <Icon name="more" />
             </summary>
             <div className="menu__panel">
+              <button
+                onClick={() => {
+                  closeMenu();
+                  setBandOpen(true);
+                }}
+              >
+                <Icon name="band" /> Cargar canciones de la banda
+              </button>
+              <button
+                onClick={() => {
+                  closeMenu();
+                  docInput.current?.click();
+                }}
+              >
+                <Icon name="file" /> Importar acordes (.docx / .txt)
+              </button>
               <button onClick={exportBackup}>
                 <Icon name="download" /> Exportar respaldo
               </button>
@@ -73,6 +104,20 @@ export function LibraryPage() {
               e.target.value = '';
             }}
           />
+          <input
+            ref={docInput}
+            type="file"
+            accept=".docx,.txt,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+            hidden
+            aria-label="Documento de acordes"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) importDocument(f);
+              e.target.value = '';
+            }}
+          />
+          {chart && <ImportChartDialog songs={chart} onClose={() => setChart(null)} />}
+          {bandOpen && <BandSongsDialog onClose={() => setBandOpen(false)} />}
           <button className="btn btn--primary" onClick={() => navigate('/edit/new')}>
             <Icon name="plus" size={20} /> Nueva
           </button>

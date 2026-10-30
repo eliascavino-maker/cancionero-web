@@ -7,21 +7,28 @@ export interface Member {
   color: string;
 }
 
+// Same colors as the band's highlighter legend: Todos violeta, Angel amarillo,
+// Sergio celeste, Leo verde.
 export const BAND: Member[] = [
-  { name: 'Sergio', sings: true, instrument: 'Guitarra', color: '#4f9dff' },
-  { name: 'Leo', sings: true, instrument: 'Guitarra', color: '#2fbf71' },
-  { name: 'Angel', sings: true, color: '#ff6fae' },
-  { name: 'Leandro', sings: true, instrument: 'Bajo', color: '#a77bff' },
-  { name: 'Elias', sings: false, instrument: 'Piano', color: '#ff8a3d' },
+  { name: 'Sergio', sings: true, instrument: 'Guitarra', color: '#38bdf8' },
+  { name: 'Leo', sings: true, instrument: 'Guitarra', color: '#4ade80' },
+  { name: 'Angel', sings: true, color: '#facc15' },
+  { name: 'Leandro', sings: true, instrument: 'Bajo', color: '#f472b6' },
+  { name: 'Elias', sings: false, instrument: 'Piano', color: '#fb923c' },
 ];
 
+/** Everybody who sings, as one voice: `{x_voz: Todos}`. */
+export const ALL = 'Todos';
+const ALL_COLOR = '#c084fc';
+
 export function colorOf(name: string): string | undefined {
+  if (name.toLowerCase() === ALL.toLowerCase()) return ALL_COLOR;
   return BAND.find((m) => m.name.toLowerCase() === name.toLowerCase())?.color;
 }
 
 /** Splits text so member names can be colored: "Queda solo Leo" → ["Queda solo ", {Leo}]. */
 export function splitByMembers(text: string): (string | { name: string; color: string })[] {
-  const names = BAND.map((m) => m.name).sort((a, b) => b.length - a.length);
+  const names = [...BAND.map((m) => m.name), ALL].sort((a, b) => b.length - a.length);
   const re = new RegExp(`\\b(${names.join('|')})\\b`, 'gi');
   const out: (string | { name: string; color: string })[] = [];
   let last = 0;

@@ -20,7 +20,7 @@ import {
 import { type Prefs, usePrefs } from './hooks';
 import { PartsDialog } from './PartsDialog';
 import type { VoiceSelection } from '../components/SongView';
-import { BAND, SINGERS } from '../data/band';
+import { ALL, SINGERS, colorOf } from '../data/band';
 
 const SECTION_NAMES: Partial<Record<SongSection['kind'], string>> = {
   verse: 'Estrofa',
@@ -92,6 +92,11 @@ export function SongPanel({
     setSelected(null);
     setPartsIndex(null);
     setVoiceSel(null);
+  };
+  /** Voces and Notas work on the Letra view, Mover acordes on Acordes: switch to it. */
+  const openEditor = (m: 'move' | 'voices' | 'notes') => {
+    set({ showChords: m === 'move' });
+    setMode(m);
   };
   const startTempo = () => {
     taps.current = [];
@@ -180,7 +185,7 @@ export function SongPanel({
         <SongView
           song={shown}
           fontSize={prefs.fontSize}
-          showChords={prefs.showChords || moving}
+          showChords={moving || (prefs.showChords && mode !== 'voices' && mode !== 'notes')}
           chordEdit={moving ? { selected, onSelect: setSelected } : undefined}
           noteEdit={
             mode === 'notes'
@@ -233,13 +238,13 @@ export function SongPanel({
       {mode === 'tools' ? (
         <div className="toolbar" role="toolbar" aria-label="Editar canción">
           <div className="toolbar__row toolbar__row--wrap">
-            <button className="btn" onClick={() => setMode('move')}>
+            <button className="btn" onClick={() => openEditor('move')}>
               <Icon name="move" size={18} /> Mover acordes
             </button>
-            <button className="btn" onClick={() => setMode('voices')}>
+            <button className="btn" onClick={() => openEditor('voices')}>
               Voces
             </button>
-            <button className="btn" onClick={() => setMode('notes')}>
+            <button className="btn" onClick={() => openEditor('notes')}>
               Notas
             </button>
             <button className="btn" onClick={() => setMode('parts')}>
@@ -260,13 +265,22 @@ export function SongPanel({
             {voiceSection && voiceSel ? (
               <>
                 <div className="toolbar__group voice-pick" role="group" aria-label="Quién canta">
-                  {SINGERS.map((name) => (
+                  {[ALL, ...SINGERS].map((name) => (
                     <button
                       key={name}
                       className="voice-pick__btn"
-                      style={{ '--m': BAND.find((m) => m.name === name)!.color } as CSSProperties}
+                      style={{ '--m': colorOf(name) } as CSSProperties}
                       aria-pressed={selectedVoices.includes(name)}
-                      onClick={() => setVoices(selectedVoices.includes(name) ? selectedVoices.filter((n) => n !== name) : [...selectedVoices, name])}
+                      onClick={() =>
+                        // "Todos" goes alone; picking a person takes "Todos" off.
+                        setVoices(
+                          selectedVoices.includes(name)
+                            ? selectedVoices.filter((n) => n !== name)
+                            : name === ALL
+                              ? [ALL]
+                              : [...selectedVoices.filter((n) => n !== ALL), name],
+                        )
+                      }
                     >
                       {name}
                     </button>
