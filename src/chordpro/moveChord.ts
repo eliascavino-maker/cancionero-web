@@ -117,3 +117,35 @@ export function moveChord(
   }
   return { content: lines.join(newline), ref: { line: target, index: chordIndexAt(lines[target], pos) } };
 }
+
+// ------------------------------------------------------------- notes
+
+/** Note text safe inside `[*...]`. */
+function cleanNote(text: string): string {
+  return text.replace(/[[\]\r\n]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/** Adds a note like `[*Silencio largo]` above the lyric at column `col` of a line. */
+export function addAnnotation(content: string, line: number, col: number, text: string): string {
+  const note = cleanNote(text);
+  const newline = content.includes('\r\n') ? '\r\n' : '\n';
+  const lines = content.split(/\r\n|\r|\n/);
+  if (!note || lines[line] === undefined) return content;
+  const raw = lines[line].trimEnd();
+  const pos = insertAt(raw, col, true);
+  lines[line] = raw.slice(0, pos) + `[*${note}]` + raw.slice(pos);
+  return lines.join(newline);
+}
+
+/** Changes the text of a note (or chord) at `ref`; empty text removes it. */
+export function setAnnotation(content: string, ref: ChordRef, text: string): string {
+  const newline = content.includes('\r\n') ? '\r\n' : '\n';
+  const lines = content.split(/\r\n|\r|\n/);
+  const raw = lines[ref.line];
+  if (raw === undefined) return content;
+  const token = scan(raw).chords[ref.index];
+  if (!token) return content;
+  const note = cleanNote(text);
+  lines[ref.line] = raw.slice(0, token.start) + (note ? `[*${note}]` : '') + raw.slice(token.end);
+  return lines.join(newline);
+}

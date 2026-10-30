@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { SPEED_LEVELS, nearestLevel, parseDuration } from './autoscroll';
 import { SongPanel } from './SongPanel';
 import { resetPrefsForTests } from './hooks';
@@ -63,6 +63,7 @@ e|--3--|
     render(
       <SongPanel content={'[G]Hola [D]mundo'} transpose={2} onTransposeChange={() => {}} onContentChange={(c) => saved.push(c)} />,
     );
+    fireEvent.click(screen.getByRole('button', { name: 'Editar canción' }));
     fireEvent.click(screen.getByRole('button', { name: 'Mover acordes' }));
     expect(screen.getByText('Tocá un acorde para moverlo')).toBeInTheDocument();
     // Shown transposed (+2), saved in the original key.
@@ -98,9 +99,91 @@ e|--3--|
     expect(screen.getByRole('button', { name: 'Desplazar automáticamente' })).toBeInTheDocument();
   });
 
-  it('no Mover acordes without a place to save', () => {
+  it('Notas: tap a word to add a note, tap the note to change or delete it', () => {
+    const saved: string[] = [];
+    const prompt = vi.spyOn(window, 'prompt');
+    render(<SongPanel content={'[G]Hola mundo'} transpose={0} onTransposeChange={() => {}} onContentChange={(c) => saved.push(c)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Editar canción' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Notas' }));
+
+    prompt.mockReturnValueOnce('Queda solo Leo');
+    fireEvent.click(screen.getByRole('button', { name: 'Nota en «mundo»' }));
+    expect(saved.at(-1)).toBe('[G]Hola [*Queda solo Leo]mundo');
+    // The member name inside the note gets their color.
+    expect(screen.getByText('Leo', { selector: '.cp-note__member' })).toBeInTheDocument();
+
+    prompt.mockReturnValueOnce('Silencio largo');
+    fireEvent.click(screen.getByRole('button', { name: 'Nota: Queda solo Leo' }));
+    expect(saved.at(-1)).toBe('[G]Hola [*Silencio largo]mundo');
+
+    prompt.mockReturnValueOnce('');
+    fireEvent.click(screen.getByRole('button', { name: 'Nota: Silencio largo' }));
+    expect(saved.at(-1)).toBe('[G]Hola mundo');
+    prompt.mockRestore();
+  });
+
+  it('notes also show in Letra mode', () => {
+    renderPanel('Hola [*Silencio largo]mundo', '3');
+    fireEvent.click(screen.getByRole('button', { name: 'Letra' }));
+    expect(screen.getByText('Silencio largo')).toBeInTheDocument();
+  });
+
+  it('Voces: pick lines and who sings them', () => {
+    const saved: string[] = [];
+    const src = '{start_of_verse: Estrofa 1}\nUno\nDos\nTres\n{end_of_verse}';
+    render(<SongPanel content={src} transpose={0} onTransposeChange={() => {}} onContentChange={(c) => saved.push(c)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Editar canción' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Voces' }));
+    expect(screen.getByText('Tocá la primera y la última línea que canta alguien')).toBeInTheDocument();
+
+    // Lines 2-3 sung by Leo.
+    fireEvent.click(screen.getByRole('button', { name: 'Línea: Dos' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Línea: Tres' }));
+    expect(screen.getByRole('button', { name: 'Línea: Dos' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(within(screen.getByRole('group', { name: 'Quién canta' })).getByRole('button', { name: 'Leo' }));
+    expect(saved.at(-1)).toBe('{start_of_verse: Estrofa 1}\nUno\n{x_voz: Leo}\nDos\nTres\n{end_of_verse}');
+    expect(screen.getByRole('img', { name: 'Canta: Leo' })).toBeInTheDocument();
+
+    // Line 1 by Angel: a new selection.
+    fireEvent.click(screen.getByRole('button', { name: 'Línea: Uno' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Línea: Uno' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Quién canta' })).getByRole('button', { name: 'Angel' }));
+    expect(saved.at(-1)).toBe('{start_of_verse: Estrofa 1}\n{x_voz: Angel}\nUno\n{x_voz: Leo}\nDos\nTres\n{end_of_verse}');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar' }));
+    expect(saved.at(-1)).toBe('{start_of_verse: Estrofa 1}\nUno\n{x_voz: Leo}\nDos\nTres\n{end_of_verse}');
+  });
+
+  it('no editing without a place to save', () => {
     renderPanel();
-    expect(screen.queryByRole('button', { name: 'Mover acordes' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Editar canción' })).toBeNull();
+  });
+
+  it('Partes: assign who sings and plays a section', () => {
+    const saved: string[] = [];
+    const src = '{start_of_verse: Estrofa 1}\n[G]Hola\n{end_of_verse}\n\n{start_of_chorus}\n[C]Coro\n{end_of_chorus}\n\n{chorus}';
+    render(<SongPanel content={src} transpose={0} onTransposeChange={() => {}} onContentChange={(c) => saved.push(c)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Editar canción' }));
+    fireEvent.click(screen.getByRole('button', { name: /Partes/ }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Asignar partes: Estrofa 1' }));
+    const sergio = screen.getByRole('group', { name: 'Voz de Sergio' });
+    fireEvent.click(within(sergio).getByRole('button', { name: 'Voz' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Voz de Leo' })).getByRole('button', { name: 'Coro' }));
+    fireEvent.click(screen.getByRole('button', { name: /Elias/ }));
+    expect(saved.at(-1)).toBe(
+      '{start_of_verse: Estrofa 1}\n{x_band: voz=Sergio; coros=Leo; tocan=Elias}\n[G]Hola\n{end_of_verse}\n\n{start_of_chorus}\n[C]Coro\n{end_of_chorus}\n\n{chorus}',
+    );
+    // Voices are drawn as colored brackets next to the lines.
+    expect(screen.getByRole('img', { name: 'Canta: Sergio' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Coro: Leo' })).toBeInTheDocument();
+    expect(screen.getByRole('listitem', { name: 'Tocan: Elias' })).toBeInTheDocument();
+
+    // "Todos" in the chorus; the repeated chorus shows the same parts.
+    fireEvent.click(screen.getAllByRole('button', { name: 'Asignar partes: Estribillo' })[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Todos' }));
+    expect(saved.at(-1)).toContain('{start_of_chorus}\n{x_band: tocan=Sergio, Leo, Leandro, Elias}\n[C]Coro');
+    expect(screen.getAllByRole('listitem', { name: 'Tocan: todos' })).toHaveLength(2);
   });
 
   it('play toggles and touching the sheet pauses', () => {

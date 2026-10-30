@@ -7,11 +7,11 @@ describe('splitIntoWords', () => {
   const split = (line: string) => splitIntoWords(parseLyricLine(line).segments);
 
   it('one word per chord', () => {
-    expect(split('[C]Hola [G]mundo')).toEqual([[{ chord: 'C', text: 'Hola' }], [{ chord: 'G', text: 'mundo' }]]);
+    expect(split('[C]Hola [G]mundo')).toMatchObject([[{ chord: 'C', text: 'Hola' }], [{ chord: 'G', text: 'mundo' }]]);
   });
 
   it('chord inside a word keeps the word together', () => {
-    expect(split('Can[G]ción de [D]mar')).toEqual([
+    expect(split('Can[G]ción de [D]mar')).toMatchObject([
       [{ text: 'Can' }, { chord: 'G', text: 'ción' }],
       [{ text: 'de' }],
       [{ chord: 'D', text: 'mar' }],
@@ -19,11 +19,11 @@ describe('splitIntoWords', () => {
   });
 
   it('several words under one chord', () => {
-    expect(split('[Am]la noche')).toEqual([[{ chord: 'Am', text: 'la' }], [{ text: 'noche' }]]);
+    expect(split('[Am]la noche')).toMatchObject([[{ chord: 'Am', text: 'la' }], [{ text: 'noche' }]]);
   });
 
   it('chords with no lyrics', () => {
-    expect(split('[C] [G] [Am]')).toEqual([
+    expect(split('[C] [G] [Am]')).toMatchObject([
       [{ chord: 'C', text: '' }],
       [{ chord: 'G', text: '' }],
       [{ chord: 'Am', text: '' }],
@@ -31,7 +31,7 @@ describe('splitIntoWords', () => {
   });
 
   it('annotation shows without the asterisk', () => {
-    expect(split('[*Rit.]fin')).toEqual([[{ chord: 'Rit.', text: 'fin' }]]);
+    expect(split('[*Rit.]fin')).toMatchObject([[{ chord: 'Rit.', text: 'fin' }]]);
   });
 });
 

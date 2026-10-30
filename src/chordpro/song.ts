@@ -28,7 +28,8 @@ export type CommentStyle = 'normal' | 'italic' | 'boxed';
 
 export type SongLine =
   /** `source`: 0-based line number in the ChordPro text (set by `parseChordPro`). */
-  | { type: 'lyric'; segments: ChordSegment[]; source?: number }
+  /** `singers`: lead voices set for this line with `{x_voz}` (else the section's). */
+  | { type: 'lyric'; segments: ChordSegment[]; source?: number; singers?: string[] }
   | { type: 'comment'; text: string; style: CommentStyle }
   /** Raw line inside a tab or grid section. */
   | { type: 'tab'; text: string }
@@ -40,9 +41,26 @@ export type LyricLine = Extract<SongLine, { type: 'lyric' }>;
 
 export type SectionKind = 'none' | 'verse' | 'chorus' | 'bridge' | 'tab' | 'grid' | 'custom';
 
+/** Who does what in a section, from `{x_band: voz=...; coros=...; tocan=...}`. */
+export interface SectionParts {
+  /** Lead vocals. */
+  lead: string[];
+  /** Backing vocals. */
+  backing: string[];
+  /** Who plays their instrument. */
+  play: string[];
+}
+
 export interface SongSection {
   kind: SectionKind;
   lines: SongLine[];
+  parts?: SectionParts;
+  /** 0-based source line of `{start_of_...}`, or of the first line for sections without one. */
+  startLine?: number;
+  /** 0-based source line of the `{x_band}` directive. */
+  partsLine?: number;
+  /** 0-based source line of `{end_of_...}`, or of the last line of the section. */
+  endLine?: number;
   /** Label given in the file, e.g. `{start_of_verse: Verso 1}`. */
   label?: string;
   /** Raw name of a custom section, e.g. `intro` from `{start_of_intro}`. */

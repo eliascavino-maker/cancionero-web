@@ -175,3 +175,167 @@
   color: inherit;
   cursor: pointer;
 }
+
+/* Band parts: who sings and plays each section. */
+.cp-section__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.cp-parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  list-style: none;
+  margin: -0.15em 0 0.45em;
+  padding: 0;
+  font-size: max(12px, 0.55em);
+  font-weight: 600;
+  color: var(--muted);
+}
+.cp-parts-btn {
+  margin-bottom: 0.35em;
+  padding: 2px 10px;
+  border: 1px dashed var(--accent);
+  border-radius: 999px;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: max(12px, 0.5em);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Member names in their color (parts list, dialog, notes). */
+.member {
+  display: inline-block;
+  padding: 0.05em 0.6em;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--m) 18%, transparent);
+  color: color-mix(in srgb, var(--m) 75%, var(--text));
+  font-weight: 700;
+}
+.cp-parts li {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.cp-parts__role {
+  color: var(--faint);
+  margin-right: 2px;
+}
+.cp-parts__all {
+  color: var(--text);
+}
+
+/* Notes above the lyrics: [*Silencio largo]. They float, so they never push words apart. */
+.cp-line--noted {
+  padding-top: 1.15em;
+  row-gap: 1.25em;
+}
+.cp-atom {
+  position: relative;
+}
+.cp-note {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  z-index: 1;
+  white-space: nowrap;
+  font-family: var(--font-ui);
+  font-size: max(12px, 0.58em);
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.cp-note__member {
+  color: color-mix(in srgb, var(--m) 80%, var(--text));
+  font-style: normal;
+  font-weight: 800;
+}
+.cp-note--editable {
+  padding: 0 0.4em;
+  border: 1px dashed var(--faint);
+  border-radius: 6px;
+  background: var(--bg);
+  cursor: pointer;
+}
+.cp-note--selected {
+  border-style: solid;
+  border-color: var(--accent);
+}
+.cp-word--tappable {
+  border-radius: 6px;
+  cursor: pointer;
+  outline: 1px dashed color-mix(in srgb, var(--muted) 45%, transparent);
+  outline-offset: 1px;
+}
+.cp-word--tappable:hover,
+.cp-word--tappable:focus-visible {
+  background: var(--surface-2);
+}
+
+/* Who sings: a colored bracket "[" to the left of the lines, with the name. */
+.cp-song {
+  --bracket-w: 1.05em;
+}
+.cp-voiced {
+  display: grid;
+  column-gap: 0;
+}
+.cp-voiced__line {
+  min-width: 0;
+  padding-left: 0.2em;
+}
+.cp-bracket {
+  position: relative;
+  margin: 0.15em 0.12em 0.25em 0;
+  border: 3px solid var(--m);
+  border-right: 0;
+  border-radius: 7px 0 0 7px;
+  min-height: 1.1em;
+}
+.cp-bracket--backing {
+  border-style: dashed;
+  border-width: 2px;
+  border-right: 0;
+  opacity: 0.85;
+}
+.cp-bracket__name {
+  position: absolute;
+  top: 0.15em;
+  left: 0.08em;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--font-ui);
+  font-size: max(10px, 0.42em);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--m) 80%, var(--text));
+}
+.cp-bracket--backing .cp-bracket__name {
+  font-style: italic;
+  font-weight: 700;
+}
+
+/* "Voces" mode: lines are tappable to pick a range. */
+.cp-pick {
+  margin: 0 -0.3em;
+  padding: 0 0.3em;
+  border-radius: 8px;
+  cursor: pointer;
+  outline: 1px dashed color-mix(in srgb, var(--muted) 40%, transparent);
+  outline-offset: -1px;
+}
+.cp-pick + .cp-pick,
+.cp-voiced__line + .cp-voiced__line .cp-pick {
+  margin-top: 2px;
+}
+.cp-pick--selected {
+  outline: 2px solid var(--accent);
+  background: var(--accent-soft);
+}

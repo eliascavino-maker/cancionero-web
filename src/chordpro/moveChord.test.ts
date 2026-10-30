@@ -1,4 +1,4 @@
-import { moveChord } from './moveChord';
+import { addAnnotation, moveChord, setAnnotation } from './moveChord';
 
 describe('moveChord', () => {
   it('moves a chord one letter later and earlier', () => {
@@ -58,5 +58,17 @@ describe('moveChord', () => {
 
   it('no line above the first one', () => {
     expect(moveChord('{title: X}\n[C]la', { line: 1, index: 0 }, 'up')).toBeNull();
+  });
+});
+
+describe('notes', () => {
+  it('adds a note before the chords of that word', () => {
+    expect(addAnnotation('Hola [G]mundo', 0, 5, 'Solo Leo')).toBe('Hola [*Solo Leo][G]mundo');
+    expect(addAnnotation('a\nHola', 1, 0, ' Silencio [largo] ')).toBe('a\n[*Silencio largo]Hola');
+  });
+
+  it('edits and removes a note', () => {
+    expect(setAnnotation('[*Solo Leo][G]Hola', { line: 0, index: 0 }, 'Todos')).toBe('[*Todos][G]Hola');
+    expect(setAnnotation('[*Solo Leo][G]Hola', { line: 0, index: 0 }, '')).toBe('[G]Hola');
   });
 });

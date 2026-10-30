@@ -1,3 +1,4 @@
+import { formatParts, isEmptyParts } from './parts';
 import type { Song, SongLine, SongSection } from './song';
 
 function sectionName(s: SongSection): string | null {
@@ -62,7 +63,16 @@ export function writeChordPro(song: Song): string {
     if (out.length) out.push('');
     const name = sectionName(section);
     if (name) out.push(section.label ? `{start_of_${name}: ${section.label}}` : `{start_of_${name}}`);
-    section.lines.forEach((l) => out.push(lineText(l)));
+    if (section.parts && !isEmptyParts(section.parts)) out.push(`{x_band: ${formatParts(section.parts)}}`);
+    let voice: string | undefined;
+    for (const l of section.lines) {
+      if (l.type === 'lyric') {
+        const want = l.singers?.join(', ');
+        if (want !== voice) out.push(want ? `{x_voz: ${want}}` : '{x_voz}');
+        voice = want;
+      }
+      out.push(lineText(l));
+    }
     if (name) out.push(`{end_of_${name}}`);
   }
   return out.join('\n') + '\n';

@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { type ChordRef, type MoveDirection, moveChord } from '../chordpro/moveChord';
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { type ChordRef, type MoveDirection, addAnnotation, moveChord, setAnnotation } from '../chordpro/moveChord';
 import { parseChordPro } from '../chordpro/parser';
+import { emptyParts, setLineVoices, setSectionParts } from '../chordpro/parts';
+import type { SongSection } from '../chordpro/song';
 import { MAX_BPM, MIN_BPM, bpmFromTaps, clampBpm, parseBpm, setTempo } from '../chordpro/tempo';
 import { Icon } from '../components/Icon';
 import { SongView } from '../components/SongView';
@@ -16,6 +18,21 @@ import {
   useWakeLock,
 } from './autoscroll';
 import { type Prefs, usePrefs } from './hooks';
+import { PartsDialog } from './PartsDialog';
+import type { VoiceSelection } from '../components/SongView';
+import { BAND, SINGERS } from '../data/band';
+
+const SECTION_NAMES: Partial<Record<SongSection['kind'], string>> = {
+  verse: 'Estrofa',
+  chorus: 'Estribillo',
+  bridge: 'Puente',
+};
+
+function sectionTitle(s: SongSection): string {
+  if (s.label) return s.label;
+  if (s.name) return s.name[0].toUpperCase() + s.name.slice(1).replace(/_/g, ' ');
+  return SECTION_NAMES[s.kind] ?? 'Parte sin nombre';
+}
 
 /**
  * Song sheet plus a bottom bar: Letra/Acordes mode, transpose, font size and
@@ -53,8 +70,13 @@ export function SongPanel({
     onContentChange?.(next);
   };
 
-  const [moving, setMoving] = useState(false);
+  // Bottom bar: normal controls, the edit menu, or one of the editors.
+  const [mode, setMode] = useState<'play' | 'tools' | 'move' | 'tempo' | 'parts' | 'notes' | 'voices'>('play');
+  const moving = mode === 'move';
+  const editingTempo = mode === 'tempo';
   const [selected, setSelected] = useState<ChordRef | null>(null);
+  const [partsIndex, setPartsIndex] = useState<number | null>(null);
+  const [voiceSel, setVoiceSel] = useState<VoiceSelection | null>(null);
   const tryMove = (dir: MoveDirection) => (selected ? moveChord(content, selected, dir) : null);
   const move = (dir: MoveDirection) => {
     const r = tryMove(dir);
@@ -63,16 +85,35 @@ export function SongPanel({
     setSelected(r.ref);
   };
 
-  const [editingTempo, setEditingTempo] = useState(false);
   const taps = useRef<number[]>([]);
 
   const stopMoving = () => {
-    setMoving(false);
+    setMode('play');
     setSelected(null);
-    setEditingTempo(false);
+    setPartsIndex(null);
+    setVoiceSel(null);
+  };
+  const startTempo = () => {
+    taps.current = [];
+    setSelected(null);
+    setMode('tempo');
   };
 
   const parsed = useMemo(() => parseChordPro(content), [content]);
+  const partsSection = partsIndex === null ? undefined : parsed.sections[partsIndex];
+
+  // ----- voices: who sings the selected lines (the line's own, else the section's).
+  const voiceSection = voiceSel ? parsed.sections[voiceSel.section] : undefined;
+  const voiceLyrics = voiceSection?.lines.filter((l) => l.type === 'lyric') ?? [];
+  const voiceLyricCount = voiceLyrics.length;
+  const firstVoiced = voiceSel ? voiceLyrics[voiceSel.from] : undefined;
+  const selectedVoices =
+    (firstVoiced?.type === 'lyric' ? firstVoiced.singers : undefined) ?? voiceSection?.parts?.lead ?? [];
+  const setVoices = (names: string[] | undefined) => {
+    if (!voiceSection || !voiceSel) return;
+    const ordered = names && SINGERS.filter((n) => names.includes(n)).concat(names.filter((n) => !SINGERS.includes(n)));
+    edit(setLineVoices(content, voiceSection, voiceSel.from, voiceSel.to, ordered));
+  };
   const bpm = parseBpm(parsed.metadata.tempo);
   const setBpm = (n: number) => edit(setTempo(content, clampBpm(n)));
   const tap = () => {
@@ -141,19 +182,133 @@ export function SongPanel({
           fontSize={prefs.fontSize}
           showChords={prefs.showChords || moving}
           chordEdit={moving ? { selected, onSelect: setSelected } : undefined}
+          noteEdit={
+            mode === 'notes'
+              ? {
+                  onWord: (line, col) => {
+                    const text = window.prompt('Nota sobre esta palabra (ej: Silencio largo, Queda solo Leo)');
+                    if (text?.trim()) edit(addAnnotation(content, line, col, text));
+                  },
+                  onNote: (ref, text) => {
+                    const next = window.prompt('Cambiar la nota (vacía para borrarla)', text);
+                    if (next !== null) edit(setAnnotation(content, ref, next));
+                  },
+                }
+              : undefined
+          }
           onTempoClick={
             onContentChange
               ? () => {
-                  stopMoving();
                   setPlaying(false);
-                  taps.current = [];
-                  setEditingTempo(true);
+                  startTempo();
+                }
+              : undefined
+          }
+          onEditParts={mode === 'parts' ? setPartsIndex : undefined}
+          voiceEdit={
+            mode === 'voices'
+              ? {
+                  selected: voiceSel,
+                  // First tap picks a line, a second tap in the same part extends to a range.
+                  onLine: (section, i) =>
+                    setVoiceSel((sel) =>
+                      sel && sel.section === section && sel.from === sel.to && sel.from !== i
+                        ? { section, from: Math.min(sel.from, i), to: Math.max(sel.from, i) }
+                        : { section, from: i, to: i },
+                    ),
                 }
               : undefined
           }
         />
       </div>
-      {editingTempo ? (
+      {partsSection && (
+        <PartsDialog
+          key={partsIndex}
+          title={sectionTitle(partsSection)}
+          parts={partsSection.parts ?? emptyParts()}
+          onChange={(p) => edit(setSectionParts(content, partsSection, p))}
+          onClose={() => setPartsIndex(null)}
+        />
+      )}
+      {mode === 'tools' ? (
+        <div className="toolbar" role="toolbar" aria-label="Editar canción">
+          <div className="toolbar__row toolbar__row--wrap">
+            <button className="btn" onClick={() => setMode('move')}>
+              <Icon name="move" size={18} /> Mover acordes
+            </button>
+            <button className="btn" onClick={() => setMode('voices')}>
+              Voces
+            </button>
+            <button className="btn" onClick={() => setMode('notes')}>
+              Notas
+            </button>
+            <button className="btn" onClick={() => setMode('parts')}>
+              <Icon name="band" size={18} /> Partes
+            </button>
+            <button className="btn" onClick={startTempo}>
+              BPM
+            </button>
+            <span className="toolbar__spacer" />
+            <button className="btn btn--primary" onClick={stopMoving}>
+              Listo
+            </button>
+          </div>
+        </div>
+      ) : mode === 'voices' ? (
+        <div className="toolbar" role="toolbar" aria-label="Voces">
+          <div className="toolbar__row toolbar__row--wrap">
+            {voiceSection && voiceSel ? (
+              <>
+                <div className="toolbar__group voice-pick" role="group" aria-label="Quién canta">
+                  {SINGERS.map((name) => (
+                    <button
+                      key={name}
+                      className="voice-pick__btn"
+                      style={{ '--m': BAND.find((m) => m.name === name)!.color } as CSSProperties}
+                      aria-pressed={selectedVoices.includes(name)}
+                      onClick={() => setVoices(selectedVoices.includes(name) ? selectedVoices.filter((n) => n !== name) : [...selectedVoices, name])}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+                <button className="btn" onClick={() => setVoiceSel({ ...voiceSel, from: 0, to: voiceLyricCount - 1 })}>
+                  Toda la parte
+                </button>
+                <button className="btn" onClick={() => setVoices(undefined)}>
+                  Quitar
+                </button>
+              </>
+            ) : (
+              <span className="toolbar__hint">Tocá la primera y la última línea que canta alguien</span>
+            )}
+            <span className="toolbar__spacer" />
+            <button className="btn btn--primary" onClick={stopMoving}>
+              Listo
+            </button>
+          </div>
+        </div>
+      ) : mode === 'notes' ? (
+        <div className="toolbar" role="toolbar" aria-label="Notas">
+          <div className="toolbar__row">
+            <span className="toolbar__hint">Tocá una palabra para ponerle una nota arriba, o una nota para cambiarla</span>
+            <span className="toolbar__spacer" />
+            <button className="btn btn--primary" onClick={stopMoving}>
+              Listo
+            </button>
+          </div>
+        </div>
+      ) : mode === 'parts' ? (
+        <div className="toolbar" role="toolbar" aria-label="Partes de la banda">
+          <div className="toolbar__row">
+            <span className="toolbar__hint">Tocá «Asignar partes» en cada parte de la canción</span>
+            <span className="toolbar__spacer" />
+            <button className="btn btn--primary" onClick={stopMoving}>
+              Listo
+            </button>
+          </div>
+        </div>
+      ) : editingTempo ? (
         <div className="toolbar" role="toolbar" aria-label="Cambiar BPM">
           <div className="toolbar__row">
             <div className="toolbar__group" role="group" aria-label="BPM">
@@ -241,9 +396,9 @@ export function SongPanel({
               Acordes
             </button>
           </div>
-          {onContentChange && prefs.showChords && (
-            <button className="icon-btn" aria-label="Mover acordes" title="Mover acordes" onClick={() => setMoving(true)}>
-              <Icon name="move" />
+          {onContentChange && (
+            <button className="icon-btn" aria-label="Editar canción" title="Mover acordes, notas, partes, BPM" onClick={() => setMode('tools')}>
+              <Icon name="edit" />
             </button>
           )}
           <span className="toolbar__spacer" />
