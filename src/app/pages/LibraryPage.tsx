@@ -26,6 +26,22 @@ export function LibraryPage() {
   const menu = useRef<HTMLDetailsElement>(null);
   const closeMenu = () => menu.current?.removeAttribute('open');
 
+  // ----- deleting several songs: pick them in the list, then "Eliminar".
+  const [selected, setSelected] = useState<Set<number> | null>(null);
+  const toggle = (id: number) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
+  };
+  const removeSelected = async () => {
+    if (!selected?.size) return;
+    const n = selected.size;
+    if (!confirm(`¿Eliminar ${n === 1 ? '1 canción' : `${n} canciones`}? También salen de los setlists. No se puede deshacer.`)) return;
+    for (const id of selected) await lib.deleteSong(id);
+    setSelected(null);
+  };
+
   const exportBackup = async () => {
     closeMenu();
     const data = await lib.exportAll();
@@ -71,6 +87,15 @@ export function LibraryPage() {
                 }}
               >
                 <Icon name="file" /> Importar acordes (.docx / .txt)
+              </button>
+              <button
+                onClick={() => {
+                  closeMenu();
+                  setSelected(new Set());
+                }}
+                style={{ color: 'var(--danger)' }}
+              >
+                <Icon name="trash" /> Eliminar canciones
               </button>
               <button onClick={exportBackup}>
                 <Icon name="download" /> Exportar respaldo
@@ -124,6 +149,21 @@ export function LibraryPage() {
         </div>
       </header>
 
+      {selected && (
+        <div className="select-bar" role="toolbar" aria-label="Eliminar canciones">
+          <span>
+            {selected.size ? `${selected.size} elegida${selected.size === 1 ? '' : 's'}` : 'Tocá las canciones a eliminar'}
+          </span>
+          <span className="toolbar__spacer" />
+          <button className="btn" onClick={() => setSelected(null)}>
+            Cancelar
+          </button>
+          <button className="btn btn--danger-fill" disabled={!selected.size} onClick={removeSelected}>
+            <Icon name="trash" size={18} /> Eliminar
+          </button>
+        </div>
+      )}
+
       <label className="search">
         <Icon name="search" size={20} />
         <input
@@ -143,6 +183,21 @@ export function LibraryPage() {
         <ul className="list">
           {songs.map((s) => (
             <li key={s.id}>
+              {selected ? (
+                <button
+                  className={`card card--pick${selected.has(s.id) ? ' card--picked' : ''}`}
+                  aria-pressed={selected.has(s.id)}
+                  onClick={() => toggle(s.id)}
+                >
+                  <span className="card__check" aria-hidden="true">
+                    {selected.has(s.id) && <Icon name="check" size={16} />}
+                  </span>
+                  <span className="card__main">
+                    <span className="card__title">{s.title}</span>
+                    {s.artist && <span className="card__sub">{s.artist}</span>}
+                  </span>
+                </button>
+              ) : (
               <a className="card" href={`#/song/${s.id}`}>
                 <span className="card__main">
                   <span className="card__title">{s.title}</span>
@@ -150,6 +205,7 @@ export function LibraryPage() {
                 </span>
                 {s.songKey && <span className="key-badge">{s.songKey}</span>}
               </a>
+              )}
             </li>
           ))}
         </ul>
