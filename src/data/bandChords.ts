@@ -94,6 +94,130 @@ interludio
 Bm G D A
 `;
 
+/**
+ * The "REPERTORIO" document, as text. Same songs as before (Vida en abundancia,
+ * Esto que soy, Amor como fuego) are left out: they're in BAND_DOC.
+ * "Dios de la vida" comes with lyrics, so it's written by hand in bandSongs.ts.
+ * Small fixes so it reads well: "/" splits into lines, parentheses that only
+ * wrap chords are dropped.
+ */
+export const REPERTORIO_DOC = `MAR ADENTRO
+intro: (Voz responde piano x4) G - C - Em - D - A - C - D
+
+estrofa: G - C - G - D
+
+estribillo: G - C - Em - D - A - B - C - D … G
+
+inter: G - C - Em - D - A - C - D
+
+estrofa.
+
+estribillo.
+
+RENDID A YAHVÉ
+intro: (Pre estrofa) G - C - G - D
+
+estrofa: G - C - G
+         G - F - D
+
+estribillo: C - D - Em … G
+
+UN MONTÓN DE ESTRELLAS
+intro: A - F#m - D - E x2
+
+estrofa: A - Em - D - E x2
+
+pre estribillo: F#m - C#m - D - E
+
+estribillo: A - F#m - D - Bm - D - E
+
+CARALUNA
+estribillo: A - E - F#m - D - A - E - D - Dm7 x2
+
+estrofa: A - E - Bm - D - A - E - D - Dm7 x2
+
+pre estribillo: D - E - F#m - D - E
+
+estribillo.
+
+ENTRA EN MI VIDA
+intro: A - D - A - Bm - A/C# - Dm - E7
+
+estrofa: A - D - A - D - Bm7 - C#m7 - Bm7 - E4 x2
+
+estribillo: A - F#m - D - E4 - A - F#m - D - Bm - D - E - A
+
+LA DE LA MALA SUERTE
+estrofa: A - F#m - D - F#m - E x2 … Bm - E
+
+estribillo: A - E - F#m - D - E
+            A - E - F#m - D - E
+
+DALE VIEJA DALE
+estrofa: E - G#m - C#m - A - F#m - B - A - B
+
+estribillo: E - G# - A - F#m - B - A - B
+
+ESTÁ PASANDO POR AQUÍ
+estrofa: E - A - E x2
+
+estribillo: E7 - A - B - G#m - C#m - A - B
+
+ELLA MULTIMILLONARIA
+estrofa: E - B - C#m - G#m - A - E - F#m - B
+
+EL LEÓN
+Bm - Em - Bm - G - F#
+Bm - Em - Bm - F#7 - Bm
+Bm - A - G - Em - F#7
+Bm - D - Em - G - F#7
+
+GRANITO DE MOSTAZA
+estrofa: (Presentación en La menor) Am - E - Am
+
+pre: A7 - Dm - Am - E … A
+
+estribillo: E - A
+
+YA NO MÁS
+estrofa: Am - F - C - G
+
+pre: Dm - F - C - G
+
+estribillo: Am - F - C - G
+
+ZAQUEO
+D - G - D - D - G - A - Bm - F#m - G - D - D - G - A - D
+
+SAL Y LUZ
+B - C#m - E - B
+G#m - F# - E9
+Anuncia la palabra
+B - G#m - F# - C#m - B - A - F#
+
+RECIBAN LA PAZ
+A - E - F#m - D - E - A
+A - D - A - D - F#m - C#m - D - Bm - E
+
+SOPLA
+E - A - C#m - A - B
+A - B7
+E - A - B
+C#m - A - B7
+
+LUZ DE LA CIUDAD
+intro
+E A
+estrofa
+E A E B A E x2
+
+estribillo
+E A E B A E
+
+final
+E D C#m B E
+`;
+
 /** Paints `from`..end of a line in a color (as the Doc does). */
 function paint(line: DocLine, from: string, color: string, to?: string) {
   const start = line.text.indexOf(from);

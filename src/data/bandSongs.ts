@@ -1,5 +1,6 @@
 import { type ChartSong, chartToChordPro, fold, parseChart } from '../importer/chart';
-import { bandDocLines } from './bandChords';
+import { linesFromText } from '../importer/docx';
+import { REPERTORIO_DOC, bandDocLines } from './bandChords';
 
 /**
  * The band's songs: the lyric sheets (one PDF per song) combined with the
@@ -356,12 +357,72 @@ y que mi bendición fue oír tu voz:
 {chorus}
 `;
 
+// Lyrics as they come in the REPERTORIO document. "llévame" and "estribo"
+// are kept with the names the document gives them.
+const DIOS_DE_LA_VIDA = `{title: Dios de la vida}
+{key: G}
+
+{start_of_intro: Intro}
+[G] [G/F#] [Em] [C]
+{end_of_intro}
+
+{start_of_verse: Estrofa}
+[G] [D] [E] [Bm] [C] [G] [F] [D]
+Somos un nuevo pueblo, soñando un mundo distinto,
+los que en el amor creemos, los que en el amor vivimos.
+Llevamos este tesoro, en vasijas de barro,
+es un mensaje del cielo, y nadie podrá callarnos.
+Y proclamamos, un nuevo día, porque la muerte ha sido vencida.
+Y anunciamos esta buena noticia, hemos sido salvados, por el Dios de la vida.
+{end_of_verse}
+
+{start_of_chorus: Estribillo}
+[C] [D] [G] [E] [*(C - D - G)]
+En el medio de la noche, encendemos una luz, en el nombre de Jesús.
+En el medio de la noche, encendemos una luz, en el nombre de Jesús.
+{end_of_chorus}
+
+{start_of_bridge: Llévame}
+[G] [D] [Em] [C] [G] [F] [D] [G]
+{end_of_bridge}
+
+{start_of_outro: Estribo}
+[G] [D] [Em] [C] [G] [F] [D] [*…] [D] [G]
+{end_of_outro}
+`;
+
 export interface BandSong {
   title: string;
   content: string;
   /** Other names it may have in the library (e.g. its chord-sheet title). */
   aliases: string[];
+  /** Chords only: if the song already has lyrics, the chords are added to them. */
+  chart?: { song: ChartSong; all: ChartSong[] };
 }
+
+/** The band's set, in order. "Presentación con Ya no más" = Granito de mostaza (in Am) + Ya no más. */
+export const REPERTORIO = [
+  'Mar adentro',
+  'Rendid a Yahvé',
+  'Dios de la vida',
+  'Un montón de estrellas',
+  'Caraluna',
+  'Entra en mi vida',
+  'La de la mala suerte',
+  'Dale vieja dale',
+  'Ella multimillonaria',
+  'El león',
+  'Granito de mostaza',
+  'Ya no más',
+  'Zaqueo',
+  'Sal y luz',
+  'Reciban la paz',
+  'Sopla',
+  'Luz de la ciudad',
+];
+
+/** Names the capitals of the document can't keep. */
+const PROPER: Record<string, string> = { 'Rendid a yahvé': 'Rendid a Yahvé' };
 
 const WITH_LYRICS: BandSong[] = [
   { title: 'Cusco', content: CUSCO, aliases: [] },
@@ -370,14 +431,22 @@ const WITH_LYRICS: BandSong[] = [
   { title: 'Bendeciré al Señor', content: BENDECIRE, aliases: ['Prueben que bueno'] },
   { title: 'Soplo de Dios', content: SOPLO_DE_DIOS, aliases: [] },
   { title: 'Reflejo de Dios', content: REFLEJO_DE_DIOS, aliases: [] },
+  { title: 'Dios de la vida', content: DIOS_DE_LA_VIDA, aliases: [] },
 ];
 
-/** Every band song: the ones with lyrics, plus the chord-only ones from the chord document. */
+/** Every band song: the ones with lyrics, plus the chord-only ones from both chord documents. */
 export function bandSongs(): BandSong[] {
-  const chart: ChartSong[] = parseChart(bandDocLines());
   const covered = new Set(WITH_LYRICS.flatMap((s) => [s.title, ...s.aliases].map(fold)));
-  const chordsOnly = chart
-    .filter((s) => !covered.has(fold(s.title)))
-    .map((s) => ({ title: s.title, content: chartToChordPro(s, chart), aliases: [] }));
-  return [...WITH_LYRICS, ...chordsOnly];
+  const chordsOnly = (chart: ChartSong[]) =>
+    chart
+      .filter((s) => !covered.has(fold(s.title)))
+      .map((s) => {
+        const song = { ...s, title: PROPER[s.title] ?? s.title };
+        return { title: song.title, content: chartToChordPro(song, chart), aliases: [], chart: { song, all: chart } };
+      });
+  return [
+    ...WITH_LYRICS,
+    ...chordsOnly(parseChart(bandDocLines())),
+    ...chordsOnly(parseChart(linesFromText(REPERTORIO_DOC))),
+  ];
 }

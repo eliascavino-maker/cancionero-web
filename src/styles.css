@@ -1062,3 +1062,8 @@ button.card:hover {
   background: var(--danger);
   color: #fff;
 }
+
+.import__setlist {
+  margin-top: 8px;
+  cursor: pointer;
+}
