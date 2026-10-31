@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { parseChordPro } from '../../chordpro/parser';
 import { writeChordPro } from '../../chordpro/writer';
+import { askConfirm } from '../../components/ask';
 import { FullscreenButton } from '../../components/FullscreenButton';
 import { Icon } from '../../components/Icon';
 import { transposeSong } from '../../music/transposer';
@@ -16,13 +17,22 @@ export function SongPage({ id }: { id: number }) {
   if (song === null) return <p className="empty">La canción no existe.</p>;
 
   const saveTransposed = async () => {
-    if (!confirm('¿Guardar la canción en este tono? Se pierden los comentarios "#" del archivo.')) return;
+    const ok = await askConfirm('Se pierden los comentarios "#" del archivo.', {
+      title: '¿Guardar la canción en este tono?',
+      ok: 'Guardar',
+    });
+    if (!ok) return;
     await lib.saveSong(writeChordPro(transposeSong(parseChordPro(song.content), transpose)), song.id);
     setTranspose(0);
   };
 
   const remove = async () => {
-    if (!confirm(`¿Borrar "${song.title}"? También sale de los setlists.`)) return;
+    const ok = await askConfirm('También sale de los setlists.', {
+      title: `¿Borrar «${song.title}»?`,
+      ok: 'Borrar',
+      danger: true,
+    });
+    if (!ok) return;
     await lib.deleteSong(song.id);
     navigate('/');
   };

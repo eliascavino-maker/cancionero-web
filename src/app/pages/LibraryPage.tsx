@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { askConfirm, tell } from '../../components/ask';
 import { Icon } from '../../components/Icon';
 import { type ChartSong, parseChart } from '../../importer/chart';
 import { readDocument } from '../../importer/docx';
@@ -20,7 +21,7 @@ export function LibraryPage() {
     try {
       setChart(parseChart(await readDocument(file)));
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'No se pudo leer el documento.');
+      await tell(e instanceof Error ? e.message : 'No se pudo leer el documento.');
     }
   };
   const menu = useRef<HTMLDetailsElement>(null);
@@ -37,7 +38,12 @@ export function LibraryPage() {
   const removeSelected = async () => {
     if (!selected?.size) return;
     const n = selected.size;
-    if (!confirm(`¿Eliminar ${n === 1 ? '1 canción' : `${n} canciones`}? También salen de los setlists. No se puede deshacer.`)) return;
+    const ok = await askConfirm('También salen de los setlists. No se puede deshacer.', {
+      title: `¿Eliminar ${n === 1 ? '1 canción' : `${n} canciones`}?`,
+      ok: 'Eliminar',
+      danger: true,
+    });
+    if (!ok) return;
     for (const id of selected) await lib.deleteSong(id);
     setSelected(null);
   };
@@ -54,11 +60,16 @@ export function LibraryPage() {
   };
 
   const importBackup = async (file: File) => {
-    if (!confirm('Importar reemplaza todas las canciones y setlists de este navegador. ¿Seguir?')) return;
+    const ok = await askConfirm('Reemplaza todas las canciones y setlists de este navegador.', {
+      title: '¿Importar la copia?',
+      ok: 'Importar',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await lib.importAll(JSON.parse(await file.text()));
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'No se pudo importar el archivo.');
+      await tell(e instanceof Error ? e.message : 'No se pudo importar el archivo.');
     }
   };
 

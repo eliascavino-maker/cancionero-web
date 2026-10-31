@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { tell } from './ask';
 import { Icon } from './Icon';
 
 // Safari (Mac / iPad) still uses the webkit names.
@@ -28,9 +29,9 @@ export async function toggleFullscreen(): Promise<void> {
   else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
   else
     // iPhone: web pages can't go full screen; installed on the home screen they open without the browser bars.
-    alert(
-      'En iPhone el navegador no deja poner pantalla completa.\n\nPara verla sin barras: tocá Compartir → "Agregar a inicio" y abrí el Cancionero desde ese ícono.',
-    );
+    await tell('Para verla sin barras: tocá Compartir → "Agregar a inicio" y abrí el Cancionero desde ese ícono.', {
+      title: 'En iPhone el navegador no deja poner pantalla completa',
+    });
 }
 
 /** Full-screen toggle. On a computer the F key does the same. */

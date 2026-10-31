@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { askConfirm, askText } from '../../components/ask';
 import { Icon } from '../../components/Icon';
 import { transposeKey } from '../../music/transposer';
 import type { SetlistEntry } from '../../data/library';
@@ -23,13 +24,18 @@ export function SetlistPage({ id }: { id: number }) {
 
   const rename = async () => {
     menu.current?.removeAttribute('open');
-    const name = prompt('Nuevo nombre', setlist.name)?.trim();
+    const name = (await askText('Renombrar setlist', setlist.name))?.trim();
     if (name) await lib.renameSetlist(id, name);
   };
 
   const remove = async () => {
     menu.current?.removeAttribute('open');
-    if (!confirm(`¿Borrar "${setlist.name}"? Las canciones quedan en la biblioteca.`)) return;
+    const ok = await askConfirm('Las canciones quedan en la biblioteca.', {
+      title: `¿Borrar «${setlist.name}»?`,
+      ok: 'Borrar',
+      danger: true,
+    });
+    if (!ok) return;
     await lib.deleteSetlist(id);
     navigate('/setlists');
   };

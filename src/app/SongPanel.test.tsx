@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { SPEED_LEVELS, nearestLevel, parseDuration } from './autoscroll';
 import { SongPanel } from './SongPanel';
 import { resetPrefsForTests } from './hooks';
@@ -99,27 +99,31 @@ e|--3--|
     expect(screen.getByRole('button', { name: 'Desplazar automáticamente' })).toBeInTheDocument();
   });
 
-  it('Notas: tap a word to add a note, tap the note to change or delete it', () => {
+  it('Notas: tap a word to add a note, tap the note to change or delete it', async () => {
     const saved: string[] = [];
-    const prompt = vi.spyOn(window, 'prompt');
     render(<SongPanel content={'[G]Hola mundo'} transpose={0} onTransposeChange={() => {}} onContentChange={(c) => saved.push(c)} />);
     fireEvent.click(screen.getByRole('button', { name: 'Editar canción' }));
     fireEvent.click(screen.getByRole('button', { name: 'Notas' }));
+    const answer = async (title: string, text: string) => {
+      const box = await screen.findByRole('textbox', { name: title });
+      fireEvent.change(box, { target: { value: text } });
+      fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    };
 
-    prompt.mockReturnValueOnce('Queda solo Leo');
     fireEvent.click(screen.getByRole('button', { name: 'Nota en «mundo»' }));
-    expect(saved.at(-1)).toBe('[G]Hola [*Queda solo Leo]mundo');
+    await answer('Nota sobre esta palabra', 'Queda solo Leo');
+    await waitFor(() => expect(saved.at(-1)).toBe('[G]Hola [*Queda solo Leo]mundo'));
     // The member name inside the note gets their color.
     expect(screen.getByText('Leo', { selector: '.cp-note__member' })).toBeInTheDocument();
 
-    prompt.mockReturnValueOnce('Silencio largo');
     fireEvent.click(screen.getByRole('button', { name: 'Nota: Queda solo Leo' }));
-    expect(saved.at(-1)).toBe('[G]Hola [*Silencio largo]mundo');
+    expect(await screen.findByRole('textbox', { name: 'Cambiar la nota' })).toHaveValue('Queda solo Leo');
+    await answer('Cambiar la nota', 'Silencio largo');
+    await waitFor(() => expect(saved.at(-1)).toBe('[G]Hola [*Silencio largo]mundo'));
 
-    prompt.mockReturnValueOnce('');
     fireEvent.click(screen.getByRole('button', { name: 'Nota: Silencio largo' }));
-    expect(saved.at(-1)).toBe('[G]Hola mundo');
-    prompt.mockRestore();
+    await answer('Cambiar la nota', '');
+    await waitFor(() => expect(saved.at(-1)).toBe('[G]Hola mundo'));
   });
 
   it('notes also show in Letra mode', () => {

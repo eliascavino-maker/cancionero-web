@@ -1,3 +1,4 @@
+import { askText } from '../../components/ask';
 import { Icon } from '../../components/Icon';
 import { navigate, useLibrary, useLive } from '../hooks';
 
@@ -6,7 +7,9 @@ export function SetlistsPage() {
   const setlists = useLive((l) => l.listSetlists(), []);
 
   const create = async () => {
-    const name = prompt('Nombre del setlist')?.trim();
+    const name = (
+      await askText('Nuevo setlist', '', { ok: 'Crear', placeholder: 'Ej: Peña 24/10' })
+    )?.trim();
     if (!name) return;
     navigate(`/setlist/${await lib.createSetlist(name)}`);
   };

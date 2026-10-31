@@ -3,6 +3,7 @@ import { type ChordRef, type MoveDirection, addAnnotation, moveChord, setAnnotat
 import { parseChordPro } from '../chordpro/parser';
 import { emptyParts, setLineVoices, setSectionParts } from '../chordpro/parts';
 import { MAX_BPM, MIN_BPM, bpmFromTaps, clampBpm, parseBpm, setTempo } from '../chordpro/tempo';
+import { askText } from '../components/ask';
 import { Icon } from '../components/Icon';
 import { SongView } from '../components/SongView';
 import { effectiveKey, normalize, transposeSong } from '../music/transposer';
@@ -199,12 +200,14 @@ export function SongPanel({
           noteEdit={
             mode === 'notes'
               ? {
-                  onWord: (line, col) => {
-                    const text = window.prompt('Nota sobre esta palabra (ej: Silencio largo, Queda solo Leo)');
+                  onWord: async (line, col) => {
+                    const text = await askText('Nota sobre esta palabra', '', {
+                      placeholder: 'Ej: Silencio largo, Queda solo Leo',
+                    });
                     if (text?.trim()) edit(addAnnotation(content, line, col, text));
                   },
-                  onNote: (ref, text) => {
-                    const next = window.prompt('Cambiar la nota (vacía para borrarla)', text);
+                  onNote: async (ref, text) => {
+                    const next = await askText('Cambiar la nota', text, { placeholder: 'Vacía para borrarla' });
                     if (next !== null) edit(setAnnotation(content, ref, next));
                   },
                 }
