@@ -11,6 +11,8 @@ import { SetlistPage } from './pages/SetlistPage';
 import { SetlistsPage } from './pages/SetlistsPage';
 import { SongPage } from './pages/SongPage';
 import { UpdatePrompt } from './UpdatePrompt';
+import { useMe } from './me';
+import { WhoAreYouDialog } from './WhoAreYou';
 
 function Page({ route }: { route: string }) {
   const parts = route.split('/').filter(Boolean);
@@ -52,6 +54,10 @@ export function App() {
   const alert = !!cloud.needsLink || !!s?.notices.length || s?.state === 'error';
   const waiting = !!s && (s.pending > 0 || s.state === 'offline');
   const stage = route.startsWith('/play');
+  const me = useMe();
+  // In a band and nobody chosen yet, here or on another device of this account.
+  const askWho =
+    !stage && !!cloud.band && !!cloud.musicians && !me.chosen && !(cloud.band.prefs as { chosen?: boolean }).chosen;
 
   useEffect(() => {
     document.documentElement.dataset.theme = prefs.theme;
@@ -64,6 +70,7 @@ export function App() {
         <Page route={route} />
       </main>
       <UpdatePrompt hidden={stage} />
+      {askWho && <WhoAreYouDialog />}
       {!stage && (
         <nav className="nav" aria-label="Secciones">
           <a href="#/" aria-current={section === 'library' ? 'page' : undefined}>

@@ -4,6 +4,7 @@ import { Icon } from '../../components/Icon';
 import { explain, useCloud } from '../../cloud/CloudProvider';
 import type { SyncStatus } from '../../cloud/sync';
 import { useLibrary, useLive } from '../hooks';
+import { MeCard } from '../WhoAreYou';
 
 /** Runs an async action, with "busy" and a readable error. */
 function useAction() {
@@ -89,6 +90,7 @@ export function BandPage({ invite }: { invite?: string }) {
         {invite && <p className="band__lead">Ya estás en «{cloud.band.bandName}».</p>}
         {cloud.needsLink && <LinkChoice />}
         {cloud.sync && <SyncCard status={cloud.sync} />}
+        <MeCard />
         <Members />
         {cloud.band.role === 'owner' && <Invites />}
         <Trash />
@@ -103,6 +105,7 @@ export function BandPage({ invite }: { invite?: string }) {
         <h1>{cloud.band?.bandName ?? 'Banda'}</h1>
       </header>
       {body}
+      {!(cloud.configured && cloud.user && cloud.band) && cloud.ready && <MeCard />}
     </div>
   );
 }

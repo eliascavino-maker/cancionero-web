@@ -19,6 +19,7 @@ import {
   useWakeLock,
 } from './autoscroll';
 import { type Prefs, usePrefs } from './hooks';
+import { litSinger, useMe } from './me';
 import { PartsDialog } from './PartsDialog';
 import { StageView, sectionTitle } from './StageView';
 import { isImmersive } from '../components/FullscreenButton';
@@ -46,6 +47,7 @@ export function SongPanel({
   onContentChange?: (content: string) => void;
 }) {
   const [prefs, setPrefs] = usePrefs();
+  const mine = litSinger(useMe());
 
   // ----- editing the text (moving chords, BPM). Edits show at once; saves
   // arrive later and are ignored if they are our own, so quick taps never jump back.
@@ -196,6 +198,7 @@ export function SongPanel({
         <SongView
           song={shown}
           fontSize={prefs.fontSize}
+          mine={mine}
           showChords={moving || (prefs.showChords && mode !== 'voices' && mode !== 'notes')}
           chordEdit={moving ? { selected, onSelect: setSelected } : undefined}
           noteEdit={
@@ -251,6 +254,7 @@ export function SongPanel({
           bpm={bpm}
           pxPerSecond={speed}
           fontSize={prefs.fontSize}
+          mine={mine}
         />
       )}
       {partsSection && (

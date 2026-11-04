@@ -41,6 +41,12 @@ export function splitByMembers(text: string): (string | { name: string; color: s
   return out;
 }
 
+/** Whether `name` sings a line sung by `singers` ("Todos" counts for every singer). */
+export function singsIn(name: string, singers: readonly string[]): boolean {
+  const n = name.toLowerCase();
+  return singers.some((s) => s.toLowerCase() === n || s.toLowerCase() === ALL.toLowerCase());
+}
+
 export const SINGERS = BAND.filter((m) => m.sings).map((m) => m.name);
 export const PLAYERS = BAND.filter((m) => m.instrument).map((m) => m.name);
 

@@ -69,6 +69,11 @@ los permisos.
 - **Letra / Acordes**: Letra muestra solo la letra (sin acordes, intros ni
   tablaturas), para quien canta. Acordes muestra los acordes sobre la letra y
   los controles de tono.
+- **Quién sos** (Banda → Vos; en una banda, la app lo pregunta la primera
+  vez): elige la vista de arranque, Acordes si tocás y Letra si solo cantás, y
+  resalta en las dos vistas las líneas que cantás, las de «Todos» y tus coros
+  (con borde punteado). La elección queda en el dispositivo y en tu cuenta, así
+  un dispositivo nuevo arranca igual.
 - **Autoscroll** (▶): baja solo la página. 🐢/🐇 cambian la velocidad, que se
   recuerda por canción. Si la canción tiene `{duration: 3:30}`, arranca en
   `auto`: llega al final en ese tiempo. Tocar la pantalla o mover la rueda

@@ -1,7 +1,9 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useLibrary } from '../app/hooks';
+import { setPrefs, getPrefs, useLibrary, usePrefs } from '../app/hooks';
+import { type Musician, getMe, setMe, useMe } from '../app/me';
 import { BAND } from '../data/band';
+import { accountStep } from './account';
 import { supabaseRemote } from './remote';
 import { supabase } from './supabase';
 import { Sync, type SyncStatus } from './sync';
@@ -28,6 +30,8 @@ export interface Cloud {
   /** This device has songs or setlists that aren't in the band yet: ask what to do. */
   needsLink: { songs: number; setlists: number; otherBand: boolean } | null;
   sync: SyncStatus | null;
+  /** The band's musicians, for "¿Quién sos?". null until known. */
+  musicians: Musician[] | null;
   /** Only the owner deletes songs. On a device without a band, anyone. */
   canDeleteSongs: boolean;
   signIn(email: string, password: string): Promise<void>;
@@ -51,6 +55,7 @@ const notConfigured: Cloud = {
   band: null,
   needsLink: null,
   sync: null,
+  musicians: null,
   canDeleteSongs: true,
   signIn: async () => {},
   signUp: async () => {},
@@ -83,6 +88,17 @@ function cacheBand(userId: string, band: Membership | null) {
     localStorage.setItem(BAND_CACHE, JSON.stringify({ userId, band }));
   } catch {
     // Storage blocked: it's read again next time.
+  }
+}
+
+const MUSICIANS_CACHE = 'cancionero.musicians';
+
+function cachedMusicians(bandId: string): Musician[] | null {
+  try {
+    const c = JSON.parse(localStorage.getItem(MUSICIANS_CACHE) ?? 'null');
+    return c?.bandId === bandId ? c.musicians : null;
+  } catch {
+    return null;
   }
 }
 
@@ -125,6 +141,11 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
   const [status, setStatus] = useState<SyncStatus | null>(null);
   /** Goes up after linking this device, so syncing starts. */
   const [linkCount, setLinkCount] = useState(0);
+  const [musicians, setMusicians] = useState<Musician[] | null>(null);
+  const meState = useMe();
+  const [prefs] = usePrefs();
+  /** Goes up when the connection comes back, to retry saving "¿Quién sos?". */
+  const [onlineCount, setOnlineCount] = useState(0);
 
   // ----- session (read from this device first, so it works offline)
   useEffect(() => {
@@ -163,6 +184,18 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
     setBand(next);
     // Out of the band (left or removed): what's here stays as this device's copy.
     if (!next && lib.bandId) await lib.unlinkBand();
+    if (next) {
+      const { data: list } = await check(
+        client.from('musicians').select('id, name, sings, instrument, color').eq('band_id', next.bandId).order('position'),
+      );
+      const roster: Musician[] = (list ?? []).map((m) => ({ ...m, instrument: m.instrument ?? undefined }));
+      try {
+        localStorage.setItem(MUSICIANS_CACHE, JSON.stringify({ bandId: next.bandId, musicians: roster }));
+      } catch {
+        // Storage blocked: read again next time.
+      }
+      setMusicians(roster);
+    }
   }, [client, user, lib]);
 
   useEffect(() => {
@@ -170,7 +203,9 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
       setBand(null);
       return;
     }
-    setBand(cachedBand(user.id));
+    const cached = cachedBand(user.id);
+    setBand(cached);
+    setMusicians(cached ? cachedMusicians(cached.bandId) : null);
     loadBand().catch(() => {
       // Offline: the cached band is used.
     });
@@ -208,6 +243,47 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
     };
   }, [band?.bandId, lib, client, linkCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ----- "¿Quién sos?" with the account. This device's answer wins; the
+  // account keeps it so a new device starts the same way.
+  useEffect(() => {
+    const again = () => setOnlineCount((n) => n + 1);
+    window.addEventListener('online', again);
+    return () => window.removeEventListener('online', again);
+  }, []);
+
+  useEffect(() => {
+    if (!user || !band || !musicians) return;
+    const step = accountStep(meState, prefs.showChords, band, musicians);
+    if (step.kind === 'adopt') {
+      setMe(step.me);
+      if (step.showChords !== undefined) setPrefs({ ...getPrefs(), showChords: step.showChords });
+    }
+    if (step.kind !== 'save') return;
+    const { musicianId } = step;
+    // Wait a moment: switching Letra/Acordes back and forth saves once.
+    const timer = setTimeout(async () => {
+      const next = { ...band, musicianId, prefs: { ...band.prefs, ...step.prefs } };
+      try {
+        await check(
+          client
+            .from('band_members')
+            .update({ musician_id: musicianId, prefs: next.prefs })
+            .eq('band_id', band.bandId)
+            .eq('user_id', user.id),
+        );
+      } catch {
+        return; // Offline: tried again when the connection comes back.
+      }
+      cacheBand(user.id, next);
+      setBand(next);
+      // The list from the band has the server's ids.
+      const me = getMe().me;
+      const withId = musicians.find((m) => m.id === musicianId);
+      if (me && withId && me.id !== withId.id) setMe({ ...getMe(), me: withId });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [client, user, band, musicians, meState, prefs.showChords, onlineCount]);
+
   const value = useMemo<Cloud>(() => {
     const myName = () => String(user?.user_metadata?.name ?? '');
     return {
@@ -218,6 +294,7 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
       band,
       needsLink,
       sync: status,
+      musicians,
       canDeleteSongs: !band || band.role === 'owner',
       async signIn(email, password) {
         await check(client.auth.signInWithPassword({ email: email.trim(), password }));
@@ -248,7 +325,7 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
       syncNow: () => void sync?.run(),
       clearNotices: () => sync?.clearNotices(),
     };
-  }, [client, authReady, user, band, needsLink, status, sync, lib, loadBand]);
+  }, [client, authReady, user, band, needsLink, status, sync, musicians, lib, loadBand]);
 
   return <CloudContext.Provider value={value}>{children}</CloudContext.Provider>;
 }

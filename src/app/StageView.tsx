@@ -86,6 +86,7 @@ export function StageView({
   bpm,
   pxPerSecond,
   fontSize,
+  mine,
 }: {
   song: Song;
   playing: boolean;
@@ -94,6 +95,8 @@ export function StageView({
   bpm: number | null;
   pxPerSecond: number;
   fontSize: number;
+  /** Singer whose lines are lit. */
+  mine?: string;
 }) {
   const slides = useMemo(() => stageSlides(song), [song]);
   const [index, setIndex] = useState(0);
@@ -210,7 +213,7 @@ export function StageView({
             <p>Instrumental</p>
           </article>
         ) : (
-          <SongView song={{ metadata: song.metadata, sections: [current] }} showHeader={false} showChords={false} />
+          <SongView song={{ metadata: song.metadata, sections: [current] }} showHeader={false} showChords={false} mine={mine} />
         )}
       </div>
 

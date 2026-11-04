@@ -69,7 +69,7 @@ function readPrefs(): Prefs {
 // One shared copy, so every screen sees a change at once.
 let currentPrefs: Prefs | null = null;
 const prefListeners = new Set<() => void>();
-const getPrefs = () => (currentPrefs ??= readPrefs());
+export const getPrefs = () => (currentPrefs ??= readPrefs());
 const subscribePrefs = (cb: () => void) => {
   prefListeners.add(cb);
   return () => prefListeners.delete(cb);

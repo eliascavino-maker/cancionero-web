@@ -334,3 +334,20 @@
   outline: 2px solid var(--tungsteno);
   background: var(--foco);
 }
+
+/* "Resaltar mis líneas": what this person sings, lit in their color. Coros, softer. */
+.cp-mine {
+  display: flow-root;
+  margin: 0 -0.3em;
+  padding: 0 0.3em;
+  border-radius: var(--r-chico);
+  background: color-mix(in srgb, var(--m) 16%, transparent);
+  box-shadow: inset 3px 0 0 var(--m);
+}
+/* Coros: dashed edge, like the coros bracket in Letra. */
+.cp-mine--backing {
+  padding-left: calc(0.3em - 2px);
+  border-left: 2px dashed var(--m);
+  background: color-mix(in srgb, var(--m) 7%, transparent);
+  box-shadow: none;
+}

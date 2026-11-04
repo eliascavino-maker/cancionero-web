@@ -120,3 +120,47 @@ describe('ChordName', () => {
     expect(chord('Bb').innerHTML).toBe('Bb');
   });
 });
+
+describe('SongView: my lines lit', () => {
+  const song = parseChordPro(
+    [
+      '{start_of_verse}',
+      '{x_band: voz=Sergio; coros=Leo}',
+      '[G]Canta Sergio',
+      '{x_voz: Leo}',
+      '[C]Canta Leo',
+      '{x_voz: Todos}',
+      '[D]Cantan todos',
+      '{x_voz}',
+      '[G] [C]',
+      '{end_of_verse}',
+    ].join('\n'),
+  );
+  const lit = (container: HTMLElement) =>
+    [...container.querySelectorAll('.cp-mine')].map((el) => [
+      el.textContent?.match(/Sergio|Leo|todos/)?.[0],
+      el.classList.contains('cp-mine--backing') ? 'coro' : 'voz',
+    ]);
+
+  it.each([true, false])('Leo, showChords=%s: his line, "Todos" and the coros', (showChords) => {
+    const { container } = render(<SongView song={song} showChords={showChords} mine="Leo" />);
+    expect(lit(container)).toEqual([
+      ['Sergio', 'coro'],
+      ['Leo', 'voz'],
+      ['todos', 'voz'],
+    ]);
+  });
+
+  it('Sergio: the lines of the section voice; chord-only lines are not sung', () => {
+    const { container } = render(<SongView song={song} mine="Sergio" />);
+    expect(lit(container)).toEqual([
+      ['Sergio', 'voz'],
+      ['todos', 'voz'],
+    ]);
+  });
+
+  it('nothing lit without a singer', () => {
+    const { container } = render(<SongView song={song} />);
+    expect(container.querySelector('.cp-mine')).toBeNull();
+  });
+});

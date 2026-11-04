@@ -12,7 +12,7 @@ import {
   lyricsOf,
 } from '../chordpro/song';
 import type { ChordRef } from '../chordpro/moveChord';
-import { PLAYERS, colorOf, shortName, splitByMembers } from '../data/band';
+import { PLAYERS, colorOf, shortName, singsIn, splitByMembers } from '../data/band';
 import { ChordName } from './ChordName';
 import { splitIntoWords } from './words';
 import './SongView.css';
@@ -33,6 +33,8 @@ export interface SongViewOptions {
   hideParts?: boolean;
   /** Makes lyric lines tappable to pick who sings them. */
   voiceEdit?: VoiceEdit;
+  /** Lights the lines this singer sings (theirs and "Todos"), in Letra and in Acordes. */
+  mine?: string;
 }
 
 /** Lyric lines `from`..`to` (counted among the lyric lines) of section `section`. */
@@ -423,6 +425,14 @@ function VoicedLines({
 }) {
   // Who sings is part of the Letra view only.
   const { brackets, slots } = bracketsFor(section, opts.hideParts || (opts.showChords ?? true));
+  const lead = section.parts?.lead ?? [];
+  const backing = section.parts?.backing ?? [];
+  /** How `opts.mine` sings this line: lead, backing (coro), or not at all. */
+  const mineIn = (line: SongLine): 'lead' | 'backing' | null => {
+    if (!opts.mine || line.type !== 'lyric' || !lyricsOf(line).trim()) return null;
+    if (singsIn(opts.mine, line.singers ?? lead)) return 'lead';
+    return singsIn(opts.mine, backing) ? 'backing' : null;
+  };
   const lyricSources = original.lines.flatMap((l) => (l.type === 'lyric' && l.source !== undefined ? [l.source] : []));
   const sel = opts.voiceEdit?.selected;
 
@@ -441,6 +451,14 @@ function VoicedLines({
           onClick={() => opts.voiceEdit!.onLine(index, ord)}
           onKeyDown={(e) => e.key === 'Enter' && opts.voiceEdit!.onLine(index, ord)}
         >
+          {content}
+        </div>
+      );
+    }
+    const lit = mineIn(line);
+    if (lit) {
+      content = (
+        <div className={`cp-mine${lit === 'backing' ? ' cp-mine--backing' : ''}`} style={memberStyle(colorOf(opts.mine!))}>
           {content}
         </div>
       );
