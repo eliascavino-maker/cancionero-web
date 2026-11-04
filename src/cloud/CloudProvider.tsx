@@ -13,7 +13,6 @@ export interface Membership {
   bandId: string;
   bandName: string;
   role: 'owner' | 'member';
-  guestCode: string;
   displayName: string;
   musicianId: string | null;
   prefs: Record<string, unknown>;
@@ -163,7 +162,7 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
     const { data } = await check(
       client
         .from('band_members')
-        .select('band_id, role, display_name, musician_id, prefs, bands(name, guest_code)')
+        .select('band_id, role, display_name, musician_id, prefs, bands(name)')
         .eq('user_id', user.id)
         .order('joined_at'),
     );
@@ -173,7 +172,6 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
       ? {
           bandId: linked.band_id,
           bandName: (linked.bands as unknown as { name: string }).name,
-          guestCode: (linked.bands as unknown as { guest_code: string }).guest_code,
           role: linked.role as Membership['role'],
           displayName: linked.display_name,
           musicianId: linked.musician_id,

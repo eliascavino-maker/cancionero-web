@@ -25,7 +25,8 @@ with esperado (tabla, rol, privilegio) as (values
   ('setlist_items', 'authenticated', 'SELECT'),
   ('setlist_items', 'authenticated', 'INSERT'),
   ('setlist_items', 'authenticated', 'UPDATE'),
-  ('revisions',     'authenticated', 'SELECT')
+  ('revisions',     'authenticated', 'SELECT'),
+  ('live_sessions', 'authenticated', 'SELECT')
 ),
 tablas as (
   select 'tabla' as tipo, g.table_name::text as objeto, g.grantee::text as rol, g.privilege_type::text as privilegio

@@ -31,6 +31,20 @@ const SUPABASE_STUB = `
   grant execute on all functions in schema auth to anon, authenticated, service_role;
   grant usage on schema public to anon, authenticated, service_role;
   create publication supabase_realtime;
+  -- Realtime: autoriza un canal privado leyendo o escribiendo realtime.messages
+  -- con el topic del canal en realtime.topic().
+  create schema realtime;
+  create table realtime.messages (
+    id bigserial primary key, topic text not null, extension text not null,
+    event text, payload jsonb, private boolean default true
+  );
+  alter table realtime.messages enable row level security;
+  create function realtime.topic() returns text language sql stable as
+    $$ select nullif(current_setting('realtime.topic', true), '') $$;
+  grant usage on schema realtime to anon, authenticated, service_role;
+  grant select, insert on realtime.messages to anon, authenticated;
+  grant usage on sequence realtime.messages_id_seq to anon, authenticated;
+  grant execute on function realtime.topic() to anon, authenticated;
 `;
 
 /** Lo que Supabase da solo a lo que se crea en public. */
@@ -179,7 +193,7 @@ describe('bandas', () => {
     await expect(as(null, 'select * from public.songs')).rejects.toThrow(/permission denied/);
   });
 
-  it('crear la banda deja owner, músicos en orden y código de invitados', async () => {
+  it('crear la banda deja owner y músicos en orden', async () => {
     const members = await as<{ user_id: string; role: string }>(A, 'select user_id, role from public.band_members order by role desc');
     expect(members).toEqual([
       { user_id: A, role: 'owner' },
@@ -187,8 +201,8 @@ describe('bandas', () => {
     ]);
     const musicians = await as<{ name: string }>(B, 'select name from public.musicians order by position');
     expect(musicians.map((m) => m.name)).toEqual(['Sergio', 'Elias']);
-    const b = await one(as<{ guest_code: string }>(B, 'select guest_code from public.bands'));
-    expect(b.guest_code).toMatch(/^[A-Z2-9]{8}$/);
+    // Sin invitados: la 005 quita el código.
+    expect(Object.keys(await one(as<object>(B, 'select * from public.bands')))).not.toContain('guest_code');
   });
 
   it('quien no es miembro no ve nada', async () => {
@@ -384,5 +398,124 @@ describe('historial', () => {
       { id: i3, position: 3, transpose: 0, deleted: true },
     ]);
     await expect(as(C, `select public.restore_setlist($1, now())`, [L])).rejects.toThrow(/No existe/);
+  });
+});
+
+describe('sala en vivo', () => {
+  const L1 = '00000000-0000-4000-8000-0000000005a1';
+  const L2 = '00000000-0000-4000-8000-0000000005a2';
+  const session = () =>
+    one(as<{ setlist_id: string; leader_id: string | null; leader_name: string }>(
+      B,
+      'select setlist_id, leader_id, leader_name from public.live_sessions where band_id = $1',
+      [band],
+    ));
+  /** Lo que hace Realtime al entrar a un canal privado o mandar un mensaje. */
+  const onTopic = async <T>(topic: string, run: () => Promise<T>) => {
+    await db.query(`select set_config('realtime.topic', $1, false)`, [topic]);
+    try {
+      return await run();
+    } finally {
+      await db.query(`select set_config('realtime.topic', '', false)`);
+    }
+  };
+  const send = (user: string, topic: string, extension: string, anonymous = false) =>
+    onTopic(topic, () =>
+      as(user, `insert into realtime.messages (topic, extension, event) values ($1, $2, 'pos')`, [topic, extension], { anonymous }),
+    );
+  const listen = (user: string, topic: string) =>
+    onTopic(topic, () => as<{ topic: string }>(user, 'select topic from realtime.messages where topic = $1', [topic]));
+
+  beforeAll(async () => {
+    await as(B, `insert into public.setlists (id, band_id, name) values ($1, $2, 'Peña'), ($3, $2, 'Ensayo')`, [L1, band, L2]);
+  });
+
+  it('abrir la sala no hace director a nadie', async () => {
+    await as(B, 'select public.open_live($1, $2)', [band, L1]);
+    expect(await session()).toEqual({ setlist_id: L1, leader_id: null, leader_name: '' });
+  });
+
+  it('quien no es miembro no abre, no ve y no dirige', async () => {
+    await expect(as(C, 'select public.open_live($1, $2)', [band, L1])).rejects.toThrow(/No sos miembro/);
+    await expect(as(C, 'select public.take_lead($1)', [band])).rejects.toThrow(/No sos miembro/);
+    await expect(as(C, 'select public.close_live($1)', [band])).rejects.toThrow(/No sos miembro/);
+    expect(await as(C, 'select * from public.live_sessions')).toEqual([]);
+    await expect(as(null, 'select * from public.live_sessions')).rejects.toThrow(/permission denied/);
+    await expect(as(G, 'select public.take_lead($1)', [band], { anonymous: true })).rejects.toThrow(/Necesitás una cuenta/);
+  });
+
+  it('nadie escribe live_sessions directo', async () => {
+    await expect(as(B, 'update public.live_sessions set leader_id = $1', [B])).rejects.toThrow(/permission denied/);
+    await expect(as(B, 'delete from public.live_sessions')).rejects.toThrow(/permission denied/);
+  });
+
+  it('"Ser director": gana el primero; el segundo tiene que tomar la dirección', async () => {
+    expect((await one(as<{ n: string }>(B, 'select public.take_lead($1) as n', [band]))).n).toBe('Sergio');
+    const late = await as(A, 'select public.take_lead($1)', [band]).catch((e: { message: string; hint?: string }) => e);
+    expect(late).toMatchObject({ message: 'Ahora dirige Sergio', hint: 'leader_changed' });
+    // Volver a tocar "Ser director" siendo director no cambia nada.
+    expect((await one(as<{ n: string }>(B, 'select public.take_lead($1) as n', [band]))).n).toBe('Sergio');
+    // "Tomar la dirección", sabiendo a quién se le saca.
+    expect((await one(as<{ n: string }>(A, 'select public.take_lead($1, $2) as n', [band, B]))).n).toBe('Elias');
+    expect(await session()).toMatchObject({ leader_id: A, leader_name: 'Elias' });
+    // Con un director que ya no es el de ahora, tampoco.
+    await expect(as(B, 'select public.take_lead($1, $2)', [band, C])).rejects.toThrow(/Ahora dirige Elias/);
+  });
+
+  it('cambiar el setlist no cambia al director', async () => {
+    await as(B, 'select public.open_live($1, $2)', [band, L2]);
+    expect(await session()).toMatchObject({ setlist_id: L2, leader_id: A });
+  });
+
+  it('solo el director deja de dirigir; la sala sigue abierta sin director', async () => {
+    await as(B, 'select public.leave_lead($1)', [band]);
+    expect(await session()).toMatchObject({ leader_id: A });
+    await as(A, 'select public.leave_lead($1)', [band]);
+    expect(await session()).toEqual({ setlist_id: L2, leader_id: null, leader_name: '' });
+  });
+
+  it('a las 12 h sin cambios vence: no se dirige, y al abrirla arranca sin director', async () => {
+    await as(B, 'select public.take_lead($1)', [band]);
+    await db.query(`update public.live_sessions set updated_at = now() - interval '13 hours' where band_id = $1`, [band]);
+    await expect(as(A, 'select public.take_lead($1, $2)', [band, B])).rejects.toThrow(/La sala está cerrada/);
+    await as(A, 'select public.open_live($1, $2)', [band, L1]);
+    expect(await session()).toEqual({ setlist_id: L1, leader_id: null, leader_name: '' });
+  });
+
+  it('un setlist que no es de la banda no sirve', async () => {
+    await expect(as(B, 'select public.open_live($1, $2)', [band, C])).rejects.toThrow(/El setlist no existe/);
+  });
+
+  it('canal live:<banda>: solo miembros escuchan y mandan (broadcast y presence)', async () => {
+    const topic = `live:${band}`;
+    await send(B, topic, 'broadcast');
+    await send(A, topic, 'presence');
+    expect((await listen(B, topic)).length).toBe(2);
+    expect(await listen(C, topic)).toEqual([]);
+    await expect(send(C, topic, 'broadcast')).rejects.toThrow(/row-level security/);
+    await expect(send(B, topic, 'postgres_changes')).rejects.toThrow(/row-level security/);
+    await expect(send(G, topic, 'presence', true)).rejects.toThrow(/row-level security/);
+    // Otro topic, o uno mal escrito: nada.
+    await expect(send(B, `live:${band}x`, 'broadcast')).rejects.toThrow(/row-level security/);
+    await expect(send(B, 'live:', 'broadcast')).rejects.toThrow(/row-level security/);
+  });
+
+  it('canal sync:<banda>: los miembros escuchan, nadie manda', async () => {
+    const topic = `sync:${band}`;
+    await db.query(`insert into realtime.messages (topic, extension) values ($1, 'postgres_changes')`, [topic]);
+    expect((await listen(B, topic)).length).toBe(1);
+    expect(await listen(C, topic)).toEqual([]);
+    await expect(send(B, topic, 'broadcast')).rejects.toThrow(/row-level security/);
+  });
+
+  it('quien sale de la banda deja de dirigir', async () => {
+    await as(B, 'select public.take_lead($1)', [band]);
+    await as(A, 'select public.remove_member($1, $2)', [band, B]);
+    expect(await one(as(A, 'select leader_id from public.live_sessions where band_id = $1', [band]))).toEqual({ leader_id: null });
+  });
+
+  it('cerrar la sala la borra', async () => {
+    await as(A, 'select public.close_live($1)', [band]);
+    expect(await as(A, 'select * from public.live_sessions')).toEqual([]);
   });
 });

@@ -33,15 +33,16 @@ select n, chequeo, ok from (values
      or has_function_privilege('anon', 'public.remove_member(uuid, uuid)', 'EXECUTE')
      or has_function_privilege('anon', 'public.leave_band(uuid)', 'EXECUTE')
      or has_function_privilege('anon', 'public.delete_band(uuid)', 'EXECUTE')
-     or has_function_privilege('anon', 'public.new_guest_code(uuid)', 'EXECUTE'))),
-  (8, 'authenticated puede ejecutar las 7 RPC',
+     -- new_guest_code se quita en la 005.
+     or coalesce(has_function_privilege('anon', to_regprocedure('public.new_guest_code(uuid)'), 'EXECUTE'), false))),
+  (8, 'authenticated puede ejecutar las RPC',
    has_function_privilege('authenticated', 'public.create_band(text, text, jsonb)', 'EXECUTE')
    and has_function_privilege('authenticated', 'public.create_invite(uuid)', 'EXECUTE')
    and has_function_privilege('authenticated', 'public.accept_invite(text, text)', 'EXECUTE')
    and has_function_privilege('authenticated', 'public.remove_member(uuid, uuid)', 'EXECUTE')
    and has_function_privilege('authenticated', 'public.leave_band(uuid)', 'EXECUTE')
    and has_function_privilege('authenticated', 'public.delete_band(uuid)', 'EXECUTE')
-   and has_function_privilege('authenticated', 'public.new_guest_code(uuid)', 'EXECUTE')),
+   and coalesce(has_function_privilege('authenticated', to_regprocedure('public.new_guest_code(uuid)'), 'EXECUTE'), true)),
   (9, 'El schema private está cerrado para anon',
    not has_schema_privilege('anon', 'private', 'USAGE')
    and not has_function_privilege('anon', 'private.is_member(uuid)', 'EXECUTE'))
