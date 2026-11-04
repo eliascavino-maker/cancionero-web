@@ -1,14 +1,17 @@
 import { useRef, useState } from 'react';
 import { askConfirm, tell } from '../../components/ask';
+import { ChordName } from '../../components/ChordName';
 import { Icon } from '../../components/Icon';
 import { type ChartSong, parseChart } from '../../importer/chart';
 import { readDocument } from '../../importer/docx';
+import { useCloud } from '../../cloud/CloudProvider';
 import { BandSongsDialog } from '../BandSongsDialog';
 import { ImportChartDialog } from '../ImportChartDialog';
 import { navigate, useLibrary, useLive, usePrefs } from '../hooks';
 
 export function LibraryPage() {
   const lib = useLibrary();
+  const cloud = useCloud();
   const [prefs, setPrefs] = usePrefs();
   const [query, setQuery] = useState('');
   const songs = useLive((l) => l.listSongs(query), [query]);
@@ -28,8 +31,8 @@ export function LibraryPage() {
   const closeMenu = () => menu.current?.removeAttribute('open');
 
   // ----- deleting several songs: pick them in the list, then "Eliminar".
-  const [selected, setSelected] = useState<Set<number> | null>(null);
-  const toggle = (id: number) => {
+  const [selected, setSelected] = useState<Set<string> | null>(null);
+  const toggle = (id: string) => {
     const next = new Set(selected);
     if (next.has(id)) next.delete(id);
     else next.add(id);
@@ -38,7 +41,7 @@ export function LibraryPage() {
   const removeSelected = async () => {
     if (!selected?.size) return;
     const n = selected.size;
-    const ok = await askConfirm('También salen de los setlists. No se puede deshacer.', {
+    const ok = await askConfirm(cloud.band ? 'Salen de la banda y de los setlists. Se pueden restaurar desde Banda → Borrados.' : 'También salen de los setlists. No se puede deshacer.', {
       title: `¿Eliminar ${n === 1 ? '1 canción' : `${n} canciones`}?`,
       ok: 'Eliminar',
       danger: true,
@@ -60,11 +63,12 @@ export function LibraryPage() {
   };
 
   const importBackup = async (file: File) => {
-    const ok = await askConfirm('Reemplaza todas las canciones y setlists de este navegador.', {
-      title: '¿Importar la copia?',
-      ok: 'Importar',
-      danger: true,
-    });
+    const ok = await askConfirm(
+      cloud.band
+        ? `Agrega sus canciones y setlists a «${cloud.band.bandName}». No reemplaza nada.`
+        : 'Reemplaza todas las canciones y setlists de este navegador.',
+      { title: '¿Importar la copia?', ok: 'Importar', danger: !cloud.band },
+    );
     if (!ok) return;
     try {
       await lib.importAll(JSON.parse(await file.text()));
@@ -99,15 +103,17 @@ export function LibraryPage() {
               >
                 <Icon name="file" /> Importar acordes (.docx / .txt)
               </button>
-              <button
-                onClick={() => {
-                  closeMenu();
-                  setSelected(new Set());
-                }}
-                style={{ color: 'var(--danger)' }}
-              >
-                <Icon name="trash" /> Eliminar canciones
-              </button>
+              {cloud.canDeleteSongs && (
+                <button
+                  onClick={() => {
+                    closeMenu();
+                    setSelected(new Set());
+                  }}
+                  style={{ color: 'var(--poncho)' }}
+                >
+                  <Icon name="trash" /> Eliminar canciones
+                </button>
+              )}
               <button onClick={exportBackup}>
                 <Icon name="download" /> Exportar respaldo
               </button>
@@ -214,7 +220,7 @@ export function LibraryPage() {
                   <span className="card__title">{s.title}</span>
                   {s.artist && <span className="card__sub">{s.artist}</span>}
                 </span>
-                {s.songKey && <span className="key-badge">{s.songKey}</span>}
+                {s.songKey && <span className="key-badge"><ChordName chord={s.songKey} /></span>}
               </a>
               )}
             </li>

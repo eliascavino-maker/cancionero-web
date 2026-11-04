@@ -4,6 +4,7 @@ import { parseChordPro } from '../chordpro/parser';
 import { emptyParts, setLineVoices, setSectionParts } from '../chordpro/parts';
 import { MAX_BPM, MIN_BPM, bpmFromTaps, clampBpm, parseBpm, setTempo } from '../chordpro/tempo';
 import { askText } from '../components/ask';
+import { ChordName } from '../components/ChordName';
 import { Icon } from '../components/Icon';
 import { SongView } from '../components/SongView';
 import { effectiveKey, normalize, transposeSong } from '../music/transposer';
@@ -453,7 +454,7 @@ export function SongPanel({
                 disabled={transpose === 0}
                 onClick={() => onTransposeChange(0)}
               >
-                <strong>{key ?? '—'}</strong>
+                <strong>{key ? <ChordName chord={key} /> : '—'}</strong>
                 <small>{transpose === 0 ? 'original' : transpose > 0 ? `+${transpose}` : transpose}</small>
               </button>
               <button className="icon-btn" aria-label="Subir medio tono" onClick={() => onTransposeChange(normalize(transpose + 1))}>

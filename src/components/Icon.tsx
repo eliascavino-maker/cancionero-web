@@ -33,6 +33,13 @@ const PATHS = {
   textLarger: 'M3 19l5-13 5 13M5 15h6M18 10v6M15 13h6',
   speed: 'M12 20a8 8 0 1 1 8-8M12 12l4-4',
   stage: 'M4 5h16v11H4zM8 20h8M12 16v4',
+  cloud: 'M7 18.5a4.5 4.5 0 0 1-.7-8.95A6 6 0 0 1 17.8 9.6a4.5 4.5 0 0 1-.8 8.9z',
+  cloudOff: 'M7 18.5a4.5 4.5 0 0 1-.7-8.95A6 6 0 0 1 17.8 9.6a4.5 4.5 0 0 1-.8 8.9zM4 4l16 16',
+  history: 'M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v3.7h3.7M12 8v4.2l2.8 1.8',
+  restore: 'M9 14l-5-5 5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
+  share: 'M12 15V4M8 8l4-4 4 4M6 12v8h12v-8',
+  copy: 'M9 9h10v11H9zM5 15V4h10',
+  logout: 'M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10',
 } as const;
 
 export type IconName = keyof typeof PATHS;

@@ -13,6 +13,7 @@ import {
 } from '../chordpro/song';
 import type { ChordRef } from '../chordpro/moveChord';
 import { PLAYERS, colorOf, shortName, splitByMembers } from '../data/band';
+import { ChordName } from './ChordName';
 import { splitIntoWords } from './words';
 import './SongView.css';
 
@@ -61,7 +62,7 @@ export interface NoteEdit {
 // Keeps an empty cell one line tall so rows stay aligned.
 const ZWSP = '​';
 
-const memberStyle = (color: string | undefined) => ({ '--m': color ?? 'var(--muted)' }) as CSSProperties;
+const memberStyle = (color: string | undefined) => ({ '--m': color ?? 'var(--ceniza)' }) as CSSProperties;
 
 /** A band member's name in their color. */
 export function MemberName({ name }: { name: string }) {
@@ -128,7 +129,7 @@ export function ChordLyricLine({
                 ) : chordEdit && ref ? (
                   <EditableChord chord={atom.chord} at={ref} edit={chordEdit} />
                 ) : (
-                  <span className="cp-chord">{atom.chord}</span>
+                  <span className="cp-chord"><ChordName chord={atom.chord} /></span>
                 ))}
               {!chordsOnly && <span className="cp-lyric">{atom.text || ZWSP}</span>}
             </span>
@@ -206,7 +207,7 @@ function EditableChord({ chord, at, edit }: { chord: string; at: ChordRef; edit:
       aria-label={`Acorde ${chord}`}
       onClick={() => edit.onSelect(at)}
     >
-      {chord}
+      <ChordName chord={chord} />
     </button>
   );
 }
@@ -214,7 +215,8 @@ function EditableChord({ chord, at, edit }: { chord: string; at: ChordRef; edit:
 function SongHeader({ metadata, onTempoClick }: { metadata: SongMetadata; onTempoClick?: () => void }) {
   const subtitle = [...metadata.subtitles, artistOf(metadata)].filter(Boolean).join(' · ');
   const tempo = metadata.tempo ? `♩ ${metadata.tempo}` : onTempoClick ? '♩ BPM' : undefined;
-  const before = [metadata.key && `Tono: ${metadata.key}`, metadata.capo ? `Capo ${metadata.capo}` : undefined];
+  const keyInfo = metadata.key && `Tono: ${metadata.key}`;
+  const before = [keyInfo, metadata.capo ? `Capo ${metadata.capo}` : undefined];
   const after = [metadata.time];
   const info = [...before, tempo, ...after].filter(Boolean) as string[];
 
@@ -230,6 +232,10 @@ function SongHeader({ metadata, onTempoClick }: { metadata: SongMetadata; onTemp
                 <button type="button" aria-label="Cambiar BPM" onClick={onTempoClick}>
                   {i}
                 </button>
+              </li>
+            ) : i === keyInfo ? (
+              <li key={i} className="cp-info__key">
+                Tono: <ChordName chord={metadata.key!} />
               </li>
             ) : (
               <li key={i}>{i}</li>

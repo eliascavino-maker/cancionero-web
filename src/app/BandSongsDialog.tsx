@@ -58,7 +58,7 @@ export function BandSongsDialog({ onClose }: { onClose: () => void }) {
     if (!rows) return;
     setBusy(true);
     const out: Row[] = [];
-    const ids = new Map<string, number>();
+    const ids = new Map<string, string>();
     for (const r of rows) {
       let id = r.existing?.id;
       if (r.include) {

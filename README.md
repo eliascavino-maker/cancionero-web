@@ -3,8 +3,8 @@
 Página web tipo OnSong: canciones en formato ChordPro, acordes dibujados sobre
 la letra, transposición, biblioteca y setlists con modo escenario.
 
-React + TypeScript + Vite. Los datos se guardan en el navegador (IndexedDB),
-sin servidor.
+React + TypeScript + Vite. Los datos se guardan en el navegador (IndexedDB) y,
+si el dispositivo está en una banda, se sincronizan con Supabase.
 
 ## Uso
 
@@ -22,11 +22,47 @@ falta configurar el servidor.
 
 ## Datos
 
-- Todo queda en el navegador donde se cargó. Otro navegador o dispositivo
-  arranca vacío.
+- Sin banda, todo queda en el navegador donde se cargó. Otro navegador o
+  dispositivo arranca vacío. Con banda, se sincroniza (ver abajo).
 - **Exportar / Importar** (en Biblioteca) baja o carga un respaldo `.json`.
-  Importar reemplaza todo.
+  Sin banda, importar reemplaza todo; con banda, agrega lo del respaldo.
 - El editor abre archivos `.cho`, `.chopro`, `.chordpro`, `.pro`, `.txt`.
+
+## Banda y sincronización
+
+- En **Banda** cada uno entra con email y contraseña. El owner crea la banda
+  e invita con un link de un solo uso (vence a los 7 días).
+- Canciones y setlists se guardan primero en el dispositivo y se suben solos
+  cuando hay conexión. La pestaña Banda muestra un punto si hay cambios sin
+  subir o algo para leer.
+- Si dos personas editan la misma canción a la vez, queda la que llegó
+  primero y la otra se guarda como «Título (conflicto)». En los setlists gana
+  el último cambio.
+- Todos crean y editan. Solo el owner borra canciones, invita, saca miembros
+  y borra la banda. Borrar no es definitivo: va a **Banda → Borrados**.
+- **Historial** (en la canción y en el menú del setlist): quién cambió qué y
+  cuándo, con botón para volver atrás. Guarda los últimos 30 cambios de cada
+  cosa, de los últimos 90 días.
+- Sin `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (en `.env.local` o en los
+  secrets de Actions) la app funciona como antes, solo en el dispositivo.
+
+### Supabase
+
+Las migraciones están en `supabase/migrations/` y cada una tiene su consulta
+de verificación en `supabase/verify/` (todas las filas tienen que dar
+`ok = true`). `supabase/diagnostics/privilegios.sql` muestra qué privilegios
+tienen anon y authenticated y cuáles sobran. `npm test` las aplica en un Postgres local (PGlite) y prueba
+los permisos.
+
+## Sin conexión
+
+- Después de abrirla una vez con internet, la app funciona sin conexión: un
+  service worker (`vite-plugin-pwa`) guarda la app y las fuentes.
+- Cuando hay una versión nueva aparece **Hay una versión nueva · Actualizar**.
+  No se actualiza sola, así la página no se recarga en medio de un show. En el
+  modo escenario el aviso no aparece.
+- En iPhone conviene instalarla en la pantalla de inicio (Compartir → Agregar a
+  inicio): Safari puede borrar los datos de sitios que no se abren en 7 días.
 
 ## Vista de canción
 
@@ -56,6 +92,9 @@ elijas ahí se guarda para esa canción en ese setlist.
 | `src/music/transposer.ts` | Transposición de acordes, tonos y canciones |
 | `src/components/SongView.tsx` | Dibuja la canción con los acordes sobre la letra |
 | `src/data/library.ts` | IndexedDB: canciones, setlists, orden, respaldo |
+| `src/cloud/sync.ts` | Sube y baja cambios con la banda; resuelve conflictos |
+| `src/cloud/CloudProvider.tsx` | Sesión, banda y cuándo sincronizar |
+| `supabase/` | Migraciones, consultas de verificación y tests de permisos |
 | `src/app/` | Pantallas, rutas y preferencias |
 
 ## ChordPro soportado

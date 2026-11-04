@@ -122,3 +122,14 @@ export function useSavedLevel(songKey: string | undefined): [number | null, (lev
   };
   return [level, save];
 }
+
+/** After the library gets new song ids: saved speeds follow their songs. */
+export function renameSpeedKeys(ids: Record<string, string>) {
+  const speeds = readSpeeds();
+  const renamed = Object.fromEntries(Object.entries(speeds).map(([k, v]) => [ids[k] ?? k, v]));
+  try {
+    localStorage.setItem(SPEEDS_KEY, JSON.stringify(renamed));
+  } catch {
+    // Storage blocked: nothing to keep.
+  }
+}

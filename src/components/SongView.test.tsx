@@ -42,7 +42,7 @@ describe('SongView', () => {
     show('[C]Hola [G]mun[Em]do');
     const g = screen.getByText('G').closest('.cp-atom')!;
     expect(g).toHaveTextContent('Gmun');
-    const em = screen.getByText('Em').closest('.cp-atom')!;
+    const em = [...document.querySelectorAll('.cp-chord')].find((c) => c.textContent === 'Em')!.closest('.cp-atom')!;
     expect(em).toHaveTextContent('Emdo');
     // "mun" and "do" share a word so they never wrap apart.
     expect(g.parentElement).toBe(em.parentElement);
@@ -92,5 +92,31 @@ describe('SongView', () => {
   it('tab section renders monospace', () => {
     show('{sot}\ne|--3--|\n{eot}');
     expect(screen.getByText('e|--3--|').tagName).toBe('PRE');
+  });
+});
+
+describe('ChordName', () => {
+  const chord = (c: string) => render(<SongView song={parseChordPro(`[${c}]la`)} />).container.querySelector('.cp-chord')!;
+
+  it('raises the quality and extensions', () => {
+    const c = chord('C#m7');
+    expect(c).toHaveTextContent('C#m7');
+    expect(c.querySelector('.chord__ext')).toHaveTextContent('m7');
+  });
+
+  it('keeps the bass after the slash at full size', () => {
+    const c = chord('Dsus2/F#');
+    expect(c.querySelector('.chord__ext')).toHaveTextContent('sus2');
+    expect(c.querySelector('.chord__bass')).toHaveTextContent('/F#');
+  });
+
+  it('reads Latin roots whole', () => {
+    const c = chord('Solm');
+    expect(c.firstChild?.textContent).toBe('Sol');
+    expect(c.querySelector('.chord__ext')).toHaveTextContent('m');
+  });
+
+  it('leaves a plain major chord alone', () => {
+    expect(chord('Bb').innerHTML).toBe('Bb');
   });
 });

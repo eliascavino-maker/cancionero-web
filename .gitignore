@@ -2,3 +2,8 @@ node_modules/
 dist/
 *.tsbuildinfo
 .vite/
+
+# Variables locales (Supabase). Nunca subirlas.
+.env.local
+.env.*.local
+*.local

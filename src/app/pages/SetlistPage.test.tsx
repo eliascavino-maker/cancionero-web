@@ -16,7 +16,7 @@ if (!globalThis.PointerEvent) {
 }
 
 let lib: Library;
-let setlist: number;
+let setlist: string;
 beforeEach(async () => {
   lib = await Library.open(`setlist-${Math.random()}`);
   setlist = await lib.createSetlist('Show');

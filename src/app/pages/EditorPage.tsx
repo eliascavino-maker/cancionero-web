@@ -17,7 +17,7 @@ Si querés, podés marcar partes con "Coro:", "Verso 2", etc.`;
  * New song: paste lyrics and the structure is detected ("Pegar letra").
  * Existing song: edit the ChordPro source, or paste the lyrics again.
  */
-export function EditorPage({ id }: { id?: number }) {
+export function EditorPage({ id }: { id?: string }) {
   const lib = useLibrary();
   const isNew = id === undefined;
   const [mode, setMode] = useState<'paste' | 'chordpro'>(isNew ? 'paste' : 'chordpro');

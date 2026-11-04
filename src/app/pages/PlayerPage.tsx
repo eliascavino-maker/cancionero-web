@@ -9,7 +9,7 @@ import { navigate, useLibrary, useLive } from '../hooks';
  * page-turner pedal set to arrows) move between songs. Transpose changes are
  * saved for this setlist item.
  */
-export function PlayerPage({ setlistId, index }: { setlistId: number; index: number }) {
+export function PlayerPage({ setlistId, index }: { setlistId: string; index: number }) {
   const lib = useLibrary();
   const data = useLive(
     async (l) => ({ setlist: await l.getSetlist(setlistId), entries: await l.getSetlistEntries(setlistId) }),
@@ -67,7 +67,7 @@ export function PlayerPage({ setlistId, index }: { setlistId: number; index: num
         content={entry.song.content}
         transpose={entry.item.transpose}
         onTransposeChange={(n) => lib.setItemTranspose(entry.item.id, n)}
-        songKey={String(entry.song.id)}
+        songKey={entry.song.id}
         onContentChange={(c) => lib.saveSong(c, entry.song.id)}
       />
     </div>

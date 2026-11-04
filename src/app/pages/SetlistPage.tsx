@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { askConfirm, askText } from '../../components/ask';
+import { ChordName } from '../../components/ChordName';
 import { Icon } from '../../components/Icon';
 import { transposeKey } from '../../music/transposer';
 import type { SetlistEntry } from '../../data/library';
+import { useCloud } from '../../cloud/CloudProvider';
 import { navigate, useLibrary, useLive } from '../hooks';
 
 /** Songs of one setlist: reorder, add, remove, play. */
-export function SetlistPage({ id }: { id: number }) {
+export function SetlistPage({ id }: { id: string }) {
   const lib = useLibrary();
+  const cloud = useCloud();
   const data = useLive(
     async (l) => {
       const setlist = await l.getSetlist(id);
@@ -30,7 +33,7 @@ export function SetlistPage({ id }: { id: number }) {
 
   const remove = async () => {
     menu.current?.removeAttribute('open');
-    const ok = await askConfirm('Las canciones quedan en la biblioteca.', {
+    const ok = await askConfirm(cloud.band ? 'Las canciones quedan en la biblioteca. Se puede restaurar desde Banda → Borrados.' : 'Las canciones quedan en la biblioteca.', {
       title: `¿Borrar «${setlist.name}»?`,
       ok: 'Borrar',
       danger: true,
@@ -56,7 +59,12 @@ export function SetlistPage({ id }: { id: number }) {
               <button onClick={rename}>
                 <Icon name="edit" /> Renombrar
               </button>
-              <button onClick={remove} style={{ color: 'var(--danger)' }}>
+              {cloud.band && (
+                <button onClick={() => navigate(`/setlist/${id}/historial`)}>
+                  <Icon name="history" /> Historial
+                </button>
+              )}
+              <button onClick={remove} style={{ color: 'var(--poncho)' }}>
                 <Icon name="trash" /> Borrar setlist
               </button>
             </div>
@@ -90,7 +98,7 @@ export function SetlistPage({ id }: { id: number }) {
   );
 }
 
-function SongPicker({ onPick, onClose }: { onPick: (songId: number) => Promise<unknown>; onClose: () => void }) {
+function SongPicker({ onPick, onClose }: { onPick: (songId: string) => Promise<unknown>; onClose: () => void }) {
   const [query, setQuery] = useState('');
   const [added, setAdded] = useState<string | null>(null);
   const songs = useLive((l) => l.listSongs(query), [query]);
@@ -165,7 +173,7 @@ function moved<T>(list: T[], from: number, to: number): T[] {
 }
 
 /** The songs of a setlist. Drag the ⠿ handle (finger or mouse) to change the order. */
-function SortableList({ setlistId, entries }: { setlistId: number; entries: SetlistEntry[] }) {
+function SortableList({ setlistId, entries }: { setlistId: string; entries: SetlistEntry[] }) {
   const lib = useLibrary();
   const list = useRef<HTMLOListElement>(null);
   const geo = useRef<Geometry | null>(null);
@@ -253,7 +261,7 @@ function SortableList({ setlistId, entries }: { setlistId: number; entries: Setl
                     .join(' · ') || ' '}
                 </span>
               </span>
-              {key && <span className="key-badge">{key}</span>}
+              {key && <span className="key-badge"><ChordName chord={key} /></span>}
             </a>
             <span className="card__tools">
               <button

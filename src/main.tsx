@@ -1,22 +1,33 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
+import { renameSpeedKeys } from './app/autoscroll';
+import { CloudProvider } from './cloud/CloudProvider';
 import { LibraryContext } from './app/hooks';
 import { Library } from './data/library';
-import '@fontsource-variable/inter';
+import '@fontsource-variable/atkinson-hyperlegible-next';
+import '@fontsource-variable/atkinson-hyperlegible-next/wght-italic.css';
 import '@fontsource/barlow-semi-condensed/600.css';
 import '@fontsource/barlow-semi-condensed/700.css';
 import './styles.css';
+
+// Ask the browser not to clear the library when space runs low.
+// Installed apps usually get it; elsewhere it may be refused, which is fine.
+navigator.storage?.persist?.().catch(() => {});
 
 const root = createRoot(document.getElementById('root')!);
 
 Library.open()
   .then(async (lib) => {
+    const upgraded = await lib.takeUpgradedSongIds();
+    if (upgraded) renameSpeedKeys(upgraded);
     await lib.seedIfEmpty();
     root.render(
       <StrictMode>
         <LibraryContext.Provider value={lib}>
-          <App />
+          <CloudProvider>
+            <App />
+          </CloudProvider>
         </LibraryContext.Provider>
       </StrictMode>,
     );

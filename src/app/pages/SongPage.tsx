@@ -5,11 +5,13 @@ import { askConfirm } from '../../components/ask';
 import { FullscreenButton } from '../../components/FullscreenButton';
 import { Icon } from '../../components/Icon';
 import { transposeSong } from '../../music/transposer';
+import { useCloud } from '../../cloud/CloudProvider';
 import { SongPanel } from '../SongPanel';
 import { navigate, useLibrary, useLive } from '../hooks';
 
-export function SongPage({ id }: { id: number }) {
+export function SongPage({ id }: { id: string }) {
   const lib = useLibrary();
+  const cloud = useCloud();
   const song = useLive((l) => l.getSong(id).then((s) => s ?? null), [id]);
   const [transpose, setTranspose] = useState(0);
 
@@ -27,7 +29,7 @@ export function SongPage({ id }: { id: number }) {
   };
 
   const remove = async () => {
-    const ok = await askConfirm('También sale de los setlists.', {
+    const ok = await askConfirm(cloud.band ? 'Sale de la banda y de los setlists. Se puede restaurar desde Banda → Borrados.' : 'También sale de los setlists.', {
       title: `¿Borrar «${song.title}»?`,
       ok: 'Borrar',
       danger: true,
@@ -54,16 +56,23 @@ export function SongPage({ id }: { id: number }) {
           <button className="icon-btn" aria-label="Editar" title="Editar" onClick={() => navigate(`/edit/${song.id}`)}>
             <Icon name="edit" />
           </button>
-          <button className="icon-btn icon-btn--danger" aria-label="Borrar" title="Borrar" onClick={remove}>
-            <Icon name="trash" />
-          </button>
+          {cloud.band && (
+            <a className="icon-btn" href={`#/song/${song.id}/historial`} aria-label="Historial" title="Historial">
+              <Icon name="history" />
+            </a>
+          )}
+          {cloud.canDeleteSongs && (
+            <button className="icon-btn icon-btn--danger" aria-label="Borrar" title="Borrar" onClick={remove}>
+              <Icon name="trash" />
+            </button>
+          )}
         </div>
       </header>
       <SongPanel
         content={song.content}
         transpose={transpose}
         onTransposeChange={setTranspose}
-        songKey={String(song.id)}
+        songKey={song.id}
         onContentChange={(c) => lib.saveSong(c, song.id)}
       />
     </div>
