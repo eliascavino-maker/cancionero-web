@@ -5,6 +5,8 @@ export interface ChordAtom {
   chord?: string;
   /** The chord is a note like `[*Silencio largo]`, not a chord. */
   annotation?: true;
+  /** Second voice. */
+  harmony?: true;
   text: string;
   /** Lyric characters before this atom in the line. */
   col: number;
@@ -34,6 +36,7 @@ export function splitIntoWords(segments: ChordSegment[]): ChordAtom[][] {
     parts.forEach((part, i) => {
       const text = part.trimEnd();
       const atom: ChordAtom = { text, col };
+      if (seg.harmony) atom.harmony = true;
       if (i === 0 && chord !== undefined) {
         atom.chord = chord;
         if (isAnnotation(seg)) atom.annotation = true;

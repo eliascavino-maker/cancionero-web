@@ -164,3 +164,27 @@ describe('SongView: my lines lit', () => {
     expect(container.querySelector('.cp-mine')).toBeNull();
   });
 });
+
+describe('SongView: second voice', () => {
+  const song = parseChordPro(
+    ['{sov}', '{x_voz2: Angel}', 'Uno', '[G]Dos', '{x_voz2}', 'Te ((quiero))', '{eov}'].join('\n'),
+  );
+  const marked = (container: HTMLElement) => [...container.querySelectorAll('.cp-harmony')].map((el) => el.textContent);
+
+  it.each([true, false])('showChords=%s: whole lines and marked words, the name once per stretch', (showChords) => {
+    const { container } = render(<SongView song={song} showChords={showChords} />);
+    expect(marked(container)).toEqual(['Uno', 'Dos', 'quiero']);
+    expect([...container.querySelectorAll('.cp-harmony-tag')].map((el) => el.textContent)).toEqual([
+      '2ª voz · Angel',
+      '2ª voz',
+    ]);
+  });
+
+  it('lights the lines of whoever sings the second voice', () => {
+    const { container } = render(<SongView song={song} mine="Angel" />);
+    expect([...container.querySelectorAll('.cp-mine')].map((el) => el.textContent?.replace(/2ª.*/, ''))).toEqual([
+      'Uno',
+      'GDos',
+    ]);
+  });
+});

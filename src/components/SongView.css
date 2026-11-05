@@ -373,3 +373,68 @@
 .cp-section--tappable:not(.cp-section--now):hover {
   background: color-mix(in srgb, var(--papel) 4%, transparent);
 }
+
+/* Indications: {x_cue: 4 compases de intro}. Own row, never over the lyrics. */
+.cp-cue {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45em;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0.2em 0 0.3em;
+  padding: 0.15em 0.7em 0.15em 0.55em;
+  border-left: 3px solid var(--tungsteno);
+  border-radius: 0 var(--r-chico) var(--r-chico) 0;
+  background: color-mix(in srgb, var(--tungsteno) 10%, transparent);
+  font-family: var(--font-cartel);
+  font-size: max(13px, 0.66em);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+  color: var(--papel);
+}
+.cp-cue::before {
+  content: '▸';
+  color: var(--tungsteno);
+}
+.cp-cue--editable {
+  border-top: 1px dashed var(--tungsteno);
+  border-right: 1px dashed var(--tungsteno);
+  border-bottom: 1px dashed var(--tungsteno);
+  font-family: var(--font-cartel);
+  cursor: pointer;
+}
+.cp-cue-add {
+  display: block;
+  margin-top: 0.3em;
+}
+
+/* Second voice: ((palabras)) or whole lines under {x_voz2: Ana}. Its singer's color, italic, dotted. */
+.cp-harmonized {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  column-gap: 0.6em;
+}
+.cp-harmonized > :first-child {
+  min-width: 0;
+}
+.cp-harmony {
+  color: color-mix(in srgb, var(--h, #c4b5fd) 80%, var(--papel));
+  font-style: italic;
+  text-decoration: underline dotted color-mix(in srgb, var(--h, #c4b5fd) 85%, transparent);
+  text-decoration-thickness: 0.09em;
+  text-underline-offset: 0.22em;
+}
+.cp-harmony-tag {
+  margin-bottom: 0.35em;
+  padding: 0.05em 0.6em;
+  border: 1px dotted var(--h, #c4b5fd);
+  border-radius: 999px;
+  font-family: var(--font-letra);
+  font-size: max(11px, 0.48em);
+  font-style: italic;
+  font-weight: 700;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--h, #c4b5fd) 80%, var(--papel));
+}

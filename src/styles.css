@@ -974,6 +974,17 @@ li.card:hover {
 .editor--preview .editor__pane {
   display: none;
 }
+/* Marks over the ChordPro text: Segunda voz, Indicación. */
+.editor__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.editor__hint {
+  font-size: 0.85rem;
+  color: var(--ceniza);
+}
 
 /* "Pegar letra": title fields + one big box for the lyrics. */
 .paste__fields {
@@ -1237,6 +1248,22 @@ li.card:hover {
   background: var(--m);
   border-color: var(--m);
   color: #140f10;
+}
+/* Second voice: its own row, dotted like the second voice in the song. */
+.voice-pick--second {
+  flex-basis: 100%;
+  align-items: center;
+}
+.voice-pick__label {
+  margin-right: 4px;
+  font-size: 0.82rem;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--ceniza);
+}
+.voice-pick--second .voice-pick__btn {
+  border-style: dotted;
+  font-style: italic;
 }
 
 /* ---------------------------------------------------------- import chords */
@@ -2200,4 +2227,10 @@ html.stage-open body {
   gap: 4px;
   color: var(--ceniza);
   font-size: 0.85rem;
+}
+
+/* Indicaciones hidden: the flag goes dim and crossed out. */
+.cue-toggle[aria-pressed='false'] {
+  color: var(--humo);
+  background: linear-gradient(to top right, transparent 47%, currentColor 47% 53%, transparent 53%) center / 22px 22px no-repeat;
 }

@@ -1,6 +1,7 @@
 import { type CSSProperties, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { type ChordRef, type MoveDirection, addAnnotation, moveChord, setAnnotation } from '../chordpro/moveChord';
 import { parseChordPro } from '../chordpro/parser';
+import { addCue, addCueAtEnd, setCue } from '../chordpro/cues';
 import { emptyParts, setLineVoices, setSectionParts } from '../chordpro/parts';
 import { MAX_BPM, MIN_BPM, bpmFromTaps, clampBpm, parseBpm, setTempo } from '../chordpro/tempo';
 import { askText } from '../components/ask';
@@ -25,6 +26,8 @@ import { StageView, sectionTitle, stageSlides } from './StageView';
 import { isImmersive } from '../components/FullscreenButton';
 import type { VoiceSelection } from '../components/SongView';
 import { ALL, SINGERS, colorOf } from '../data/band';
+
+const CUE_HINT = 'Ej: 4 compases de intro, x2, Corte, Silencio 2 c.';
 
 /** Live room: where the band is, by part (index in `stageSlides`). */
 export interface LivePart {
@@ -84,7 +87,7 @@ export function SongPanel({
   };
 
   // Bottom bar: normal controls, the edit menu, or one of the editors.
-  const [mode, setMode] = useState<'play' | 'tools' | 'move' | 'tempo' | 'parts' | 'notes' | 'voices'>('play');
+  const [mode, setMode] = useState<'play' | 'tools' | 'move' | 'tempo' | 'parts' | 'notes' | 'voices' | 'cues'>('play');
   const moving = mode === 'move';
   const editingTempo = mode === 'tempo';
   const [selected, setSelected] = useState<ChordRef | null>(null);
@@ -118,6 +121,8 @@ export function SongPanel({
   };
 
   const parsed = useMemo(() => parseChordPro(content), [content]);
+  const hasCues = parsed.sections.some((s) => s.lines.some((l) => l.type === 'cue'));
+  const showCues = prefs.showCues || mode === 'cues';
   const partsSection = partsIndex === null ? undefined : parsed.sections[partsIndex];
 
   // ----- voices: who sings the selected lines (the line's own, else the section's).
@@ -127,10 +132,11 @@ export function SongPanel({
   const firstVoiced = voiceSel ? voiceLyrics[voiceSel.from] : undefined;
   const selectedVoices =
     (firstVoiced?.type === 'lyric' ? firstVoiced.singers : undefined) ?? voiceSection?.parts?.lead ?? [];
-  const setVoices = (names: string[] | undefined) => {
+  const selectedHarmony = (firstVoiced?.type === 'lyric' ? firstVoiced.harmony : undefined) ?? [];
+  const setVoices = (names: string[] | undefined, voice: 'lead' | 'harmony' = 'lead') => {
     if (!voiceSection || !voiceSel) return;
     const ordered = names && SINGERS.filter((n) => names.includes(n)).concat(names.filter((n) => !SINGERS.includes(n)));
-    edit(setLineVoices(content, voiceSection, voiceSel.from, voiceSel.to, ordered));
+    edit(setLineVoices(content, voiceSection, voiceSel.from, voiceSel.to, ordered?.length ? ordered : undefined, voice));
   };
   const bpm = parseBpm(parsed.metadata.tempo);
   const setBpm = (n: number) => edit(setTempo(content, clampBpm(n)));
@@ -245,6 +251,25 @@ export function SongPanel({
           currentPart={live?.part}
           onPartTap={live?.onPart}
           showChords={moving || (prefs.showChords && mode !== 'voices' && mode !== 'notes')}
+          showCues={showCues}
+          cueEdit={
+            mode === 'cues'
+              ? {
+                  onLine: async (line) => {
+                    const text = await askText('Indicación arriba de esta línea', '', { placeholder: CUE_HINT });
+                    if (text?.trim()) edit(addCue(content, line, text));
+                  },
+                  onEnd: async (section) => {
+                    const text = await askText('Indicación al final de la parte', '', { placeholder: CUE_HINT });
+                    if (text?.trim()) edit(addCueAtEnd(content, section, text));
+                  },
+                  onCue: async (line, text) => {
+                    const next = await askText('Cambiar la indicación', text, { placeholder: 'Vacía para borrarla' });
+                    if (next !== null) edit(setCue(content, line, next));
+                  },
+                }
+              : undefined
+          }
           chordEdit={moving ? { selected, onSelect: setSelected } : undefined}
           noteEdit={
             mode === 'notes'
@@ -300,6 +325,7 @@ export function SongPanel({
           pxPerSecond={speed}
           fontSize={fontSize}
           mine={mine}
+          showCues={showCues}
           index={live?.part}
           onIndexChange={live?.onPart}
         />
@@ -324,6 +350,9 @@ export function SongPanel({
             </button>
             <button className="btn" onClick={() => openEditor('notes')}>
               Notas
+            </button>
+            <button className="btn" onClick={() => setMode('cues')}>
+              <Icon name="cue" size={18} /> Indicaciones
             </button>
             <button className="btn" onClick={() => setMode('parts')}>
               <Icon name="band" size={18} /> Partes
@@ -370,10 +399,41 @@ export function SongPanel({
                 <button className="btn" onClick={() => setVoices(undefined)}>
                   Quitar
                 </button>
+                <div className="toolbar__group voice-pick voice-pick--second" role="group" aria-label="Segunda voz">
+                  <span className="voice-pick__label">2ª voz</span>
+                  {SINGERS.map((name) => (
+                    <button
+                      key={name}
+                      className="voice-pick__btn"
+                      style={{ '--m': colorOf(name) } as CSSProperties}
+                      aria-pressed={selectedHarmony.includes(name)}
+                      onClick={() =>
+                        setVoices(
+                          selectedHarmony.includes(name)
+                            ? selectedHarmony.filter((n) => n !== name)
+                            : [...selectedHarmony, name],
+                          'harmony',
+                        )
+                      }
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
               </>
             ) : (
               <span className="toolbar__hint">Tocá la primera y la última línea que canta alguien</span>
             )}
+            <span className="toolbar__spacer" />
+            <button className="btn btn--primary" onClick={stopMoving}>
+              Listo
+            </button>
+          </div>
+        </div>
+      ) : mode === 'cues' ? (
+        <div className="toolbar" role="toolbar" aria-label="Indicaciones">
+          <div className="toolbar__row">
+            <span className="toolbar__hint">Tocá una línea para poner una indicación arriba, o una indicación para cambiarla</span>
             <span className="toolbar__spacer" />
             <button className="btn btn--primary" onClick={stopMoving}>
               Listo
@@ -489,6 +549,17 @@ export function SongPanel({
               Acordes
             </button>
           </div>
+          {hasCues && (
+            <button
+              className="icon-btn cue-toggle"
+              aria-label="Indicaciones"
+              title={prefs.showCues ? 'Ocultar las indicaciones' : 'Mostrar las indicaciones'}
+              aria-pressed={prefs.showCues}
+              onClick={() => set({ showCues: !prefs.showCues })}
+            >
+              <Icon name="cue" />
+            </button>
+          )}
           {onContentChange && (
             <button className="icon-btn" aria-label="Editar canción" title="Mover acordes, notas, partes, BPM" onClick={() => setMode('tools')}>
               <Icon name="edit" />

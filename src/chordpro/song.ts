@@ -22,6 +22,8 @@ export interface ChordSegment {
   /** Raw text between `[` and `]`. Missing when the segment has no chord. */
   chord?: string;
   lyric: string;
+  /** Second voice: inside `((…))`, or the whole line under `{x_voz2}`. */
+  harmony?: true;
 }
 
 export type CommentStyle = 'normal' | 'italic' | 'boxed';
@@ -29,8 +31,11 @@ export type CommentStyle = 'normal' | 'italic' | 'boxed';
 export type SongLine =
   /** `source`: 0-based line number in the ChordPro text (set by `parseChordPro`). */
   /** `singers`: lead voices set for this line with `{x_voz}` (else the section's). */
-  | { type: 'lyric'; segments: ChordSegment[]; source?: number; singers?: string[] }
+  /** `harmony`: who sings the second voice, from `{x_voz2}`. */
+  | { type: 'lyric'; segments: ChordSegment[]; source?: number; singers?: string[]; harmony?: string[] }
   | { type: 'comment'; text: string; style: CommentStyle }
+  /** `{x_cue: 4 compases de intro}`: an indication on its own row, never over the lyrics. */
+  | { type: 'cue'; text: string; source?: number }
   /** Raw line inside a tab or grid section. */
   | { type: 'tab'; text: string }
   | { type: 'empty' }
@@ -88,6 +93,17 @@ export function displayChord(s: ChordSegment): string | undefined {
 
 export function hasChords(line: LyricLine): boolean {
   return line.segments.some((s) => s.chord !== undefined);
+}
+
+/** The line has a second voice: marked words, or all of it. */
+export function hasHarmony(line: LyricLine): boolean {
+  return line.segments.some((s) => s.harmony && s.lyric.trim());
+}
+
+/** The whole line is second voice (`{x_voz2}` with no `((…))` marks). */
+export function isHarmonyLine(line: LyricLine): boolean {
+  const sung = line.segments.filter((s) => s.lyric.trim());
+  return sung.length > 0 && sung.every((s) => s.harmony);
 }
 
 export function lyricsOf(line: LyricLine): string {

@@ -126,6 +126,56 @@ e|--3--|
     await waitFor(() => expect(saved.at(-1)).toBe('[G]Hola mundo'));
   });
 
+  it('Indicaciones: add one above a line or at the end of a part, change it, delete it', async () => {
+    const saved: string[] = [];
+    const answer = async (title: string, text: string) => {
+      const box = await screen.findByRole('textbox', { name: title });
+      fireEvent.change(box, { target: { value: text } });
+      fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    };
+    render(
+      <SongPanel
+        content={'{soc}\n[G]Hola mundo\n{eoc}'}
+        transpose={0}
+        onTransposeChange={() => {}}
+        onContentChange={(c) => saved.push(c)}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Editar canción' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Indicaciones' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Indicación arriba de: Hola mundo' }));
+    await answer('Indicación arriba de esta línea', '4 compases de intro');
+    await waitFor(() => expect(saved.at(-1)).toBe('{soc}\n{x_cue: 4 compases de intro}\n[G]Hola mundo\n{eoc}'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Indicación al final: Estribillo' }));
+    await answer('Indicación al final de la parte', 'x2');
+    await waitFor(() => expect(saved.at(-1)).toBe('{soc}\n{x_cue: 4 compases de intro}\n[G]Hola mundo\n{x_cue: x2}\n{eoc}'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Indicación: x2' }));
+    await answer('Cambiar la indicación', '');
+    await waitFor(() => expect(saved.at(-1)).toBe('{soc}\n{x_cue: 4 compases de intro}\n[G]Hola mundo\n{eoc}'));
+  });
+
+  it('indications show in Letra and Acordes, and can be hidden', () => {
+    renderPanel('{x_cue: Entra Leo}\n[G]Hola\n[D]', '5');
+    const cue = () => screen.queryByText((_, el) => el?.className === 'cp-cue' && el.textContent === 'Entra Leo');
+    expect(cue()).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Letra' }));
+    expect(cue()).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Indicaciones' }));
+    expect(screen.getByRole('button', { name: 'Indicaciones' })).toHaveAttribute('aria-pressed', 'false');
+    expect(cue()).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Acordes' }));
+    expect(cue()).toBeNull();
+    expect(screen.getByText('Hola')).toBeInTheDocument();
+  });
+
+  it('no Indicaciones button when the song has none', () => {
+    renderPanel();
+    expect(screen.queryByRole('button', { name: 'Indicaciones' })).toBeNull();
+  });
+
   it('notes also show in Letra mode', () => {
     renderPanel('Hola [*Silencio largo]mundo', '3');
     fireEvent.click(screen.getByRole('button', { name: 'Letra' }));
@@ -156,6 +206,24 @@ e|--3--|
 
     fireEvent.click(screen.getByRole('button', { name: 'Quitar' }));
     expect(saved.at(-1)).toBe('{start_of_verse: Estrofa 1}\nUno\n{x_voz: Leo}\nDos\nTres\n{end_of_verse}');
+  });
+
+  it('Voces: a second voice on the chosen lines', () => {
+    const saved: string[] = [];
+    const src = '{start_of_verse}\nUno\nDos\n{end_of_verse}';
+    render(<SongPanel content={src} transpose={0} onTransposeChange={() => {}} onContentChange={(c) => saved.push(c)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Editar canción' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Voces' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Línea: Dos' }));
+    const second = () => within(screen.getByRole('group', { name: 'Segunda voz' }));
+
+    fireEvent.click(second().getByRole('button', { name: 'Angel' }));
+    expect(saved.at(-1)).toBe('{start_of_verse}\nUno\n{x_voz2: Angel}\nDos\n{end_of_verse}');
+    expect(second().getByRole('button', { name: 'Angel' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('2ª voz · Angel')).toBeInTheDocument();
+
+    fireEvent.click(second().getByRole('button', { name: 'Angel' }));
+    expect(saved.at(-1)).toBe(src);
   });
 
   it('no editing without a place to save', () => {

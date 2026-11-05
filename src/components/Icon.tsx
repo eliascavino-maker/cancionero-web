@@ -44,6 +44,7 @@ const PATHS = {
   metronome: 'M9.5 3h5l3.5 17H6zM12 16l5-9M8 16h8',
   signal: 'M4 10v4h3l7 4V6l-7 4zM17.5 9.5a3.5 3.5 0 0 1 0 5',
   map: 'M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2zM9 4v14M15 6v14',
+  cue: 'M6 21V4M6 4h11.5l-2.5 4 2.5 4H6',
 } as const;
 
 export type IconName = keyof typeof PATHS;

@@ -79,6 +79,15 @@ los permisos.
   resalta en las dos vistas las líneas que cantás, las de «Todos» y tus coros
   (con borde punteado). La elección queda en el dispositivo y en tu cuenta, así
   un dispositivo nuevo arranca igual.
+- **Indicaciones** («4 compases de intro», «x2», «Corte»): van en su propio
+  renglón, nunca encima de la letra, en Letra y en Acordes. El ícono de la
+  bandera las oculta o las muestra. Se agregan con ✎ → Indicaciones (tocando
+  una línea, o «Indicación al final» de una parte) o en el editor de texto.
+- **Segunda voz**: las palabras o líneas que lleva una segunda voz se ven en
+  cursiva, subrayadas con puntos y en el color de quien la canta, con
+  «2ª voz · Angel» al lado. Se marca en ✎ → Voces (eligiendo líneas) o, para
+  palabras sueltas, seleccionándolas en el editor de texto y tocando
+  **Segunda voz**. A quien la canta se le resaltan esas líneas.
 - **Autoscroll** (▶): baja solo la página. 🐢/🐇 cambian la velocidad, que se
   recuerda por canción. Si la canción tiene `{duration: 3:30}`, arranca en
   `auto`: llega al final en ese tiempo. Tocar la pantalla o mover la rueda
@@ -167,6 +176,11 @@ Solo para los miembros de la banda, cada uno con su cuenta.
 - `{chorus}` repite el último estribillo.
 - Comentarios `c`, `ci`, `cb`, `highlight`. Las líneas `#` se ignoran.
 - Anotaciones `[*Rit.]`: se muestran como acorde y no se transponen.
+- Propias de la app (las demás apps ignoran las directivas `x_`):
+  - `{x_band: voz=…; coros=…; tocan=…}` y `{x_voz: Leo}`: quién canta y toca.
+  - `{x_cue: 4 compases de intro}`: indicación en su propio renglón.
+  - `{x_voz2: Angel}` … `{x_voz2}`: segunda voz en esas líneas. Con
+    `((palabras))` solo esas palabras son segunda voz.
 - `\[` y `\]` para corchetes literales.
 - No soportado: selectores (`{title-guitar: …}`, se ignoran), directivas de
   formato (`textfont`, `columns`, …), varias canciones por archivo.

@@ -56,10 +56,12 @@ export interface Prefs {
   stageMode?: boolean;
   /** Letter size in modo escenario: bigger than the normal one. */
   stageFontSize: number;
+  /** Indications (`{x_cue}`: "4 compases de intro", "x2") in Letra and Acordes. */
+  showCues: boolean;
 }
 
 export const STAGE_FONT = { min: 24, max: 64 };
-const DEFAULT_PREFS: Prefs = { fontSize: 22, showChords: true, theme: 'dark', stageFontSize: 32 };
+const DEFAULT_PREFS: Prefs = { fontSize: 22, showChords: true, theme: 'dark', stageFontSize: 32, showCues: true };
 const PREFS_KEY = 'cancionero.prefs';
 
 function readPrefs(): Prefs {

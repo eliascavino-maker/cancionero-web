@@ -27,16 +27,19 @@ function parseDirective(line: string): Directive | null {
 
 /**
  * Splits `[C]Hello [G]world` into chord/lyric segments.
- * `\[` and `\]` are literal brackets.
+ * `\[` and `\]` are literal brackets. `((…))` marks a second voice.
  */
 export function parseLyricLine(line: string): LyricLine {
   const segments: ChordSegment[] = [];
   let buf = '';
   let chord: string | undefined;
+  let harmony = false;
 
   const flush = () => {
     if (chord !== undefined || buf) {
-      segments.push(chord === undefined ? { lyric: buf } : { chord, lyric: buf });
+      const s: ChordSegment = chord === undefined ? { lyric: buf } : { chord, lyric: buf };
+      if (harmony) s.harmony = true;
+      segments.push(s);
     }
     buf = '';
   };
@@ -46,6 +49,18 @@ export function parseLyricLine(line: string): LyricLine {
     const ch = line[i];
     if (ch === '\\' && i + 1 < line.length && '[]\\'.includes(line[i + 1])) {
       buf += line[i + 1];
+      i += 2;
+      continue;
+    }
+    const mark = line.startsWith('((', i) ? true : line.startsWith('))', i) ? false : null;
+    if (mark !== null) {
+      // The chord before the mark keeps the text before it; what follows
+      // starts without one. A chord right before the mark goes inside.
+      if (buf) {
+        flush();
+        chord = undefined;
+      }
+      harmony = mark;
       i += 2;
       continue;
     }
@@ -79,6 +94,8 @@ class SongBuilder {
   private endLine?: number;
   /** Lead singers set by `{x_voz}` for the next lyric lines. */
   private voice?: string[];
+  /** Second voice set by `{x_voz2}` for the next lyric lines. */
+  private harmony?: string[];
   /** Source line being read. */
   line = 0;
 
@@ -90,6 +107,11 @@ class SongBuilder {
     this.startLine ??= this.line;
     this.endLine = this.line;
     if (line.type === 'lyric' && this.voice) line.singers = this.voice;
+    if (line.type === 'lyric' && this.harmony) {
+      line.harmony = this.harmony;
+      // No `((…))` marks: the whole line is second voice.
+      if (!line.segments.some((s) => s.harmony)) line.segments.forEach((s) => (s.harmony = true));
+    }
     this.lines.push(line);
   }
 
@@ -98,6 +120,13 @@ class SongBuilder {
     this.startLine ??= this.line;
     this.endLine = this.line;
     this.voice = names.length ? names : undefined;
+  }
+
+  /** `{x_voz2: Ana}`: who sings a second voice on the next lines; `{x_voz2}` ends it. */
+  setHarmony(names: string[]) {
+    this.startLine ??= this.line;
+    this.endLine = this.line;
+    this.harmony = names.length ? names : undefined;
   }
 
   setParts(parts: SectionParts) {
@@ -141,6 +170,7 @@ class SongBuilder {
     this.partsLine = undefined;
     this.endLine = undefined;
     this.voice = undefined;
+    this.harmony = undefined;
   }
 
   build(): Song {
@@ -259,8 +289,13 @@ function apply(d: Directive, b: SongBuilder) {
     case 'comment_box':
     case 'cb':
       return b.add({ type: 'comment', text: v, style: 'boxed' });
+    case 'x_cue':
+      if (v) b.add({ type: 'cue', text: v, source: b.line });
+      return;
     case 'x_voz':
       return b.setVoice(parseNames(v));
+    case 'x_voz2':
+      return b.setHarmony(parseNames(v));
     case 'x_band':
       return b.setParts(parseParts(v));
     case 'chorus':

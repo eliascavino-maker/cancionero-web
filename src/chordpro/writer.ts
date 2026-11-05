@@ -18,12 +18,23 @@ function escapeLyric(lyric: string): string {
 
 function lineText(line: SongLine): string {
   switch (line.type) {
-    case 'lyric':
-      return line.segments
-        .map((s) => (s.chord === undefined ? '' : `[${s.chord}]`) + escapeLyric(s.lyric))
-        .join('');
+    case 'lyric': {
+      // Under `{x_voz2}` a line that is all second voice needs no marks.
+      const whole = line.harmony && line.segments.every((s) => s.harmony);
+      let open = false;
+      let text = '';
+      for (const s of line.segments) {
+        const want = !whole && !!s.harmony;
+        if (want !== open) text += want ? '((' : '))';
+        open = want;
+        text += (s.chord === undefined ? '' : `[${s.chord}]`) + escapeLyric(s.lyric);
+      }
+      return open ? `${text}))` : text;
+    }
     case 'comment':
       return `{${line.style === 'italic' ? 'ci' : line.style === 'boxed' ? 'cb' : 'c'}: ${line.text}}`;
+    case 'cue':
+      return `{x_cue: ${line.text}}`;
     case 'tab':
       return line.text;
     case 'empty':
@@ -65,11 +76,15 @@ export function writeChordPro(song: Song): string {
     if (name) out.push(section.label ? `{start_of_${name}: ${section.label}}` : `{start_of_${name}}`);
     if (section.parts && !isEmptyParts(section.parts)) out.push(`{x_band: ${formatParts(section.parts)}}`);
     let voice: string | undefined;
+    let harmony: string | undefined;
     for (const l of section.lines) {
       if (l.type === 'lyric') {
         const want = l.singers?.join(', ');
         if (want !== voice) out.push(want ? `{x_voz: ${want}}` : '{x_voz}');
         voice = want;
+        const second = l.harmony?.join(', ');
+        if (second !== harmony) out.push(second ? `{x_voz2: ${second}}` : '{x_voz2}');
+        harmony = second;
       }
       out.push(lineText(l));
     }

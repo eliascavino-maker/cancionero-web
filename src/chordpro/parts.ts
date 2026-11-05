@@ -76,12 +76,16 @@ export function parseNames(value: string): string[] {
   return [...new Set(value.split(',').map((n) => n.trim()).filter(Boolean))];
 }
 
-const VOICE_LINE = /^\s*\{\s*x_voz\b/i;
+const VOICE_LINE = { lead: /^\s*\{\s*x_voz\b/i, harmony: /^\s*\{\s*x_voz2\b/i };
+const DIRECTIVE = { lead: 'x_voz', harmony: 'x_voz2' };
 
 /**
  * Sets who sings lyric lines `from`..`to` (counted among the lyric lines of
  * the section). `undefined` = back to the section's voice. Rewrites the
  * `{x_voz}` lines of that section; nothing else changes.
+ *
+ * `voice: 'harmony'` does the same with the second voice (`{x_voz2}`):
+ * `undefined` = no second voice.
  */
 export function setLineVoices(
   content: string,
@@ -89,17 +93,21 @@ export function setLineVoices(
   from: number,
   to: number,
   singers: string[] | undefined,
+  voice: 'lead' | 'harmony' = 'lead',
 ): string {
   if (section.startLine === undefined || section.endLine === undefined) return content;
   const lyric = section.lines.filter((l) => l.type === 'lyric' && l.source !== undefined) as {
     source: number;
     singers?: string[];
+    harmony?: string[];
   }[];
   const wanted = new Map<number, string | undefined>();
   lyric.forEach((l, i) => {
-    const names = i >= from && i <= to ? singers : l.singers;
+    const names = i >= from && i <= to ? singers : voice === 'lead' ? l.singers : l.harmony;
     wanted.set(l.source, names?.length ? names.join(', ') : undefined);
   });
+  const directive = DIRECTIVE[voice];
+  const voiceLine = VOICE_LINE[voice];
 
   const newline = content.includes('\r\n') ? '\r\n' : '\n';
   const lines = content.split(/\r\n|\r|\n/);
@@ -107,11 +115,11 @@ export function setLineVoices(
   let current: string | undefined;
   lines.forEach((line, i) => {
     const inside = i >= section.startLine! && i <= section.endLine!;
-    if (inside && VOICE_LINE.test(line)) return;
+    if (inside && voiceLine.test(line)) return;
     if (inside && wanted.has(i)) {
       const want = wanted.get(i);
       if (want !== current) {
-        out.push(want ? `{x_voz: ${want}}` : '{x_voz}');
+        out.push(want ? `{${directive}: ${want}}` : `{${directive}}`);
         current = want;
       }
     }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { blockName, detectBlocks, looksLikeChordPro, textToChordPro } from '../../chordpro/fromText';
+import { type TextEdit, insertCueLine, toggleHarmony } from '../../chordpro/harmony';
 import { parseChordPro } from '../../chordpro/parser';
 import { Icon } from '../../components/Icon';
 import { SongView } from '../../components/SongView';
@@ -26,6 +27,8 @@ export function EditorPage({ id }: { id?: string }) {
   const [tab, setTab] = useState<'edit' | 'preview'>('edit');
   const [saving, setSaving] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const sourceBox = useRef<HTMLTextAreaElement>(null);
+  const [toolHint, setToolHint] = useState('');
 
   useEffect(() => {
     if (id !== undefined) lib.getSong(id).then((s) => setSource(s?.content ?? ''));
@@ -53,6 +56,20 @@ export function EditorPage({ id }: { id?: string }) {
     setSource(generated);
     setMode('chordpro');
   };
+  /** Applies an edit to the ChordPro text and keeps the box focused on the result. */
+  const applyEdit = (make: (text: string, start: number, end: number) => TextEdit | null, hint: string) => {
+    const box = sourceBox.current;
+    if (!box || source === null) return;
+    const result = make(source, box.selectionStart, box.selectionEnd);
+    setToolHint(result ? '' : hint);
+    if (!result) return;
+    setSource(result.text);
+    requestAnimationFrame(() => {
+      box.focus();
+      box.setSelectionRange(result.start, result.end);
+    });
+  };
+
   const field = (name: 'title' | 'artist' | 'key' | 'tempo') => ({
     value: paste[name],
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => setPaste({ ...paste, [name]: e.target.value }),
@@ -156,7 +173,29 @@ export function EditorPage({ id }: { id?: string }) {
           </div>
         ) : (
           <div className="editor__pane">
+            <div className="editor__tools" role="toolbar" aria-label="Marcar en el texto">
+              <button
+                className="btn"
+                title="Marca las palabras elegidas con ((…)). Otra vez, las desmarca."
+                onClick={() => applyEdit(toggleHarmony, 'Elegí las palabras de la segunda voz.')}
+              >
+                Segunda voz
+              </button>
+              <button
+                className="btn"
+                title="Agrega {x_cue: …} arriba de la línea del cursor"
+                onClick={() => applyEdit((text, at) => insertCueLine(text, at), '')}
+              >
+                <Icon name="cue" size={18} /> Indicación
+              </button>
+              {toolHint && (
+                <span className="editor__hint" role="status">
+                  {toolHint}
+                </span>
+              )}
+            </div>
             <textarea
+              ref={sourceBox}
               className="editor__source"
               aria-label="Texto ChordPro"
               spellCheck={false}

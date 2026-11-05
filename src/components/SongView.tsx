@@ -7,6 +7,7 @@ import {
   type SectionParts,
   type SongSection,
   artistOf,
+  hasHarmony,
   isAnnotation,
   isPreformatted,
   lyricsOf,
@@ -42,6 +43,19 @@ export interface SongViewOptions {
   currentPart?: number;
   /** Live room, leading: tapping a part makes it the current one. */
   onPartTap?: (sectionIndex: number) => void;
+  /** Indications (`{x_cue}`) on their own row. Default: shown. */
+  showCues?: boolean;
+  /** Makes lines tappable to add indications, and indications to change them. */
+  cueEdit?: CueEdit;
+}
+
+export interface CueEdit {
+  /** A lyric line was tapped (its source line): add an indication above it. */
+  onLine: (line: number) => void;
+  /** An indication was tapped: change or delete it. */
+  onCue: (line: number, text: string) => void;
+  /** "Al final" of a section was tapped. */
+  onEnd: (section: SongSection) => void;
 }
 
 /** Lyric lines `from`..`to` (counted among the lyric lines) of section `section`. */
@@ -119,7 +133,21 @@ export function ChordLyricLine({
   const source = line.source;
   const tappable = noteEdit && source !== undefined;
   if (!drawChords && !hasNotes && !tappable) {
-    return <div className="cp-line">{lyricsOf(line) || ZWSP}</div>;
+    return (
+      <div className="cp-line">
+        {line.segments.some((s) => s.harmony)
+          ? line.segments.map((s, i) =>
+              s.harmony ? (
+                <span key={i} className="cp-harmony">
+                  {s.lyric}
+                </span>
+              ) : (
+                <Fragment key={i}>{s.lyric}</Fragment>
+              ),
+            )
+          : lyricsOf(line) || ZWSP}
+      </div>
+    );
   }
   // Chords and notes are counted in the same order as in the source line.
   let chordIndex = 0;
@@ -140,7 +168,9 @@ export function ChordLyricLine({
                 ) : (
                   <span className="cp-chord"><ChordName chord={atom.chord} /></span>
                 ))}
-              {!chordsOnly && <span className="cp-lyric">{atom.text || ZWSP}</span>}
+              {!chordsOnly && (
+                <span className={atom.harmony && atom.text ? 'cp-lyric cp-harmony' : 'cp-lyric'}>{atom.text || ZWSP}</span>
+              )}
             </span>
           );
         });
@@ -282,6 +312,21 @@ function Line({ line, opts, lastChorus }: { line: SongLine; opts: SongViewOption
       );
     case 'comment':
       return <div className={`cp-comment cp-comment--${line.style}`}>{line.text}</div>;
+    case 'cue':
+      return opts.cueEdit && line.source !== undefined ? (
+        <button
+          type="button"
+          className="cp-cue cp-cue--editable"
+          aria-label={`Indicación: ${line.text}`}
+          onClick={() => opts.cueEdit!.onCue(line.source!, line.text)}
+        >
+          <NoteText text={line.text} />
+        </button>
+      ) : (
+        <div className="cp-cue">
+          <NoteText text={line.text} />
+        </div>
+      );
     case 'tab':
       return <pre className="cp-tab">{line.text}</pre>;
     case 'empty':
@@ -306,11 +351,14 @@ function hasWords(line: SongLine): boolean {
   return line.type !== 'lyric' || lyricsOf(line).trim() !== '';
 }
 
-/** Lines to draw. In lyrics mode, chord-only lines and tabs are dropped. */
-function visibleSection(section: SongSection, showChords: boolean): SongSection | null {
-  if (showChords) return section;
-  if (isPreformatted(section)) return null;
-  const lines = section.lines.filter(hasWords);
+/**
+ * Lines to draw. In lyrics mode, chord-only lines and tabs are dropped;
+ * indications, when hidden.
+ */
+function visibleSection(section: SongSection, showChords: boolean, showCues: boolean): SongSection | null {
+  if (showChords && showCues) return section;
+  if (!showChords && isPreformatted(section)) return null;
+  const lines = section.lines.filter((l) => (showChords || hasWords(l)) && (showCues || l.type !== 'cue'));
   return lines.some((l) => l.type !== 'empty') ? { ...section, lines } : null;
 }
 
@@ -438,6 +486,7 @@ function VoicedLines({
   const mineIn = (line: SongLine): 'lead' | 'backing' | null => {
     if (!opts.mine || line.type !== 'lyric' || !lyricsOf(line).trim()) return null;
     if (singsIn(opts.mine, line.singers ?? lead)) return 'lead';
+    if (hasHarmony(line) && singsIn(opts.mine, line.harmony ?? [])) return 'lead';
     return singsIn(opts.mine, backing) ? 'backing' : null;
   };
   const lyricSources = original.lines.flatMap((l) => (l.type === 'lyric' && l.source !== undefined ? [l.source] : []));
@@ -445,7 +494,38 @@ function VoicedLines({
 
   const row = (line: SongLine, i: number) => {
     let content = <Line line={line} opts={opts} lastChorus={lastChorus} />;
+    if (line.type === 'lyric' && hasHarmony(line)) {
+      const who = line.harmony ?? [];
+      // The name goes on the first line of each stretch with the same second voice.
+      const before = section.lines.slice(0, i).findLast((l) => l.type === 'lyric' && lyricsOf(l).trim());
+      const first = !before || before.type !== 'lyric' || !hasHarmony(before) || (before.harmony ?? []).join() !== who.join();
+      content = (
+        <div className="cp-harmonized" style={{ '--h': colorOf(who[0] ?? '') } as CSSProperties}>
+          {content}
+          {first && (
+            <span className="cp-harmony-tag" title={`Segunda voz${who.length ? `: ${who.join(', ')}` : ''}`}>
+              2ª voz{who.length ? ` · ${who.join(', ')}` : ''}
+            </span>
+          )}
+        </div>
+      );
+    }
     const ord = line.type === 'lyric' && line.source !== undefined ? lyricSources.indexOf(line.source) : -1;
+    if (opts.cueEdit && line.type === 'lyric' && line.source !== undefined) {
+      const source = line.source;
+      content = (
+        <div
+          className="cp-pick"
+          role="button"
+          tabIndex={0}
+          aria-label={`Indicación arriba de: ${lyricsOf(line).trim() || 'acordes'}`}
+          onClick={() => opts.cueEdit!.onLine(source)}
+          onKeyDown={(e) => e.key === 'Enter' && opts.cueEdit!.onLine(source)}
+        >
+          {content}
+        </div>
+      );
+    }
     if (opts.voiceEdit && ord !== -1) {
       const selected = sel?.section === index && ord >= sel.from && ord <= sel.to;
       content = (
@@ -501,7 +581,7 @@ function VoicedLines({
 
 function Section(props: { section: SongSection; index: number; opts: SongViewOptions; lastChorus?: LastChorus }) {
   const { opts, lastChorus, index } = props;
-  const section = visibleSection(props.section, opts.showChords ?? true);
+  const section = visibleSection(props.section, opts.showChords ?? true, opts.showCues ?? true);
   if (!section) return null;
   const label = section.label ?? defaultLabel(section);
   const parts = !opts.hideParts && section.parts && !isEmpty(section.parts) ? section.parts : undefined;
@@ -537,6 +617,16 @@ function Section(props: { section: SongSection; index: number; opts: SongViewOpt
         <pre className="cp-tab">{section.lines.map((l) => (l.type === 'tab' ? l.text : '')).join('\n')}</pre>
       ) : (
         <VoicedLines section={section} original={props.section} index={index} opts={opts} lastChorus={lastChorus} />
+      )}
+      {opts.cueEdit && !isPreformatted(section) && section.endLine !== undefined && (
+        <button
+          type="button"
+          className="cp-parts-btn cp-cue-add"
+          aria-label={`Indicación al final: ${label ?? 'sin nombre'}`}
+          onClick={() => opts.cueEdit!.onEnd(props.section)}
+        >
+          + Indicación al final
+        </button>
       )}
     </section>
   );

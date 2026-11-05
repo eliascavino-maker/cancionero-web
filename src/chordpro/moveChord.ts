@@ -21,7 +21,10 @@ interface ScannedLine {
   colStart: number[];
 }
 
-/** Same rules as `parseLyricLine`: `\[` escapes, `[x]` chords, `[]` is not a chord. */
+/**
+ * Same rules as `parseLyricLine`: `\[` escapes, `[x]` chords, `[]` is not a
+ * chord, `((` and `))` (second voice) are not lyrics.
+ */
 function scan(line: string): ScannedLine {
   const chords: ChordToken[] = [];
   const colStart: number[] = [];
@@ -29,6 +32,10 @@ function scan(line: string): ScannedLine {
   while (i < line.length) {
     if (line[i] === '\\' && i + 1 < line.length && '[]\\'.includes(line[i + 1])) {
       colStart.push(i);
+      i += 2;
+      continue;
+    }
+    if (line.startsWith('((', i) || line.startsWith('))', i)) {
       i += 2;
       continue;
     }

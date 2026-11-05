@@ -88,6 +88,7 @@ export function StageView({
   pxPerSecond,
   fontSize,
   mine,
+  showCues = true,
   index: shownIndex,
   onIndexChange,
 }: {
@@ -100,6 +101,8 @@ export function StageView({
   fontSize: number;
   /** Singer whose lines are lit. */
   mine?: string;
+  /** Indications (`{x_cue}`). */
+  showCues?: boolean;
   /**
    * Live room: the part comes from outside. With `onIndexChange` (leading)
    * moving asks for it; without it (following) the part can't be moved here.
@@ -225,9 +228,17 @@ export function StageView({
             <article className="cp-song stage__instrumental">
               {current.kind !== 'none' && <div className="cp-label">{sectionTitle(current)}</div>}
               <p>Instrumental</p>
+              {showCues &&
+                current.lines.map((l, i) =>
+                  l.type === 'cue' ? (
+                    <div key={i} className="cp-cue">
+                      {l.text}
+                    </div>
+                  ) : null,
+                )}
             </article>
           ) : (
-            <SongView song={{ metadata: song.metadata, sections: [current] }} showHeader={false} showChords={false} mine={mine} />
+            <SongView song={{ metadata: song.metadata, sections: [current] }} showHeader={false} showChords={false} mine={mine} showCues={showCues} />
           )}
         </div>
       </div>
