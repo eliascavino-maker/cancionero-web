@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
-import { askConfirm, askText } from '../../components/ask';
+import { askConfirm, askText, tell } from '../../components/ask';
 import { ChordName } from '../../components/ChordName';
 import { Icon } from '../../components/Icon';
 import { transposeKey } from '../../music/transposer';
 import type { SetlistEntry } from '../../data/library';
-import { useCloud } from '../../cloud/CloudProvider';
+import { explain, useCloud } from '../../cloud/CloudProvider';
+import { useRoom } from '../../live/LiveProvider';
 import { navigate, useLibrary, useLive } from '../hooks';
 
 /** Songs of one setlist: reorder, add, remove, play. */
 export function SetlistPage({ id }: { id: string }) {
   const lib = useLibrary();
   const cloud = useCloud();
+  const { room, state: live } = useRoom();
   const data = useLive(
     async (l) => {
       const setlist = await l.getSetlist(id);
@@ -29,6 +31,31 @@ export function SetlistPage({ id }: { id: string }) {
     menu.current?.removeAttribute('open');
     const name = (await askText('Renombrar setlist', setlist.name))?.trim();
     if (name) await lib.renameSetlist(id, name);
+  };
+
+  /** Opens the band's room with this setlist (nobody leads yet), or goes in. */
+  const openLive = async () => {
+    if (!room) return;
+    const open = live.session;
+    if (open?.setlistId !== id) {
+      if (open) {
+        const other = (await lib.getSetlist(open.setlistId))?.name ?? 'otro setlist';
+        const ok = await askConfirm(`La sala está abierta con «${other}». ¿La cambiás a «${setlist.name}»?`, {
+          ok: 'Cambiar el setlist',
+        });
+        if (!ok) return;
+      }
+      try {
+        await room.open(id);
+      } catch (e) {
+        // A setlist made a moment ago may not be in the band yet.
+        cloud.syncNow();
+        const msg = explain(e);
+        await tell(/no existe/i.test(msg) ? 'El setlist todavía no se subió a la banda. Probá de nuevo en unos segundos.' : msg);
+        return;
+      }
+    }
+    navigate('/vivo');
   };
 
   const remove = async () => {
@@ -78,8 +105,13 @@ export function SetlistPage({ id }: { id: string }) {
           disabled={entries.length === 0}
           onClick={() => navigate(`/play/${id}/0`)}
         >
-          <Icon name="play" size={18} /> Tocar en vivo
+          <Icon name="play" size={18} /> Tocar
         </button>
+        {room && (
+          <button className="btn" disabled={entries.length === 0} onClick={openLive}>
+            <Icon name="band" size={18} /> {live.session?.setlistId === id ? 'Entrar a la sala' : 'Sala en vivo'}
+          </button>
+        )}
         <button className="btn" onClick={() => dialog.current?.showModal()}>
           <Icon name="plus" size={18} /> Canciones
         </button>

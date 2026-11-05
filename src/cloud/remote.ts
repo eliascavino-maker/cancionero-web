@@ -65,12 +65,20 @@ export function supabaseRemote(client: SupabaseClient): Remote {
       return (data as Row | null) ?? null;
     },
     watch(bandId, onChange) {
-      const channel = client.channel(`sync:${bandId}`);
+      // Private: only members get it (realtime.messages policy of migration 005).
+      const channel = client.channel(`sync:${bandId}`, { config: { private: true } });
       for (const table of TABLES) {
         channel.on('postgres_changes', { event: '*', schema: 'public', table, filter: `band_id=eq.${bandId}` }, onChange);
       }
-      channel.subscribe();
-      return () => void client.removeChannel(channel);
+      let stopped = false;
+      // The session's token, so the server knows who joins the private channel.
+      void client.realtime.setAuth().finally(() => {
+        if (!stopped) channel.subscribe();
+      });
+      return () => {
+        stopped = true;
+        void client.removeChannel(channel);
+      };
     },
   };
 }

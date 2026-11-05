@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { Icon } from '../components/Icon';
 import { useCloud } from '../cloud/CloudProvider';
 import { BandPage, syncSummary } from './pages/BandPage';
+import { LivePage } from './pages/LivePage';
+import { useRoom } from '../live/LiveProvider';
 import { SetlistHistoryPage, SongHistoryPage } from './pages/HistoryPage';
 import { usePrefs, useRoute } from './hooks';
 import { EditorPage } from './pages/EditorPage';
@@ -31,6 +33,8 @@ function Page({ route }: { route: string }) {
       return <PlayerPage setlistId={parts[1]} index={Number(parts[2]) || 0} />;
     case 'banda':
       return <BandPage />;
+    case 'vivo':
+      return <LivePage />;
     case 'invitacion':
       // key: a new link while the page is open starts with its own code.
       return <BandPage key={parts[1]} invite={parts[1]} />;
@@ -53,7 +57,8 @@ export function App() {
   const s = cloud.sync;
   const alert = !!cloud.needsLink || !!s?.notices.length || s?.state === 'error';
   const waiting = !!s && (s.pending > 0 || s.state === 'offline');
-  const stage = route.startsWith('/play');
+  const stage = route.startsWith('/play') || route.startsWith('/vivo');
+  const live = useRoom().state.session;
   const me = useMe();
   // In a band and nobody chosen yet, here or on another device of this account.
   const askWho =
@@ -81,6 +86,15 @@ export function App() {
             <Icon name="list" />
             Setlists
           </a>
+          {live && (
+            <a href="#/vivo" className="nav__live">
+              <span className="nav__icon">
+                <Icon name="play" />
+                <span className="nav__dot nav__dot--live" />
+              </span>
+              En vivo
+            </a>
+          )}
           {cloud.configured && (
             <a
               href="#/banda"

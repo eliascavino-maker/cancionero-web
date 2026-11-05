@@ -87,6 +87,8 @@ export function StageView({
   pxPerSecond,
   fontSize,
   mine,
+  index: shownIndex,
+  onIndexChange,
 }: {
   song: Song;
   playing: boolean;
@@ -97,17 +99,26 @@ export function StageView({
   fontSize: number;
   /** Singer whose lines are lit. */
   mine?: string;
+  /**
+   * Live room: the part comes from outside. With `onIndexChange` (leading)
+   * moving asks for it; without it (following) the part can't be moved here.
+   */
+  index?: number;
+  onIndexChange?: (index: number) => void;
 }) {
   const slides = useMemo(() => stageSlides(song), [song]);
-  const [index, setIndex] = useState(0);
+  const [ownIndex, setIndex] = useState(0);
+  const index = Math.max(0, Math.min(shownIndex ?? ownIndex, slides.length - 1));
   const current = slides[Math.min(index, slides.length - 1)];
   const next = slides[index + 1];
   const seconds = current ? slideSeconds(current, bpm, pxPerSecond, fontSize) : 0;
 
   const go = (i: number) => {
     if (i < 0 || i >= slides.length) return false;
+    if (onIndexChange) onIndexChange(i);
+    else if (shownIndex === undefined) setIndex(i);
+    else return false;
     elapsed.current = 0;
-    setIndex(i);
     return true;
   };
 

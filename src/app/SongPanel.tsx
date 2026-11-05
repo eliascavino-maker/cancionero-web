@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { type ChordRef, type MoveDirection, addAnnotation, moveChord, setAnnotation } from '../chordpro/moveChord';
 import { parseChordPro } from '../chordpro/parser';
 import { emptyParts, setLineVoices, setSectionParts } from '../chordpro/parts';
@@ -21,10 +21,21 @@ import {
 import { type Prefs, usePrefs } from './hooks';
 import { litSinger, useMe } from './me';
 import { PartsDialog } from './PartsDialog';
-import { StageView, sectionTitle } from './StageView';
+import { StageView, sectionTitle, stageSlides } from './StageView';
 import { isImmersive } from '../components/FullscreenButton';
 import type { VoiceSelection } from '../components/SongView';
 import { ALL, SINGERS, colorOf } from '../data/band';
+
+/** Live room: where the band is, by part (index in `stageSlides`). */
+export interface LivePart {
+  part: number;
+  /** Scrolls to the part when it changes. */
+  follow: boolean;
+  /** Leading: tapping a part makes it the current one. */
+  onPart?: (part: number) => void;
+  /** Leading: the big part buttons, above the controls. */
+  bar?: ReactNode;
+}
 
 /**
  * Song sheet plus a bottom bar: Letra/Acordes mode, transpose, font size and
@@ -32,6 +43,7 @@ import { ALL, SINGERS, colorOf } from '../data/band';
  *
  * `songKey` identifies the song to remember its scroll speed.
  * With `onContentChange`, chords can be moved by hand ("Mover acordes").
+ * With `live`, the sheet is shown part by part and the current one is marked.
  */
 export function SongPanel({
   content: savedContent,
@@ -39,12 +51,14 @@ export function SongPanel({
   onTransposeChange,
   songKey,
   onContentChange,
+  live,
 }: {
   content: string;
   transpose: number;
   onTransposeChange: (n: number) => void;
   songKey?: string;
   onContentChange?: (content: string) => void;
+  live?: LivePart;
 }) {
   const [prefs, setPrefs] = usePrefs();
   const mine = litSinger(useMe());
@@ -120,7 +134,13 @@ export function SongPanel({
     const tapped = bpmFromTaps(taps.current);
     if (tapped !== null) setBpm(tapped);
   };
-  const shown = useMemo(() => transposeSong(parsed, transpose), [parsed, transpose]);
+  const transposed = useMemo(() => transposeSong(parsed, transpose), [parsed, transpose]);
+  // Live: one section per part, so a part number means the same on every device.
+  const inLive = live !== undefined;
+  const shown = useMemo(
+    () => (inLive ? { ...transposed, sections: stageSlides(transposed) } : transposed),
+    [transposed, inLive],
+  );
   const key = effectiveKey(shown);
   const set = (p: Partial<Prefs>) => setPrefs({ ...prefs, ...p });
 
@@ -148,6 +168,23 @@ export function SongPanel({
   }, [playing]);
 
   useAutoScroll(playing && !stage, speed, () => setPlaying(false));
+
+  // ----- live: bring the current part up (the first one: the top, with the title).
+  const sheet = useRef<HTMLDivElement>(null);
+  const livePart = live?.part;
+  const liveFollow = live?.follow;
+  useEffect(() => {
+    if (livePart === undefined || !liveFollow || stage) return;
+    const smooth = !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (livePart === 0) {
+      window.scrollTo?.({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
+      return;
+    }
+    const parts = [...(sheet.current?.querySelectorAll<HTMLElement>('[data-part]') ?? [])];
+    // In Letra a part with nothing to sing isn't drawn: the one before it.
+    const el = parts.filter((p) => Number(p.dataset.part) <= livePart).at(-1);
+    el?.scrollIntoView?.({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+  }, [livePart, liveFollow, stage]);
   useWakeLock(playing);
 
   // Leaving full screen closes the stage view.
@@ -194,11 +231,13 @@ export function SongPanel({
 
   return (
     <div className="song-panel">
-      <div className="song-panel__sheet" data-testid="sheet" onPointerDown={() => playing && setPlaying(false)}>
+      <div className="song-panel__sheet" ref={sheet} data-testid="sheet" onPointerDown={() => playing && setPlaying(false)}>
         <SongView
           song={shown}
           fontSize={prefs.fontSize}
           mine={mine}
+          currentPart={live?.part}
+          onPartTap={live?.onPart}
           showChords={moving || (prefs.showChords && mode !== 'voices' && mode !== 'notes')}
           chordEdit={moving ? { selected, onSelect: setSelected } : undefined}
           noteEdit={
@@ -255,6 +294,8 @@ export function SongPanel({
           pxPerSecond={speed}
           fontSize={prefs.fontSize}
           mine={mine}
+          index={live?.part}
+          onIndexChange={live?.onPart}
         />
       )}
       {partsSection && (
@@ -432,6 +473,7 @@ export function SongPanel({
         </div>
       ) : (
       <div className="toolbar" role="toolbar" aria-label="Controles de la canción">
+        {live?.bar && <div className="toolbar__row toolbar__row--live">{live.bar}</div>}
         <div className="toolbar__row">
           <div className="segmented" role="group" aria-label="Vista">
             <button aria-pressed={!prefs.showChords} onClick={() => set({ showChords: false })}>

@@ -86,6 +86,28 @@ Desde un setlist, **▶ Tocar**. Las flechas ←/→ cambian de canción: sirven
 los pedales Bluetooth para pasar páginas configurados en flechas. El tono que
 elijas ahí se guarda para esa canción en ese setlist.
 
+## Sala en vivo
+
+Solo para los miembros de la banda, cada uno con su cuenta.
+
+- **Abrir la sala:** desde un setlist, con **Sala en vivo**. Arranca sin
+  director, y a los demás les aparece **En vivo** abajo.
+- **Ser director:** el primero que lo toca dirige, y todos ven
+  «Dirige: Sergio». Si ya hay director, **Tomar la dirección** pide
+  confirmación. **Dejar de dirigir** deja la sala abierta sin director: cada uno
+  navega libre.
+- **Dirigir:** con los botones grandes **Parte anterior** y **Parte siguiente**
+  (después de la última parte sigue la próxima canción), tocando una parte, o
+  con ↑/↓ y RePág/AvPág. ←/→ cambian de canción. La canción, la parte y el tono
+  llegan a los demás en unos 60 ms.
+- **Seguir:** quien sigue ve la parte actual marcada y en pantalla, con su
+  vista y su resaltado. Moverse a mano o **Dejar de seguir** lo suelta.
+- **Por dentro:** quién dirige está en `live_sessions`. La posición va por
+  broadcast en el canal privado `live:<banda>`, sin pasar por la base. Presence
+  solo dice quién está, porque Supabase limita cuántas veces se actualiza.
+  Quien entra tarde o se reconecta pide la posición con `hello`. La sala vence
+  a las 12 h sin cambios.
+
 ## Estructura
 
 | Ruta | Qué hace |
@@ -99,6 +121,7 @@ elijas ahí se guarda para esa canción en ese setlist.
 | `src/data/library.ts` | IndexedDB: canciones, setlists, orden, respaldo |
 | `src/cloud/sync.ts` | Sube y baja cambios con la banda; resuelve conflictos |
 | `src/cloud/CloudProvider.tsx` | Sesión, banda y cuándo sincronizar |
+| `src/live/room.ts` | Sala en vivo: director, posición por broadcast, quién está |
 | `supabase/` | Migraciones, consultas de verificación y tests de permisos |
 | `src/app/` | Pantallas, rutas y preferencias |
 

@@ -351,3 +351,25 @@
   background: color-mix(in srgb, var(--m) 7%, transparent);
   box-shadow: none;
 }
+
+/* Live room: the part where the band is. Lit from the left in tungsten. */
+.cp-section[data-part] {
+  scroll-margin-top: 132px;
+  margin-inline: -10px;
+  padding-inline: 10px;
+  border-radius: var(--r-boton);
+  transition: background-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+.cp-section--now {
+  background: color-mix(in srgb, var(--tungsteno) 9%, transparent);
+  box-shadow: inset 4px 0 0 var(--tungsteno);
+}
+.cp-section--now .cp-label {
+  color: var(--tungsteno);
+}
+.cp-section--tappable {
+  cursor: pointer;
+}
+.cp-section--tappable:not(.cp-section--now):hover {
+  background: color-mix(in srgb, var(--papel) 4%, transparent);
+}

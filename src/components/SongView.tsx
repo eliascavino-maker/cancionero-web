@@ -35,6 +35,13 @@ export interface SongViewOptions {
   voiceEdit?: VoiceEdit;
   /** Lights the lines this singer sings (theirs and "Todos"), in Letra and in Acordes. */
   mine?: string;
+  /**
+   * Live room: every section is a part (`data-part` = its index) and this one
+   * is marked as where the band is.
+   */
+  currentPart?: number;
+  /** Live room, leading: tapping a part makes it the current one. */
+  onPartTap?: (sectionIndex: number) => void;
 }
 
 /** Lyric lines `from`..`to` (counted among the lyric lines) of section `section`. */
@@ -501,8 +508,15 @@ function Section(props: { section: SongSection; index: number; opts: SongViewOpt
   // Who plays is part of the Acordes view only.
   const showPlay = parts && parts.play.length > 0 && (opts.showChords ?? true);
   const editable = opts.onEditParts && !isPreformatted(section) && section.lines.some((l) => l.type === 'lyric');
+  const live = opts.currentPart !== undefined;
+  const now = live && opts.currentPart === index;
   return (
-    <section className={`cp-section cp-section--${section.kind}`}>
+    <section
+      className={`cp-section cp-section--${section.kind}${now ? ' cp-section--now' : ''}${opts.onPartTap ? ' cp-section--tappable' : ''}`}
+      data-part={live ? index : undefined}
+      aria-current={now ? 'step' : undefined}
+      onClick={opts.onPartTap ? () => opts.onPartTap!(index) : undefined}
+    >
       {(label || editable) && (
         <div className="cp-section__head">
           {label && <div className="cp-label">{label}</div>}

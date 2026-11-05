@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
 import { renameSpeedKeys } from './app/autoscroll';
 import { CloudProvider } from './cloud/CloudProvider';
+import { LiveProvider } from './live/LiveProvider';
 import { LibraryContext } from './app/hooks';
 import { Library } from './data/library';
 import '@fontsource-variable/atkinson-hyperlegible-next';
@@ -26,7 +27,9 @@ Library.open()
       <StrictMode>
         <LibraryContext.Provider value={lib}>
           <CloudProvider>
-            <App />
+            <LiveProvider>
+              <App />
+            </LiveProvider>
           </CloudProvider>
         </LibraryContext.Provider>
       </StrictMode>,

@@ -1560,3 +1560,141 @@ html.stage-open body {
 .form + .who-card {
   margin-top: 32px;
 }
+
+/* ------------------------------------------------------ sala en vivo */
+
+.nav__dot--live {
+  background: var(--poncho);
+}
+.live__header {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+.live__status {
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--filo);
+}
+.live__who {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--ceniza);
+  font-weight: 600;
+}
+.live__who::before {
+  content: '';
+  align-self: center;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--humo);
+}
+.live__who--lead {
+  color: var(--papel);
+}
+.live__who--lead::before {
+  background: var(--poncho);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--poncho) 25%, transparent);
+}
+.live__who strong {
+  font-family: var(--font-cartel);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--tungsteno);
+}
+.live__who small,
+.live__people,
+.live__offline {
+  color: var(--humo);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.live__people {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.live__offline {
+  color: var(--tungsteno);
+}
+.live__actions {
+  flex: 1 1 100%;
+  display: flex;
+  gap: 8px;
+}
+.live__actions .btn {
+  flex: 1;
+}
+/* "Ser director" is the big one: it's tapped in person, on stage. */
+.live__lead {
+  min-height: 52px;
+  font-size: 1.05rem;
+}
+.btn--primary.live__lead {
+  font-family: var(--font-cartel);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* The leader's part buttons, on top of the song controls. */
+.toolbar__row--live {
+  flex-basis: 100%;
+}
+.live-parts {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 4px 0 2px;
+}
+.live-parts__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 60px;
+  padding: 0 10px;
+  border: 1px solid var(--filo-fuerte);
+  border-radius: var(--r-boton);
+  background: var(--case-alto);
+  color: var(--papel);
+  font: inherit;
+  font-family: var(--font-cartel);
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.15s var(--ease), transform 0.12s var(--ease);
+}
+.live-parts__btn--next {
+  background: var(--tungsteno);
+  border-color: var(--tungsteno);
+  color: var(--sobre-tungsteno);
+}
+.live-parts__btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.live-parts__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+/* Auto-scroll hides the controls, but the leader keeps the part buttons. */
+.is-scrolling .toolbar__row--live {
+  display: flex;
+  flex: 1 1 100%;
+}
+.is-scrolling .toolbar:has(.toolbar__row--live) {
+  left: 8px;
+  right: 8px;
+  width: auto;
+  border-radius: var(--r-panel);
+}
+.live .song-panel__sheet {
+  padding-bottom: 220px;
+}
