@@ -33,6 +33,10 @@ export interface SongRecord extends Synced {
   content: string;
   createdAt: number;
   updatedAt: number;
+  /** An arrangement (acústica, con banda, otro tono): the original song's id. */
+  arrangementOf?: string;
+  /** The arrangement's name, e.g. «Acústica». Only arrangements have one. */
+  arrangementName?: string;
 }
 
 export interface Setlist extends Synced {
@@ -65,7 +69,10 @@ export interface SetlistEntry {
 export interface LibraryExport {
   format: 'cancionero';
   version: 1 | 2;
-  songs: Pick<SongRecord, 'id' | 'title' | 'artist' | 'songKey' | 'content' | 'createdAt' | 'updatedAt'>[];
+  songs: Pick<
+    SongRecord,
+    'id' | 'title' | 'artist' | 'songKey' | 'content' | 'createdAt' | 'updatedAt' | 'arrangementOf' | 'arrangementName'
+  >[];
   setlists: Pick<Setlist, 'id' | 'name' | 'createdAt'>[];
   setlistItems: Pick<SetlistItem, 'id' | 'setlistId' | 'songId' | 'position' | 'transpose'>[];
 }
@@ -92,10 +99,15 @@ export function fold(s: string): string {
 }
 
 const byTitle = (a: SongRecord, b: SongRecord) =>
-  a.title.localeCompare(b.title, 'es', { sensitivity: 'base' });
+  a.title.localeCompare(b.title, 'es', { sensitivity: 'base' }) ||
+  (a.arrangementName ?? '').localeCompare(b.arrangementName ?? '', 'es', { sensitivity: 'base' });
 const byPosition = (a: SetlistItem, b: SetlistItem) => a.position - b.position || (a.id < b.id ? -1 : 1);
 const alive = <T extends Synced>(r: T | undefined): r is T => !!r && !r.deletedAt;
 const uuid = () => crypto.randomUUID();
+
+/** Same limit as the server: 1 to 40 letters. */
+export const MAX_ARRANGEMENT_NAME = 40;
+const cleanName = (name: string) => name.replace(/\s+/g, ' ').trim().slice(0, MAX_ARRANGEMENT_NAME);
 
 /** Marks a record as changed here. */
 function touch<T extends Synced>(r: T): T {
@@ -160,14 +172,77 @@ export class Library {
 
   // ---------------------------------------------------------------- songs
 
-  /** Library sorted by title. `query` matches title or artist, ignoring case and accents. */
+  /**
+   * Library sorted by title. `query` matches title or artist, ignoring case
+   * and accents. Arrangements don't show on their own: their original does
+   * (also when the query matches an arrangement's name). An arrangement whose
+   * original was deleted shows as a song.
+   */
   async listSongs(query = ''): Promise<SongRecord[]> {
     const songs = (await this.db.getAll('songs')).filter(alive);
+    const ids = new Set(songs.map((s) => s.id));
+    const grouped = (s: SongRecord) => !!s.arrangementOf && ids.has(s.arrangementOf);
     const q = fold(query.trim());
-    const filtered = q
-      ? songs.filter((s) => fold(s.title).includes(q) || fold(s.artist ?? '').includes(q))
-      : songs;
-    return filtered.sort(byTitle);
+    const byName = new Set(
+      q ? songs.filter((s) => grouped(s) && fold(s.arrangementName ?? '').includes(q)).map((s) => s.arrangementOf) : [],
+    );
+    const matches = (s: SongRecord) =>
+      !q || fold(s.title).includes(q) || fold(s.artist ?? '').includes(q) || byName.has(s.id);
+    return songs.filter((s) => !grouped(s) && matches(s)).sort(byTitle);
+  }
+
+  /**
+   * Songs with arrangements: original id → the original first, then its
+   * arrangements by name. Songs without arrangements aren't in it.
+   */
+  async arrangementGroups(): Promise<Map<string, SongRecord[]>> {
+    const songs = (await this.db.getAll('songs')).filter(alive);
+    const byId = new Map(songs.map((s) => [s.id, s]));
+    const groups = new Map<string, SongRecord[]>();
+    for (const s of songs) {
+      const original = s.arrangementOf ? byId.get(s.arrangementOf) : undefined;
+      if (!original) continue;
+      if (!groups.has(original.id)) groups.set(original.id, [original]);
+      groups.get(original.id)!.push(s);
+    }
+    for (const list of groups.values()) {
+      const [original, ...rest] = list;
+      rest.sort((a, b) => (a.arrangementName ?? '').localeCompare(b.arrangementName ?? '', 'es', { sensitivity: 'base' }));
+      list.splice(0, list.length, original, ...rest);
+    }
+    return groups;
+  }
+
+  /** The original and arrangements of the song `id` belongs to; just the song if it has none. */
+  async arrangementsOf(id: string): Promise<SongRecord[]> {
+    const song = await this.getSong(id);
+    if (!song) return [];
+    return (await this.arrangementGroups()).get(song.arrangementOf ?? song.id) ?? [song];
+  }
+
+  /**
+   * New arrangement of a song (or of the original, if `sourceId` is already
+   * an arrangement): its own copy of the text, named `name`. Returns its id.
+   */
+  async createArrangement(sourceId: string, name: string, content?: string): Promise<string> {
+    const source = await this.getSong(sourceId);
+    if (!source) throw new Error(`No song ${sourceId}`);
+    const id = await this.saveSong(content ?? source.content);
+    const song = (await this.db.get('songs', id))!;
+    await this.db.put('songs', {
+      ...song,
+      arrangementOf: source.arrangementOf ?? source.id,
+      arrangementName: cleanName(name) || 'Arreglo',
+    });
+    this.changed();
+    return id;
+  }
+
+  async renameArrangement(id: string, name: string): Promise<void> {
+    const song = await this.db.get('songs', id);
+    if (!song?.arrangementOf || !cleanName(name)) return;
+    await this.db.put('songs', touch({ ...song, arrangementName: cleanName(name) }));
+    this.changed();
   }
 
   async getSong(id: string): Promise<SongRecord | undefined> {
@@ -369,6 +444,14 @@ export class Library {
     this.changed();
   }
 
+  /** Plays another arrangement of the song in this setlist, in its own key. */
+  async setItemSong(itemId: string, songId: string): Promise<void> {
+    const item = await this.db.get('setlistItems', itemId);
+    if (!item || item.songId === songId) return;
+    await this.db.put('setlistItems', touch({ ...item, songId, transpose: 0 }));
+    this.changed();
+  }
+
   async setItemTranspose(itemId: string, transpose: number): Promise<void> {
     const item = await this.db.get('setlistItems', itemId);
     if (!item) return;
@@ -380,22 +463,26 @@ export class Library {
 
   async exportAll(): Promise<LibraryExport> {
     const [songs, setlists, items] = await Promise.all([
-      this.listSongs(),
+      this.db.getAll('songs'),
       this.db.getAll('setlists'),
       this.db.getAll('setlistItems'),
     ]);
     return {
       format: 'cancionero',
       version: 2,
-      songs: songs.map(({ id, title, artist, songKey, content, createdAt, updatedAt }) => ({
-        id,
-        title,
-        artist,
-        songKey,
-        content,
-        createdAt,
-        updatedAt,
-      })),
+      songs: songs
+        .filter(alive)
+        .sort(byTitle)
+        .map(({ id, title, artist, songKey, content, createdAt, updatedAt, arrangementOf, arrangementName }) => ({
+          id,
+          title,
+          artist,
+          songKey,
+          content,
+          createdAt,
+          updatedAt,
+          ...(arrangementOf ? { arrangementOf, arrangementName } : {}),
+        })),
       setlists: setlists.filter(alive).map(({ id, name, createdAt }) => ({ id, name, createdAt })),
       setlistItems: items
         .filter(alive)
@@ -423,7 +510,17 @@ export class Library {
     const tx = this.db.transaction(DATA_STORES, 'readwrite');
     if (!this.band) await Promise.all(DATA_STORES.map((s) => tx.objectStore(s).clear()));
     await Promise.all([
-      ...data.songs.map((s) => tx.objectStore('songs').put({ ...s, ...base, id: idOf('song', s.id) })),
+      ...data.songs.map((s) =>
+        tx.objectStore('songs').put({
+          ...s,
+          ...base,
+          id: idOf('song', s.id),
+          // Only if its original came in the same backup.
+          ...(s.arrangementOf && data.songs.some((o) => o.id === s.arrangementOf)
+            ? { arrangementOf: idOf('song', s.arrangementOf), arrangementName: cleanName(s.arrangementName ?? '') || 'Arreglo' }
+            : { arrangementOf: undefined, arrangementName: undefined }),
+        }),
+      ),
       ...data.setlists.map((s) => tx.objectStore('setlists').put({ ...s, ...base, id: idOf('setlist', s.id) })),
       ...data.setlistItems.map((i) =>
         tx.objectStore('setlistItems').put({
@@ -526,6 +623,13 @@ export class Library {
     const items = tx.objectStore('setlistItems');
     const setlists = new Set(await tx.objectStore('setlists').getAllKeys());
     const songs = new Set(await tx.objectStore('songs').getAllKeys());
+    // Arrangements whose original didn't make it: songs of their own.
+    const songStore = tx.objectStore('songs');
+    for (const s of await songStore.getAll()) {
+      if (s.arrangementOf && !songs.has(s.arrangementOf)) {
+        await songStore.put({ ...s, arrangementOf: undefined, arrangementName: undefined });
+      }
+    }
     for (const i of await items.getAll()) {
       if (!setlists.has(i.setlistId) || !songs.has(i.songId)) await items.delete(i.id);
     }
@@ -568,7 +672,12 @@ export class Library {
     const content = re.test(song.content)
       ? song.content.replace(re, `{title: ${title}}`)
       : `{title: ${title}}\n${song.content}`;
-    await this.saveSong(content);
+    const id = await this.saveSong(content);
+    if (song.arrangementOf) {
+      const copy = (await this.db.get('songs', id))!;
+      const name = cleanName(`${song.arrangementName ?? 'Arreglo'} (conflicto)`);
+      await this.db.put('songs', { ...copy, arrangementOf: song.arrangementOf, arrangementName: name });
+    }
     return title;
   }
 
@@ -616,4 +725,9 @@ async function writeV1(tx: UpgradeTx, old: V1): Promise<void> {
     Object.fromEntries([...songIds].map(([k, v]) => [String(k), v])),
     'v1SongIds',
   );
+}
+
+/** "Cusco · Acústica" for an arrangement, the title for the rest. */
+export function songLabel(s: Pick<SongRecord, 'title' | 'arrangementName'>): string {
+  return s.arrangementName ? `${s.title} · ${s.arrangementName}` : s.title;
 }

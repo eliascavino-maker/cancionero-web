@@ -26,9 +26,9 @@ Migración 006 (señales de la banda). Lo demás va por broadcast en `live:<band
 
 ## Etapa B — Canciones y arreglos (migración 007)
 
-- [ ] Arreglos ligados a la original (`songs.arrangement_of`), elegibles en el setlist.
-- [ ] Indicaciones por compás en renglón propio (`{x_cue: …}`), ocultables.
-- [ ] Segunda voz / armonía con otro color y quién la canta.
+- [x] Arreglos ligados a la original (`songs.arrangement_of`), elegibles en el setlist.
+- [x] Indicaciones por compás en renglón propio (`{x_cue: …}`), ocultables.
+- [x] Segunda voz / armonía con otro color y quién la canta.
 
 ## Etapa C — Música
 

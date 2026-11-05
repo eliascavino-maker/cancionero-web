@@ -23,6 +23,9 @@ export interface SongRow extends Common {
   artist: string | null;
   song_key: string | null;
   content: string;
+  /** Migration 7. Missing until it's applied. */
+  arrangement_of?: string | null;
+  arrangement_name?: string | null;
 }
 
 export interface SetlistRow extends Common {
@@ -67,6 +70,10 @@ export function toRecord<S extends DataStore>(store: S, row: Row): StoredRecord<
       createdAt: ms(r.created_at)!,
       updatedAt: ms(r.updated_at)!,
     };
+    if (r.arrangement_of) {
+      song.arrangementOf = r.arrangement_of;
+      song.arrangementName = r.arrangement_name ?? undefined;
+    }
     return song as StoredRecord<S>;
   }
   if (store === 'setlists') {
@@ -84,7 +91,11 @@ export function toUpload<S extends DataStore>(store: S, record: StoredRecord<S>)
   const common = { id: record.id, band_id: record.bandId!, deleted_at: iso(record.deletedAt) };
   if (store === 'songs') {
     const s = record as SongRecord;
-    return { ...common, title: s.title, artist: s.artist ?? null, song_key: s.songKey ?? null, content: s.content };
+    const row = { ...common, title: s.title, artist: s.artist ?? null, song_key: s.songKey ?? null, content: s.content };
+    // Only arrangements send these: songs keep uploading before migration 7.
+    return s.arrangementOf
+      ? { ...row, arrangement_of: s.arrangementOf, arrangement_name: s.arrangementName ?? null }
+      : row;
   }
   if (store === 'setlists') return { ...common, name: (record as Setlist).name };
   const i = record as SetlistItem;

@@ -2234,3 +2234,59 @@ html.stage-open body {
   color: var(--humo);
   background: linear-gradient(to top right, transparent 47%, currentColor 47% 53%, transparent 53%) center / 22px 22px no-repeat;
 }
+
+/* ------------------------------------------------------------ arreglos */
+
+/* Versions of a song above it: Original · Acústica · Con banda · + Arreglo. */
+.arrangements {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+.arrangements__item,
+.arrangements__tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--filo-fuerte);
+  border-radius: 999px;
+  background: none;
+  color: var(--ceniza);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.arrangements__item[aria-current='page'] {
+  border-color: var(--tungsteno);
+  background: var(--foco);
+  color: var(--tungsteno);
+}
+.arrangements__tool {
+  border-style: dashed;
+  padding: 0 10px;
+}
+.arrangements__item:hover,
+.arrangements__tool:hover {
+  color: var(--papel);
+}
+
+/* Setlist: which arrangement plays. */
+.arr-select {
+  max-width: 8.5em;
+  min-height: 32px;
+  padding: 0 6px;
+  border: 1px solid var(--filo-fuerte);
+  border-radius: 999px;
+  background: var(--case);
+  color: var(--papel);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+}

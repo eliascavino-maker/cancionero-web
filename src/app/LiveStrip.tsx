@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { parseChordPro } from '../chordpro/parser';
 import type { SongSection } from '../chordpro/song';
-import type { SetlistEntry } from '../data/library';
+import { type SetlistEntry, songLabel } from '../data/library';
 import { LockButton } from './Lock';
 import { sectionTitle, stageSlides } from './StageView';
 
@@ -33,20 +33,20 @@ export function LiveStrip({
   const [map, setMap] = useState(false);
   const n = part?.slides.length ?? 0;
   const current = part && n ? part.slides[Math.min(part.index, n - 1)] : undefined;
-  const songLabel = `Canción ${index + 1} de ${entries.length}`;
-  const partLabel = current ? `${sectionTitle(current)} · ${part!.index + 1}/${n} partes` : entries[index]?.song.title;
+  const position = `Canción ${index + 1} de ${entries.length}`;
+  const partLabel = current ? `${sectionTitle(current)} · ${part!.index + 1}/${n} partes` : (entries[index] ? songLabel(entries[index].song) : undefined);
 
   return (
     <div className="live-strip stage-keep">
       <button
         className="progress"
         aria-haspopup="dialog"
-        aria-label={`${partLabel ? `${partLabel}. ` : ''}${songLabel}. Abrir el mapa`}
+        aria-label={`${partLabel ? `${partLabel}. ` : ''}${position}. Abrir el mapa`}
         onClick={() => setMap(true)}
       >
         <span className="progress__text">
           <strong className="progress__part">{partLabel}</strong>
-          <span className="progress__song">{songLabel}</span>
+          <span className="progress__song">{position}</span>
         </span>
         <span className="progress__bars" aria-hidden="true">
           {part && n > 0 && (
@@ -131,10 +131,10 @@ function SetlistMap({
               onClick={() => onJump(i, 0)}
             >
               <span className="live-map__num">{i + 1}</span>
-              {e.song.title}
+              {songLabel(e.song)}
             </button>
             {withParts && slides[i].length > 1 && (
-              <div className="live-map__parts" role="group" aria-label={`Partes de ${e.song.title}`}>
+              <div className="live-map__parts" role="group" aria-label={`Partes de ${songLabel(e.song)}`}>
                 {slides[i].map((s, p) => (
                   <button
                     key={p}

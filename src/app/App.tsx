@@ -22,7 +22,7 @@ function Page({ route }: { route: string }) {
     case undefined:
       return <LibraryPage />;
     case 'song':
-      return parts[2] === 'historial' ? <SongHistoryPage id={parts[1]} /> : <SongPage id={parts[1]} />;
+      return parts[2] === 'historial' ? <SongHistoryPage id={parts[1]} /> : <SongPage key={parts[1]} id={parts[1]} />;
     case 'edit':
       return <EditorPage key={parts[1]} id={parts[1] === 'new' ? undefined : parts[1]} />;
     case 'setlists':

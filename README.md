@@ -94,6 +94,21 @@ los permisos.
   pausa; la barra espaciadora pausa y reanuda. Mientras se desplaza, la
   pantalla no se apaga, en los navegadores que lo permiten.
 
+## Arreglos
+
+- Una canción puede tener **arreglos** (acústica, con banda, otro tono): cada
+  uno con su propio texto, ligado a la original. En la biblioteca aparece solo
+  la original, con «2 arreglos» abajo; buscar el nombre del arreglo también la
+  encuentra.
+- Arriba de la canción están **Original · Acústica · …** para pasar de uno a
+  otro, y **+ Arreglo** para hacer uno nuevo a partir de lo que se ve. Si
+  cambiaste el tono, el arreglo nace en ese tono y se propone «En A» como
+  nombre. El lápiz renombra el arreglo.
+- En el setlist, las canciones con arreglos tienen un selector para elegir
+  cuál se toca. Al cambiarlo vuelve a su tono propio. El historial del setlist
+  lo registra y «Volver acá» también vuelve el arreglo.
+- Borrar la original no borra los arreglos: quedan como canciones sueltas.
+
 ## Tocar un setlist
 
 Desde un setlist, **▶ Tocar**. Las flechas ←/→ cambian de canción: sirven

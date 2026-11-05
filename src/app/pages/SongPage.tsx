@@ -6,6 +6,8 @@ import { FullscreenButton } from '../../components/FullscreenButton';
 import { Icon } from '../../components/Icon';
 import { transposeSong } from '../../music/transposer';
 import { useCloud } from '../../cloud/CloudProvider';
+import { songLabel } from '../../data/library';
+import { ArrangementBar } from '../Arrangements';
 import { SongPanel } from '../SongPanel';
 import { navigate, useLibrary, useLive } from '../hooks';
 
@@ -30,13 +32,13 @@ export function SongPage({ id }: { id: string }) {
 
   const remove = async () => {
     const ok = await askConfirm(cloud.band ? 'Sale de la banda y de los setlists. Se puede restaurar desde Banda → Borrados.' : 'También sale de los setlists.', {
-      title: `¿Borrar «${song.title}»?`,
+      title: `¿Borrar «${songLabel(song)}»?`,
       ok: 'Borrar',
       danger: true,
     });
     if (!ok) return;
     await lib.deleteSong(song.id);
-    navigate('/');
+    navigate(song.arrangementOf ? `/song/${song.arrangementOf}` : '/');
   };
 
   return (
@@ -68,6 +70,7 @@ export function SongPage({ id }: { id: string }) {
           )}
         </div>
       </header>
+      <ArrangementBar song={song} transpose={transpose} />
       <SongPanel
         content={song.content}
         transpose={transpose}

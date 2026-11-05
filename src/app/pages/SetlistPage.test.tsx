@@ -55,3 +55,17 @@ it('moves with the arrow keys', async () => {
   fireEvent.keyDown(await screen.findByRole('button', { name: /Mover Tres/ }), { key: 'ArrowUp' });
   await waitFor(async () => expect(await order()).toEqual(['Uno', 'Tres', 'Dos', 'Cuatro']));
 });
+
+it('picks which arrangement plays', async () => {
+  const [uno] = await lib.getSetlistEntries(setlist);
+  const acustica = await lib.createArrangement(uno.song.id, 'Acústica');
+  show();
+  const pick = await screen.findByRole('combobox', { name: 'Arreglo de Uno' });
+  expect(pick).toHaveValue(uno.song.id);
+  // Songs without arrangements have nothing to pick.
+  expect(screen.queryByRole('combobox', { name: 'Arreglo de Dos' })).toBeNull();
+
+  fireEvent.change(pick, { target: { value: acustica } });
+  await waitFor(async () => expect((await lib.getSetlistEntries(setlist))[0].song.id).toBe(acustica));
+  await waitFor(() => expect(screen.getByRole('combobox', { name: 'Arreglo de Uno' })).toHaveValue(acustica));
+});

@@ -47,6 +47,8 @@ class FakeServer {
       insert: async (table, row) => {
         this.check();
         if (this.tables[table].has(row.id)) throw new RemoteError('duplicate key', '23505', false);
+        const of = (row as { arrangement_of?: string | null }).arrangement_of;
+        if (of && !this.tables.songs.has(of)) throw new RemoteError('violates foreign key', '23503', false);
         return write(table, row, undefined);
       },
       update: async (table, row, base) => {
@@ -122,6 +124,25 @@ it('setlists with their order and tone travel too', async () => {
   expect(entries.map((e) => [e.song.title, e.item.transpose])).toEqual([
     ['Dos', 2],
     ['Uno', 0],
+  ]);
+});
+
+it('arrangements go up after their original, in the same sync, and arrive linked', async () => {
+  const a = await device();
+  const b = await device('u2');
+  // Several, so the order on this device (by id) can't be right by chance.
+  for (const t of ['Uno', 'Dos', 'Tres']) {
+    const original = await a.lib.saveSong(song(t));
+    await a.lib.createArrangement(original, 'Acústica');
+  }
+  await a.sync.run();
+  expect(a.sync.getStatus()).toMatchObject({ pending: 0, notices: [] });
+  await b.sync.run();
+  const groups = [...(await b.lib.arrangementGroups()).values()];
+  expect(groups.map((g) => g.map((s) => s.arrangementName ?? s.title)).sort()).toEqual([
+    ['Dos', 'Acústica'],
+    ['Tres', 'Acústica'],
+    ['Uno', 'Acústica'],
   ]);
 });
 

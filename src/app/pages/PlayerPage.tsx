@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FullscreenButton, canGoFull } from '../../components/FullscreenButton';
 import { Icon } from '../../components/Icon';
+import { songLabel } from '../../data/library';
 import { LiveStrip } from '../LiveStrip';
 import { useMoveDirection } from '../motion';
 import { LockOverlay } from '../Lock';
@@ -57,7 +58,7 @@ export function PlayerPage({ setlistId, index }: { setlistId: string; index: num
           <strong>
             {index + 1}/{count} · {data.setlist?.name}
           </strong>
-          <small>{next ? `Sigue: ${next.song.title}` : 'Última canción'}</small>
+          <small>{next ? `Sigue: ${songLabel(next.song)}` : 'Última canción'}</small>
         </div>
         <button
           className="icon-btn icon-btn--filled"

@@ -4,6 +4,7 @@ import { askConfirm } from '../../components/ask';
 import { Icon } from '../../components/Icon';
 import { SongView } from '../../components/SongView';
 import { explain, useCloud } from '../../cloud/CloudProvider';
+import { songLabel } from '../../data/library';
 import { navigate, useLibrary } from '../hooks';
 
 interface Revision {
@@ -138,7 +139,7 @@ export function SetlistHistoryPage({ id }: { id: string }) {
     if (!revisions) return;
     const ids = [...new Set(revisions.map((r) => r.data.song_id as string | undefined).filter(Boolean))] as string[];
     Promise.all(ids.map((s) => lib.getRecord('songs', s))).then((songs) =>
-      setTitles(new Map(songs.filter(Boolean).map((s) => [s!.id, s!.title]))),
+      setTitles(new Map(songs.filter(Boolean).map((s) => [s!.id, songLabel(s!)]))),
     );
   }, [revisions, lib]);
 
@@ -153,6 +154,9 @@ export function SetlistHistoryPage({ id }: { id: string }) {
     if (r.action === 'create') return `Agregó ${song}`;
     if (r.action === 'delete') return `Sacó ${song}`;
     if (r.action === 'restore') return `Volvió a poner ${song}`;
+    if (older && older.data.song_id !== r.data.song_id) {
+      return `Eligió ${song}`;
+    }
     const t = Number(r.data.transpose);
     const toneChanged = older && Number(older.data.transpose) !== t;
     const moved = older && Number(older.data.position) !== Number(r.data.position);

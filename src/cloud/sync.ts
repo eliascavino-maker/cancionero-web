@@ -155,7 +155,10 @@ export class Sync {
     let more = false;
     // Songs and setlists before their items: the server checks they exist.
     for (const store of DATA_STORES) {
-      for (const rec of await this.lib.dirtyRecords(store)) {
+      const records = await this.lib.dirtyRecords(store);
+      // Originals before arrangements: the server checks the original exists.
+      if (store === 'songs') records.sort((a, b) => Number(!!(a as SongRecord).arrangementOf) - Number(!!(b as SongRecord).arrangementOf));
+      for (const rec of records) {
         if (rec.bandId !== this.bandId) continue;
         if (await this.pushOne(store, rec)) more = true;
       }

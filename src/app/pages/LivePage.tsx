@@ -9,7 +9,7 @@ import { LeaderChanged, type LivePos } from '../../live/room';
 import { COUNT_BPM, bandSignals, countBeats } from '../../live/signals';
 import { clampBpm, parseBpm } from '../../chordpro/tempo';
 import { CueOverlay, SignalsDialog } from '../Cue';
-import type { SetlistEntry } from '../../data/library';
+import { type SetlistEntry, songLabel } from '../../data/library';
 import { navigate, useLibrary, useLive } from '../hooks';
 import { LiveStrip } from '../LiveStrip';
 import { useMoveDirection } from '../motion';
@@ -183,7 +183,7 @@ export function LivePage() {
           <strong>
             {at.index + 1}/{entries.length} · {data.setlist.name}
           </strong>
-          <small>{next ? `Sigue: ${next.song.title}` : 'Última canción'}</small>
+          <small>{next ? `Sigue: ${songLabel(next.song)}` : 'Última canción'}</small>
         </div>
         <button
           className="icon-btn icon-btn--filled"

@@ -15,6 +15,12 @@ export function LibraryPage() {
   const [prefs, setPrefs] = usePrefs();
   const [query, setQuery] = useState('');
   const songs = useLive((l) => l.listSongs(query), [query]);
+  const groups = useLive((l) => l.arrangementGroups(), []);
+  /** "Cusco · 2 arreglos". */
+  const subtitle = (id: string, artist?: string) => {
+    const n = (groups?.get(id)?.length ?? 1) - 1;
+    return [artist, n ? `${n} arreglo${n === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ');
+  };
   const fileInput = useRef<HTMLInputElement>(null);
   const docInput = useRef<HTMLInputElement>(null);
   const [chart, setChart] = useState<ChartSong[] | null>(null);
@@ -211,14 +217,14 @@ export function LibraryPage() {
                   </span>
                   <span className="card__main">
                     <span className="card__title">{s.title}</span>
-                    {s.artist && <span className="card__sub">{s.artist}</span>}
+                    {subtitle(s.id, s.artist) && <span className="card__sub">{subtitle(s.id, s.artist)}</span>}
                   </span>
                 </button>
               ) : (
               <a className="card" href={`#/song/${s.id}`}>
                 <span className="card__main">
                   <span className="card__title">{s.title}</span>
-                  {s.artist && <span className="card__sub">{s.artist}</span>}
+                  {subtitle(s.id, s.artist) && <span className="card__sub">{subtitle(s.id, s.artist)}</span>}
                 </span>
                 {s.songKey && <span className="key-badge"><ChordName chord={s.songKey} /></span>}
               </a>

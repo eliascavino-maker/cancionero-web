@@ -401,6 +401,75 @@ describe('historial', () => {
   });
 });
 
+describe('arreglos', () => {
+  const O = '50000000-0000-4000-8000-000000000001'; // original
+  const R = '50000000-0000-4000-8000-000000000002'; // arreglo
+  const X = '50000000-0000-4000-8000-000000000003';
+  const arrangement = (user: string, id: string, of: string | null, name: string | null) =>
+    as(
+      user,
+      `insert into public.songs (id, band_id, title, content, arrangement_of, arrangement_name)
+       values ($1, $2, 'Cusco', '{title: Cusco}', $3, $4) returning arrangement_of, arrangement_name`,
+      [id, band, of, name],
+    );
+
+  beforeAll(async () => {
+    await newSong(O, 'Cusco');
+  });
+
+  it('un miembro crea un arreglo de una canción de su banda, con nombre', async () => {
+    expect(await arrangement(B, R, O, 'Acústica')).toEqual([{ arrangement_of: O, arrangement_name: 'Acústica' }]);
+    await expect(arrangement(B, X, O, null)).rejects.toThrow(/songs_arrangement_named/);
+    await expect(arrangement(B, X, O, '   ')).rejects.toThrow(/songs_arrangement_named/);
+    await expect(arrangement(B, X, null, 'Suelta')).rejects.toThrow(/songs_arrangement_named/);
+    await expect(arrangement(B, X, X, 'Yo misma')).rejects.toThrow();
+  });
+
+  it('un solo nivel: ni arreglos de arreglos, ni una original con arreglos pasa a ser arreglo', async () => {
+    await expect(arrangement(B, X, R, 'Otra')).rejects.toThrow(/otro arreglo/);
+    await newSong(X, 'Faro');
+    await expect(
+      as(B, `update public.songs set arrangement_of = $1, arrangement_name = 'Faro' where id = $2`, [X, O]),
+    ).rejects.toThrow(/con arreglos/);
+    // Renombrar el arreglo sí.
+    await as(B, `update public.songs set arrangement_name = 'Con banda' where id = $1`, [R]);
+  });
+
+  it('no apunta a una canción de otra banda', async () => {
+    const other = (await one(as<{ b: string }>(C, `select public.create_band('Otra', 'Elias', $1) as b`, [MUSICIANS]))).b;
+    const theirs = '50000000-0000-4000-8000-000000000009';
+    await as(C, `insert into public.songs (id, band_id, title, content) values ($1, $2, 'x', 'x')`, [theirs, other]);
+    await expect(arrangement(B, '50000000-0000-4000-8000-000000000004', theirs, 'Robada')).rejects.toThrow(
+      /songs_arrangement_same_band/,
+    );
+  });
+
+  it('elegir el arreglo en el setlist queda en el historial y restore_setlist lo vuelve', async () => {
+    const L = '50000000-0000-4000-8000-000000000101';
+    const I = '50000000-0000-4000-8000-000000000102';
+    await as(B, `insert into public.setlists (id, band_id, name) values ($1, $2, 'Acústico')`, [L, band]);
+    await as(B, `insert into public.setlist_items (id, band_id, setlist_id, song_id, position) values ($1, $2, $3, $4, 1)`, [
+      I,
+      band,
+      L,
+      O,
+    ]);
+    await db.query(`update public.revisions set changed_at = changed_at - interval '1 hour' where row_id in ($1, $2)`, [L, I]);
+    await db.exec(`set session_replication_role = replica`);
+    await db.query(`update public.setlist_items set created_at = created_at - interval '1 hour' where id = $1`, [I]);
+    await db.exec(`set session_replication_role = origin`);
+    const before = (await one(db.query<{ t: string }>(`select (now() - interval '30 minutes')::text as t`).then((r) => r.rows))).t;
+
+    await as(B, `update public.setlist_items set song_id = $1 where id = $2`, [R, I]);
+    const item = () =>
+      one(as<{ song_id: string; deleted: boolean }>(B, `select song_id, deleted_at is not null as deleted from public.setlist_items where id = $1`, [I]));
+    expect(await item()).toEqual({ song_id: R, deleted: false });
+
+    await as(B, `select public.restore_setlist($1, $2)`, [L, before]);
+    expect(await item()).toEqual({ song_id: O, deleted: false });
+  });
+});
+
 describe('señales del director', () => {
   const signals = () =>
     one(as<{ live_signals: unknown }>(B, 'select live_signals from public.bands where id = $1', [band]));

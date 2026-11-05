@@ -3,7 +3,7 @@ import { askConfirm, askText, tell } from '../../components/ask';
 import { ChordName } from '../../components/ChordName';
 import { Icon } from '../../components/Icon';
 import { transposeKey } from '../../music/transposer';
-import type { SetlistEntry } from '../../data/library';
+import { type SetlistEntry, type SongRecord, songLabel } from '../../data/library';
 import { explain, useCloud } from '../../cloud/CloudProvider';
 import { useRoom } from '../../live/LiveProvider';
 import { navigate, useLibrary, useLive } from '../hooks';
@@ -16,7 +16,7 @@ export function SetlistPage({ id }: { id: string }) {
   const data = useLive(
     async (l) => {
       const setlist = await l.getSetlist(id);
-      return setlist ? { setlist, entries: await l.getSetlistEntries(id) } : null;
+      return setlist ? { setlist, entries: await l.getSetlistEntries(id), groups: await l.arrangementGroups() } : null;
     },
     [id],
   );
@@ -25,7 +25,7 @@ export function SetlistPage({ id }: { id: string }) {
 
   if (data === undefined) return null;
   if (data === null) return <p className="empty">El setlist no existe.</p>;
-  const { setlist, entries } = data;
+  const { setlist, entries, groups } = data;
 
   const rename = async () => {
     menu.current?.removeAttribute('open');
@@ -120,7 +120,7 @@ export function SetlistPage({ id }: { id: string }) {
       {entries.length === 0 ? (
         <p className="empty">Agregá canciones con "Canciones".</p>
       ) : (
-        <SortableList setlistId={id} entries={entries} />
+        <SortableList setlistId={id} entries={entries} groups={groups} />
       )}
 
       <dialog ref={dialog} className="dialog" onClick={(e) => e.target === dialog.current && dialog.current.close()}>
@@ -205,7 +205,16 @@ function moved<T>(list: T[], from: number, to: number): T[] {
 }
 
 /** The songs of a setlist. Drag the ⠿ handle (finger or mouse) to change the order. */
-function SortableList({ setlistId, entries }: { setlistId: string; entries: SetlistEntry[] }) {
+function SortableList({
+  setlistId,
+  entries,
+  groups,
+}: {
+  setlistId: string;
+  entries: SetlistEntry[];
+  /** Songs with arrangements, to pick which one plays. */
+  groups: Map<string, SongRecord[]>;
+}) {
   const lib = useLibrary();
   const list = useRef<HTMLOListElement>(null);
   const geo = useRef<Geometry | null>(null);
@@ -276,6 +285,7 @@ function SortableList({ setlistId, entries }: { setlistId: string; entries: Setl
       {base.map(({ item, song }, i) => {
         const key = song.songKey && transposeKey(song.songKey, item.transpose);
         const dragged = drag?.from === i;
+        const versions = groups.get(song.arrangementOf ?? song.id);
         const { n, shift } = place(i);
         return (
           <li
@@ -288,7 +298,12 @@ function SortableList({ setlistId, entries }: { setlistId: string; entries: Setl
               <span className="card__main">
                 <span className="card__title">{song.title}</span>
                 <span className="card__sub">
-                  {[song.artist, item.transpose ? `${item.transpose > 0 ? '+' : ''}${item.transpose} semitonos` : null]
+                  {[
+                    song.artist,
+                    // With a picker the name is already there.
+                    versions ? null : song.arrangementName,
+                    item.transpose ? `${item.transpose > 0 ? '+' : ''}${item.transpose} semitonos` : null,
+                  ]
                     .filter(Boolean)
                     .join(' · ') || ' '}
                 </span>
@@ -296,9 +311,23 @@ function SortableList({ setlistId, entries }: { setlistId: string; entries: Setl
               {key && <span className="key-badge"><ChordName chord={key} /></span>}
             </a>
             <span className="card__tools">
+              {versions && (
+                <select
+                  className="arr-select"
+                  aria-label={`Arreglo de ${song.title}`}
+                  value={song.id}
+                  onChange={(e) => lib.setItemSong(item.id, e.target.value)}
+                >
+                  {versions.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.arrangementName ?? 'Original'}
+                    </option>
+                  ))}
+                </select>
+              )}
               <button
                 className="icon-btn icon-btn--small"
-                aria-label={`Quitar ${song.title}`}
+                aria-label={`Quitar ${songLabel(song)}`}
                 onClick={() => lib.removeSetlistItem(item.id)}
               >
                 <Icon name="close" size={18} />
