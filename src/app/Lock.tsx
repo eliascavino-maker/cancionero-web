@@ -72,7 +72,7 @@ export function LockOverlay({ onUnlock }: { onUnlock: () => void }) {
     >
       <div className="lock__hint">
         <span className="lock__ring">
-          <svg viewBox="0 0 40 40" aria-hidden="true">
+          <svg className="lock__progress" viewBox="0 0 40 40" aria-hidden="true">
             <circle className="lock__track" cx="20" cy="20" r="17" />
             <circle
               className="lock__fill"

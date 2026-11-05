@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { FullscreenButton, canGoFull } from '../../components/FullscreenButton';
 import { Icon } from '../../components/Icon';
-import { LockButton, LockOverlay } from '../Lock';
+import { LiveStrip } from '../LiveStrip';
+import { useMoveDirection } from '../motion';
+import { LockOverlay } from '../Lock';
 import { SongPanel } from '../SongPanel';
 import { useStageMode } from '../stageMode';
 import { navigate, useLibrary, useLive } from '../hooks';
@@ -20,6 +22,7 @@ export function PlayerPage({ setlistId, index }: { setlistId: string; index: num
   const count = data?.entries.length ?? 0;
   const stage = useStageMode();
   const [locked, setLocked] = useState(false);
+  const dir = useMoveDirection(index);
   const go = (i: number) => i >= 0 && i < count && navigate(`/play/${setlistId}/${i}`);
 
   useEffect(() => {
@@ -42,7 +45,7 @@ export function PlayerPage({ setlistId, index }: { setlistId: string; index: num
   const next = data.entries[index + 1];
 
   return (
-    <div className="page page--song player">
+    <div className="page page--song player" data-dir={dir}>
       <header className="page__header page__header--sticky page__header--strip">
         <a className="icon-btn" href={`#/setlist/${setlistId}`} aria-label="Salir del modo en vivo">
           <Icon name="close" />
@@ -74,9 +77,7 @@ export function PlayerPage({ setlistId, index }: { setlistId: string; index: num
           <Icon name="stage" />
         </button>
         {(!stage.on || canGoFull()) && <FullscreenButton />}
-        <div className="live-strip stage-keep">
-          <LockButton onLock={() => setLocked(true)} />
-        </div>
+        <LiveStrip entries={data.entries} index={index} onJump={go} onLock={() => setLocked(true)} />
       </header>
       {locked && <LockOverlay onUnlock={() => setLocked(false)} />}
       <SongPanel

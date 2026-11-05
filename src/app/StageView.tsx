@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { Song, SongLine, SongSection } from '../chordpro/song';
 import { Icon } from '../components/Icon';
 import { SongView } from '../components/SongView';
+import { useMoveDirection } from './motion';
 
 const SECTION_NAMES: Partial<Record<SongSection['kind'], string>> = {
   verse: 'Estrofa',
@@ -112,6 +113,7 @@ export function StageView({
   const current = slides[Math.min(index, slides.length - 1)];
   const next = slides[index + 1];
   const seconds = current ? slideSeconds(current, bpm, pxPerSecond, fontSize) : 0;
+  const dir = useMoveDirection(index);
 
   const go = (i: number) => {
     if (i < 0 || i >= slides.length) return false;
@@ -218,14 +220,16 @@ export function StageView({
           go(e.clientX - r.left < r.width / 3 ? index - 1 : index + 1);
         }}
       >
-        {instrumental ? (
-          <article className="cp-song stage__instrumental">
-            {current.kind !== 'none' && <div className="cp-label">{sectionTitle(current)}</div>}
-            <p>Instrumental</p>
-          </article>
-        ) : (
-          <SongView song={{ metadata: song.metadata, sections: [current] }} showHeader={false} showChords={false} mine={mine} />
-        )}
+        <div key={index} className="stage__part" data-dir={dir}>
+          {instrumental ? (
+            <article className="cp-song stage__instrumental">
+              {current.kind !== 'none' && <div className="cp-label">{sectionTitle(current)}</div>}
+              <p>Instrumental</p>
+            </article>
+          ) : (
+            <SongView song={{ metadata: song.metadata, sections: [current] }} showHeader={false} showChords={false} mine={mine} />
+          )}
+        </div>
       </div>
 
       <div className="stage__next" aria-live="polite">

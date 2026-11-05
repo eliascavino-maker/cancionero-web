@@ -8,7 +8,9 @@ import { useRoom } from '../../live/LiveProvider';
 import { LeaderChanged, type LivePos } from '../../live/room';
 import type { SetlistEntry } from '../../data/library';
 import { navigate, useLibrary, useLive } from '../hooks';
-import { LockButton, LockOverlay } from '../Lock';
+import { LiveStrip } from '../LiveStrip';
+import { useMoveDirection } from '../motion';
+import { LockOverlay } from '../Lock';
 import { SongPanel } from '../SongPanel';
 import { useStageMode } from '../stageMode';
 import { stageSlides } from '../StageView';
@@ -48,7 +50,9 @@ export function LivePage() {
   const at = following ? { index: lpIndex, part: lp!.part } : local;
   const entry = entries[at.index];
   const transpose = following ? lp!.transpose : (entry?.item.transpose ?? 0);
-  const parts = useMemo(() => (entry ? stageSlides(parseChordPro(entry.song.content)).length : 0), [entry?.song.content]);
+  const slides = useMemo(() => (entry ? stageSlides(parseChordPro(entry.song.content)) : []), [entry?.song.content]);
+  const parts = slides.length;
+  const dir = useMoveDirection(at.index);
   const part = Math.min(at.part, Math.max(0, parts - 1));
 
   // Stop following where the leader was, so nothing jumps.
@@ -150,7 +154,7 @@ export function LivePage() {
   const others = state.peers.filter((p) => p.userId !== myId).map((p) => p.name);
 
   return (
-    <div className="page page--song live">
+    <div className="page page--song live" data-dir={dir}>
       <header className="page__header page__header--sticky page__header--strip live__header">
         <a className="icon-btn" href={`#/setlist/${setlistId}`} aria-label="Salir de la sala">
           <Icon name="close" />
@@ -236,9 +240,13 @@ export function LivePage() {
             )}
           </div>
         </div>
-        <div className="live-strip stage-keep">
-          <LockButton onLock={() => setLocked(true)} />
-        </div>
+        <LiveStrip
+          entries={entries}
+          index={at.index}
+          part={{ index: part, slides }}
+          onJump={move}
+          onLock={() => setLocked(true)}
+        />
       </header>
       {locked && <LockOverlay onUnlock={() => setLocked(false)} />}
 

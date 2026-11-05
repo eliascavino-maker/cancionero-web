@@ -130,9 +130,9 @@ describe('modo escenario', () => {
 
     expect(root.classList.contains('stage-mode')).toBe(true);
     expect(getPrefs().stageMode).toBe(true);
-    expect(s.container.querySelector<HTMLElement>('.cp-song')!.style.fontSize).toBe('34px');
+    expect(s.container.querySelector<HTMLElement>('.cp-song')!.style.fontSize).toBe('32px');
     fireEvent.click(s.page.getByRole('button', { name: 'Letra más grande' }));
-    expect(getPrefs()).toMatchObject({ stageFontSize: 36, fontSize: 22 });
+    expect(getPrefs()).toMatchObject({ stageFontSize: 34, fontSize: 22 });
 
     // A tap on the song brings the controls up; another one hides them.
     fireEvent.click(s.container.querySelector('.cp-song')!);
@@ -158,4 +158,22 @@ it('locked: touches do nothing, but the leader still arrives and keys still work
   await waitFor(() => expect(l.now()).toContain('Coro Uno'));
   fireEvent.keyDown(screen.getByRole('dialog', { name: 'Pantalla bloqueada' }), { key: 'ArrowRight' });
   await waitFor(() => expect(l.page.getByText(/2\/2 · Peña/)).toBeInTheDocument());
+});
+
+it('the strip says where we are; its map jumps (and the leader takes everyone)', async () => {
+  const s = device(sergio);
+  const l = device(leo);
+  fireEvent.click(await s.page.findByRole('button', { name: 'Ser director' }));
+  await waitFor(() => expect(l.page.getByRole('button', { name: 'Dejar de seguir' })).toBeInTheDocument());
+  const strip = s.page.getByRole('button', { name: /Abrir el mapa/ });
+  expect(strip).toHaveTextContent('Estrofa · 1/3 partes');
+  expect(strip).toHaveTextContent('Canción 1 de 2');
+
+  fireEvent.click(strip);
+  const map = s.page.getByRole('dialog', { name: 'Mapa del setlist' });
+  fireEvent.click(within(within(map).getByRole('group', { name: 'Partes de Dos' })).getAllByRole('button')[1]);
+  await waitFor(() => expect(l.now()).toContain('Coro Dos'));
+  expect(l.page.getByRole('button', { name: /Abrir el mapa/ })).toHaveTextContent('Estribillo · 2/3 partes');
+  expect(l.page.getByRole('button', { name: /Abrir el mapa/ })).toHaveTextContent('Canción 2 de 2');
+  expect(s.page.queryByRole('dialog', { name: 'Mapa del setlist' })).toBeNull();
 });

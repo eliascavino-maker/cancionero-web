@@ -59,7 +59,7 @@ export interface Prefs {
 }
 
 export const STAGE_FONT = { min: 24, max: 64 };
-const DEFAULT_PREFS: Prefs = { fontSize: 22, showChords: true, theme: 'dark', stageFontSize: 34 };
+const DEFAULT_PREFS: Prefs = { fontSize: 22, showChords: true, theme: 'dark', stageFontSize: 32 };
 const PREFS_KEY = 'cancionero.prefs';
 
 function readPrefs(): Prefs {

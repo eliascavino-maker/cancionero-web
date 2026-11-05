@@ -1736,7 +1736,183 @@ html.stage-open body {
   min-width: 0;
 }
 .live-strip > .icon-btn {
-  margin-left: auto;
+  flex: none;
+}
+.progress {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 10px 7px;
+  border: 1px solid var(--filo);
+  border-radius: var(--r-boton);
+  background: var(--case);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.progress:hover {
+  background: var(--case-alto);
+}
+.progress__text {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+.progress__part {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--tungsteno);
+  font-family: var(--font-cartel);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.progress__song {
+  flex: none;
+  color: var(--ceniza);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.progress__bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.progress__parts {
+  display: flex;
+  gap: 3px;
+}
+.progress__parts > span {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--case-luz);
+  transition: background-color 0.3s var(--ease);
+}
+.progress__parts > .is-done {
+  background: var(--tungsteno);
+}
+.progress__setlist {
+  height: 2px;
+  border-radius: 1px;
+  background: var(--case-luz);
+  overflow: hidden;
+}
+.progress__setlist > span {
+  display: block;
+  height: 100%;
+  background: var(--ceniza);
+  transition: width 0.3s var(--ease);
+}
+
+/* The map: every song, with its parts to jump to. */
+.live-map {
+  padding-bottom: 8px;
+}
+.live-map__list {
+  margin: 0;
+  padding: 0 0 8px;
+  list-style: none;
+}
+.live-map__song {
+  padding: 4px 0;
+  border-top: 1px solid var(--filo);
+}
+.live-map__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: var(--r-chico);
+  background: none;
+  text-align: left;
+  font-weight: 600;
+  cursor: pointer;
+}
+.live-map__title:hover {
+  background: var(--case);
+}
+.live-map__num {
+  flex: none;
+  width: 1.8em;
+  color: var(--humo);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.is-here .live-map__title,
+.live-map__title[aria-current] {
+  color: var(--tungsteno);
+}
+.live-map__parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 2px 6px 8px calc(1.8em + 16px);
+}
+.live-map__part {
+  min-height: 36px;
+  padding: 4px 12px;
+  border: 1px solid var(--filo-fuerte);
+  border-radius: 999px;
+  background: var(--case);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.live-map__part:hover {
+  background: var(--case-alto);
+}
+.live-map__part[aria-current] {
+  border-color: var(--tungsteno);
+  background: var(--tungsteno);
+  color: var(--sobre-tungsteno);
+}
+
+/* ------------------------------------------- moving between parts and songs */
+
+.app--stage .song-panel__sheet {
+  animation: song-in 0.32s var(--ease) both;
+}
+[data-dir='back'] .song-panel__sheet,
+.stage__part[data-dir='back'] {
+  --from: -32px;
+}
+@keyframes song-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--from, 32px));
+  }
+}
+.stage__part {
+  animation: song-in 0.26s var(--ease) both;
+}
+.cp-section {
+  transition: background-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+.cp-section--now {
+  animation: part-now 0.6s var(--ease);
+}
+@keyframes part-now {
+  from {
+    background-color: color-mix(in srgb, var(--tungsteno) 22%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app--stage .song-panel__sheet,
+  .stage__part,
+  .cp-section--now {
+    animation: none;
+  }
 }
 
 /* ------------------------------------------------------ bloqueo */
@@ -1763,7 +1939,7 @@ html.stage-open body {
   padding: 8px 14px 8px 8px;
   border: 1px solid var(--filo-fuerte);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--case) 88%, transparent);
+  background: var(--case);
   color: var(--ceniza);
   font-size: 0.9rem;
   font-weight: 600;
@@ -1777,7 +1953,7 @@ html.stage-open body {
   height: 40px;
   color: var(--tungsteno);
 }
-.lock__ring svg {
+.lock__ring .lock__progress {
   position: absolute;
   inset: 0;
   transform: rotate(-90deg);
@@ -1838,10 +2014,10 @@ html.stage-open body {
   padding-top: 8px;
 }
 /* Until a tap: only what's needed to play (the strip, the leader's buttons). */
-.stage-mode:not(.stage-chrome) .page__header > :not(.stage-keep) {
+.stage-mode:not(.stage-chrome) .page > .page__header > :not(.stage-keep) {
   display: none;
 }
-.stage-mode:not(.stage-chrome) .page__header {
+.stage-mode:not(.stage-chrome) .page > .page__header {
   padding-top: calc(4px + env(safe-area-inset-top));
   padding-bottom: 4px;
 }
@@ -1849,7 +2025,7 @@ html.stage-open body {
 .stage-mode:not(.stage-chrome) .toolbar__row:not(.toolbar__row--live) {
   display: none;
 }
-.stage-mode .page__header > :not(.stage-keep),
+.stage-mode .page > .page__header > :not(.stage-keep),
 .stage-mode .toolbar {
   animation: chrome-in 0.18s var(--ease);
 }
@@ -1859,7 +2035,7 @@ html.stage-open body {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .stage-mode .page__header > :not(.stage-keep),
+  .stage-mode .page > .page__header > :not(.stage-keep),
   .stage-mode .toolbar {
     animation: none;
   }
