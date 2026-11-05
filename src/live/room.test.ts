@@ -143,3 +143,41 @@ it('moving never touches Presence (Supabase limits it and closes the channel pas
   expect(hub.tracks.get('u-sergio')).toBe(before);
   expect(Object.keys(hub.presence.get('u-sergio')!)).toEqual(['userId', 'name']);
 });
+
+it('count-in and signals: the leader sends them, everyone sees them (the leader too)', async () => {
+  const { hub, sergio, leo } = await setup();
+  sergio.count(90, 4);
+  sergio.signal({ text: 'Final', color: '#ffaf3a', vibrate: true });
+  await flush();
+  // Not leading: nothing goes out.
+  expect(hub.sent.filter((m) => m.event === 'count' || m.event === 'signal')).toEqual([]);
+
+  await sergio.takeLead(null);
+  await flush();
+  sergio.count(90, 4);
+  await flush();
+  expect(leo.getState().cue).toMatchObject({ kind: 'count', bpm: 90, beats: 4, from: 'u-sergio' });
+  expect(sergio.getState().cue).toMatchObject({ kind: 'count', bpm: 90, beats: 4 });
+
+  const before = leo.getState().cue!.id;
+  sergio.signal({ text: 'Final', color: '#FFAF3A', vibrate: true });
+  await flush();
+  expect(leo.getState().cue).toMatchObject({ kind: 'signal', text: 'Final', color: '#ffaf3a', vibrate: true });
+  expect(leo.getState().cue!.id).toBeGreaterThan(before);
+});
+
+it("someone who isn't the leader can't show a count-in or a signal; broken ones are dropped", async () => {
+  const { hub, sergio, leo } = await setup();
+  await sergio.takeLead(null);
+  await flush();
+  const send = (from: string, event: string, payload: Record<string, unknown>) =>
+    hub.subs.get('u-leo')!.onMessage(event, { ...payload, from });
+  send('u-otro', 'signal', { text: 'Cortar', color: '#f0565a' });
+  send('u-sergio', 'signal', { text: '', color: '#f0565a' });
+  send('u-sergio', 'signal', { text: 'Cortar', color: 'red' });
+  send('u-sergio', 'count', { bpm: 5000, beats: 4 });
+  send('u-sergio', 'count', { bpm: 90, beats: 40 });
+  expect(leo.getState().cue).toBeNull();
+  send('u-sergio', 'count', { bpm: 120, beats: 3 });
+  expect(leo.getState().cue).toMatchObject({ kind: 'count', bpm: 120, beats: 3 });
+});

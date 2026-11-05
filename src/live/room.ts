@@ -7,6 +7,8 @@
  * quien llega tarde la pide con "hello" y el director la manda de nuevo.
  */
 
+import { type Signal, toSignal } from './signals';
+
 /** Where the leader is. */
 export interface LivePos {
   /** Goes up with every message of the same leader: older ones are dropped. */
@@ -23,6 +25,22 @@ export interface LivePos {
 }
 
 export type Place = Omit<LivePos, 'seq' | 'from'>;
+
+/** What the leader shows on every screen for a moment. */
+export type CueBody =
+  /** Count-in: `beats` big numbers, one per beat at `bpm`. */
+  | { kind: 'count'; bpm: number; beats: number }
+  /** A signal ("Último coro"), see `signals.ts`. */
+  | ({ kind: 'signal' } & Signal);
+
+export type Cue = CueBody & {
+  /** Goes up with each cue on this device: a new one starts again even if it's the same. */
+  id: number;
+  /** Who sent it (the leader, maybe us). */
+  from: string;
+  /** When it arrived (Date.now()): a screen opened later doesn't show it again. */
+  at: number;
+};
 
 /** The open room, from `live_sessions`. */
 export interface LiveSession {
@@ -47,6 +65,8 @@ export interface LiveState {
   leaderPos: LivePos | null;
   peers: Peer[];
   connected: boolean;
+  /** Last count-in or signal of the leader. */
+  cue: Cue | null;
 }
 
 /** What each one keeps in Presence. */
@@ -82,7 +102,8 @@ export interface LiveServer {
 }
 
 export class LiveRoom {
-  private state: LiveState = { loaded: false, session: null, leaderPos: null, peers: [], connected: false };
+  private state: LiveState = { loaded: false, session: null, leaderPos: null, peers: [], connected: false, cue: null };
+  private cues = 0;
   private listeners = new Set<(s: LiveState) => void>();
   private conn: LiveConnection | null = null;
   private seq = 0;
@@ -190,7 +211,15 @@ export class LiveRoom {
       void this.refresh();
     } else if (event === 'session') {
       void this.refresh().then(() => this.askWhere());
+    } else if (event === 'count' || event === 'signal') {
+      // Only the current leader's.
+      const body = toCueBody(event, payload);
+      if (body && payload.from === this.state.session?.leaderId) this.showCue(body, String(payload.from));
     }
+  }
+
+  private showCue(body: CueBody, from: string) {
+    this.set({ cue: { ...body, id: ++this.cues, from, at: Date.now() } });
   }
 
   private leading() {
@@ -248,6 +277,23 @@ export class LiveRoom {
     this.send('lead', { leaderId: null, leaderName: '' });
   }
 
+  /** Count-in for everyone (and here). Only while leading. */
+  count(bpm: number, beats: number) {
+    this.cue({ kind: 'count', bpm, beats });
+  }
+
+  /** A signal for everyone (and here). Only while leading. */
+  signal(s: Signal) {
+    this.cue({ kind: 'signal', ...s });
+  }
+
+  private cue(body: CueBody) {
+    if (!this.leading()) return;
+    const { kind, ...rest } = body;
+    this.send(kind, { ...rest, from: this.me.userId });
+    this.showCue(body, this.me.userId);
+  }
+
   /** Where this device is. Sent only while leading; kept to send when taking the lead. */
   sendPos(place: Place) {
     this.last = place;
@@ -255,4 +301,16 @@ export class LiveRoom {
     const pos: LivePos = { ...place, seq: ++this.seq, from: this.me.userId };
     this.send('pos', pos as unknown as Record<string, unknown>);
   }
+}
+
+/** A count-in or signal from a message; null if it isn't a valid one. */
+function toCueBody(event: string, p: Record<string, unknown>): CueBody | null {
+  if (event === 'signal') {
+    const s = toSignal(p);
+    return s && { kind: 'signal', ...s };
+  }
+  const bpm = Number(p.bpm);
+  const beats = Number(p.beats);
+  if (!(bpm >= 20 && bpm <= 300) || !Number.isInteger(beats) || beats < 1 || beats > 8) return null;
+  return { kind: 'count', bpm, beats };
 }

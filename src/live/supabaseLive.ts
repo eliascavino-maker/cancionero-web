@@ -3,7 +3,7 @@ import { LeaderChanged, type LiveServer, type LiveSession, type PresenceMeta } f
 
 /** The room expires 12 h after its last change (same rule as the server). */
 const OPEN_MS = 12 * 60 * 60 * 1000;
-const EVENTS = ['pos', 'lead', 'session', 'hello'];
+const EVENTS = ['pos', 'lead', 'session', 'hello', 'count', 'signal'];
 /** Waits before joining again after the channel closes. */
 const RETRY_MS = [1000, 2000, 5000, 10_000, 30_000];
 

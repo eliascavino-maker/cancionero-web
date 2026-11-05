@@ -16,6 +16,8 @@ export interface Membership {
   displayName: string;
   musicianId: string | null;
   prefs: Record<string, unknown>;
+  /** The director's signals as the band keeps them (`bands.live_signals`); see `bandSignals`. */
+  liveSignals?: unknown;
 }
 
 export interface Cloud {
@@ -178,6 +180,11 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
           prefs: linked.prefs as Record<string, unknown>,
         }
       : null;
+    if (next) {
+      // Without migration 006 the column isn't there: the factory signals.
+      const { data: b, error } = await client.from('bands').select('live_signals').eq('id', next.bandId).maybeSingle();
+      next.liveSignals = error ? null : ((b as { live_signals?: unknown } | null)?.live_signals ?? null);
+    }
     cacheBand(user.id, next);
     setBand(next);
     // Out of the band (left or removed): what's here stays as this device's copy.

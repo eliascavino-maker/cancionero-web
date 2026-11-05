@@ -401,6 +401,64 @@ describe('historial', () => {
   });
 });
 
+describe('señales del director', () => {
+  const signals = () =>
+    one(as<{ live_signals: unknown }>(B, 'select live_signals from public.bands where id = $1', [band]));
+  const set = (user: string | null, list: unknown) =>
+    as(user, 'select public.set_live_signals($1, $2)', [band, list === null ? null : JSON.stringify(list)]);
+
+  it('sin lista: null (la app usa las de fábrica)', async () => {
+    expect(await signals()).toEqual({ live_signals: null });
+  });
+
+  it('el owner la cambia y los miembros la leen, prolija', async () => {
+    await set(A, [
+      { text: '  Último coro ', color: '#A78BFA' },
+      { text: 'Cortar', color: '#f0565a', vibrate: true },
+    ]);
+    expect(await signals()).toEqual({
+      live_signals: [
+        { text: 'Último coro', color: '#a78bfa', vibrate: false },
+        { text: 'Cortar', color: '#f0565a', vibrate: true },
+      ],
+    });
+    expect(await as(C, 'select live_signals from public.bands where id = $1', [band])).toEqual([]);
+  });
+
+  it('solo el owner; nadie escribe bands directo; anon no llama', async () => {
+    await expect(set(B, [{ text: 'Ya', color: '#000000' }])).rejects.toThrow(/Solo el owner/);
+    await expect(set(C, [{ text: 'Ya', color: '#000000' }])).rejects.toThrow(/Solo el owner/);
+    await expect(as(B, `update public.bands set live_signals = null where id = $1`, [band])).rejects.toThrow(/permission denied/);
+    await expect(set(null, null)).rejects.toThrow(/permission denied/);
+  });
+
+  it('una lista mal formada no entra', async () => {
+    const ok = { text: 'Final', color: '#ffaf3a' };
+    for (const bad of [
+      [],
+      Array(13).fill(ok),
+      [{ text: '', color: '#ffaf3a' }],
+      [{ text: 'x'.repeat(25), color: '#ffaf3a' }],
+      [{ text: 'Final', color: 'naranja' }],
+      [{ text: 'Final', color: '#ffaf3a', vibrate: 'sí' }],
+      [{ text: 'Final', color: '#ffaf3a', extra: 1 }],
+      [ok, 'Cortar'],
+      { text: 'Final', color: '#ffaf3a' },
+    ]) {
+      await expect(set(A, bad), JSON.stringify(bad)).rejects.toThrow(/Señales inválidas/);
+    }
+    // Ni con permisos de sobra: el check de la tabla.
+    await expect(
+      db.query(`update public.bands set live_signals = '[{"text": "", "color": "#000000"}]' where id = $1`, [band]),
+    ).rejects.toThrow(/check constraint/);
+  });
+
+  it('null vuelve a las de fábrica', async () => {
+    await set(A, null);
+    expect(await signals()).toEqual({ live_signals: null });
+  });
+});
+
 describe('sala en vivo', () => {
   const L1 = '00000000-0000-4000-8000-0000000005a1';
   const L2 = '00000000-0000-4000-8000-0000000005a2';

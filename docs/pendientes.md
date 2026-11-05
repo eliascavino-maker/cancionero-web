@@ -7,21 +7,21 @@ lleva migración, va con su verificación en `supabase/verify/`.
 
 Migración 006 (señales de la banda). Lo demás va por broadcast en `live:<banda>`.
 
-- [ ] **Modo escenario**: tema ultra oscuro, alto contraste, letra grande, solo
+- [x] **Modo escenario**: tema ultra oscuro, alto contraste, letra grande, solo
   lo indispensable (el resto aparece al tocar). En la Sala en vivo y en ▶ Tocar.
   Se recuerda en el dispositivo y en la cuenta (`band_members.prefs.stage`).
   Pide pantalla completa donde existe; en iPhone esconde los controles de la app.
-- [ ] **Bloqueo**: candado que ignora los toques. Se desbloquea manteniendo
+- [x] **Bloqueo**: candado que ignora los toques. Se desbloquea manteniendo
   apretado 2 s. Los pedales y el teclado siguen andando, y el director sigue
   llegando.
-- [ ] **Cuenta regresiva**: el director toca «Contar» y a todos les aparece la
+- [x] **Cuenta regresiva**: el director toca «Contar» y a todos les aparece la
   cuenta al BPM de la canción (tiempos según `{time}`, 4 si no hay).
-- [ ] **Señales del director**: cartel grande unos segundos en todas las
+- [x] **Señales del director**: cartel grande unos segundos en todas las
   pantallas, con color y vibración opcional (Safari en iPhone no vibra). Lista
   editable por el owner en Banda.
-- [ ] **Barra de progreso**: «Coro · 3/6» y «Canción 4 de 12». Tocarla abre el
+- [x] **Barra de progreso**: «Coro · 3/6» y «Canción 4 de 12». Tocarla abre el
   mapa para saltar.
-- [ ] **Animación** al cambiar de parte o canción, sin animar con
+- [x] **Animación** al cambiar de parte o canción, sin animar con
   `prefers-reduced-motion`.
 
 ## Etapa B — Canciones y arreglos (migración 007)

@@ -5,6 +5,8 @@ import { explain, useCloud } from '../../cloud/CloudProvider';
 import type { SyncStatus } from '../../cloud/sync';
 import { useLibrary, useLive } from '../hooks';
 import { MeCard } from '../WhoAreYou';
+import { SignalsEditor } from '../SignalsEditor';
+import { bandSignals } from '../../live/signals';
 
 /** Runs an async action, with "busy" and a readable error. */
 function useAction() {
@@ -93,6 +95,7 @@ export function BandPage({ invite }: { invite?: string }) {
         <MeCard />
         <Members />
         {cloud.band.role === 'owner' && <Invites />}
+        {cloud.band.role === 'owner' && <Signals />}
         <Trash />
         <Account />
       </>
@@ -438,6 +441,29 @@ function Members() {
           ))}
         </ul>
       )}
+    </Section>
+  );
+}
+
+// ----------------------------------------------------------------- signals
+
+/** The director's signs in the live room. Only the owner changes them. */
+function Signals() {
+  const cloud = useCloud();
+  const band = cloud.band!;
+  return (
+    <Section title="Señales en vivo">
+      <p className="band__line">
+        Los carteles que el director muestra en todas las pantallas de la sala. Hasta 12. Safari en iPhone no vibra.
+      </p>
+      <SignalsEditor
+        initial={bandSignals(band.liveSignals)}
+        onSave={async (list) => {
+          const { error } = await cloud.client!.rpc('set_live_signals', { band: band.bandId, signals: list });
+          if (error) throw new Error(explain(error));
+          await cloud.refreshBand();
+        }}
+      />
     </Section>
   );
 }

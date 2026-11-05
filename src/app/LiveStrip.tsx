@@ -114,11 +114,11 @@ function SetlistMap({
       className="dialog live-map"
       aria-label="Mapa del setlist"
       onClose={onClose}
-      onClick={(e) => e.target === dialog.current && dialog.current.close()}
+      onClick={(e) => e.target === dialog.current && onClose()}
     >
       <header className="page__header">
         <h2>Mapa</h2>
-        <button className="btn" onClick={() => dialog.current?.close()}>
+        <button className="btn" onClick={onClose}>
           Cerrar
         </button>
       </header>

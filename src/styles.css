@@ -2040,3 +2040,164 @@ html.stage-open body {
     animation: none;
   }
 }
+
+/* ------------------------------------------- the leader: count-in and signals */
+
+.live-lead {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0 2px;
+}
+.live-lead .live-parts {
+  padding: 0;
+}
+.live-cues {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.live-cues__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  border: 1px solid var(--filo-fuerte);
+  border-radius: var(--r-boton);
+  background: var(--case);
+  color: var(--papel);
+  font: inherit;
+  font-family: var(--font-cartel);
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.live-cues__btn:active {
+  transform: scale(0.97);
+}
+
+.signals__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  padding-bottom: 8px;
+}
+.signals__btn {
+  min-height: 72px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--r-boton);
+  background: var(--cue);
+  font-family: var(--font-cartel);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.signals__btn:active {
+  transform: scale(0.97);
+}
+
+/* On every screen: never takes touches, above the lock too. */
+.cue {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.cue--count {
+  background: rgb(0 0 0 / 0.6);
+}
+.cue__beat {
+  color: var(--tungsteno);
+  font-family: var(--font-cartel);
+  font-size: min(62vw, 62vh);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 40px rgb(0 0 0 / 0.8);
+  animation: beat-pop 0.25s var(--ease);
+}
+@keyframes beat-pop {
+  from {
+    transform: scale(1.25);
+    opacity: 0.4;
+  }
+}
+.cue__sign {
+  width: 100%;
+  padding: clamp(24px, 6vh, 64px) 24px;
+  background: var(--cue);
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.45);
+  font-family: var(--font-cartel);
+  font-size: clamp(2.6rem, 13vw, 8rem);
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  overflow-wrap: anywhere;
+  animation: sign-in 0.22s var(--ease);
+}
+@keyframes sign-in {
+  from {
+    transform: scaleY(0.6);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cue__beat,
+  .cue__sign {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------- Banda: señales en vivo */
+
+.signals-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+.signals-edit__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.signals-edit__color {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 2px;
+  border: 1px solid var(--filo-fuerte);
+  border-radius: var(--r-chico);
+  background: var(--hueco);
+  cursor: pointer;
+}
+.signals-edit__text {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--r-chico);
+  background: var(--cue);
+  font-family: var(--font-cartel);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.signals-edit__vibrate {
+  accent-color: var(--tungsteno);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ceniza);
+  font-size: 0.85rem;
+}

@@ -177,3 +177,28 @@ it('the strip says where we are; its map jumps (and the leader takes everyone)',
   expect(l.page.getByRole('button', { name: /Abrir el mapa/ })).toHaveTextContent('Canción 2 de 2');
   expect(s.page.queryByRole('dialog', { name: 'Mapa del setlist' })).toBeNull();
 });
+
+it('"Contar" and "Señales": the leader shows them big on every screen', async () => {
+  const vibrate = vi.fn();
+  Object.defineProperty(navigator, 'vibrate', { configurable: true, value: vibrate });
+  const s = device(sergio);
+  const l = device(leo);
+  fireEvent.click(await s.page.findByRole('button', { name: 'Ser director' }));
+  await waitFor(() => expect(l.page.getByRole('button', { name: 'Dejar de seguir' })).toBeInTheDocument());
+  // Followers don't have them.
+  expect(l.page.queryByRole('button', { name: /Contar/ })).toBeNull();
+
+  fireEvent.click(s.page.getByRole('button', { name: /Contar/ }));
+  // No {time}: 4 beats. Both screens count.
+  await waitFor(() => expect(screen.getAllByRole('status').filter((e) => e.classList.contains('cue'))).toHaveLength(2));
+  expect(document.querySelector('.cue__beat')).toHaveTextContent('4');
+
+  fireEvent.click(s.page.getByRole('button', { name: /Señales/ }));
+  const dialog = s.page.getByRole('dialog', { name: 'Señales' });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Cortar' }));
+  await waitFor(() => expect(screen.getAllByRole('alert').filter((e) => e.textContent === 'Cortar')).toHaveLength(2));
+  expect(s.page.queryByRole('dialog', { name: 'Señales' })).toBeNull();
+  // "Cortar" vibrates, but not on the leader's phone.
+  expect(vibrate).toHaveBeenCalledTimes(1);
+  delete (navigator as { vibrate?: unknown }).vibrate;
+});

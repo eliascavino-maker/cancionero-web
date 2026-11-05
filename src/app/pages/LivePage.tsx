@@ -3,9 +3,12 @@ import { parseChordPro } from '../../chordpro/parser';
 import { askConfirm, tell } from '../../components/ask';
 import { FullscreenButton, canGoFull } from '../../components/FullscreenButton';
 import { Icon } from '../../components/Icon';
-import { explain } from '../../cloud/CloudProvider';
+import { explain, useCloud } from '../../cloud/CloudProvider';
 import { useRoom } from '../../live/LiveProvider';
 import { LeaderChanged, type LivePos } from '../../live/room';
+import { COUNT_BPM, bandSignals, countBeats } from '../../live/signals';
+import { clampBpm, parseBpm } from '../../chordpro/tempo';
+import { CueOverlay, SignalsDialog } from '../Cue';
 import type { SetlistEntry } from '../../data/library';
 import { navigate, useLibrary, useLive } from '../hooks';
 import { LiveStrip } from '../LiveStrip';
@@ -42,6 +45,14 @@ export function LivePage() {
   const [follow, setFollow] = useState(true);
   const stage = useStageMode();
   const [locked, setLocked] = useState(false);
+  const cloud = useCloud();
+  const signals = bandSignals(cloud.band?.liveSignals);
+  const [picking, setPicking] = useState(false);
+  const refreshBand = cloud.refreshBand;
+  // The owner may have just changed the signals.
+  useEffect(() => {
+    refreshBand().catch(() => {});
+  }, [refreshBand]);
   const [local, setLocal] = useState({ index: 0, part: 0 });
 
   const lp = state.leaderPos;
@@ -50,7 +61,8 @@ export function LivePage() {
   const at = following ? { index: lpIndex, part: lp!.part } : local;
   const entry = entries[at.index];
   const transpose = following ? lp!.transpose : (entry?.item.transpose ?? 0);
-  const slides = useMemo(() => (entry ? stageSlides(parseChordPro(entry.song.content)) : []), [entry?.song.content]);
+  const song = useMemo(() => (entry ? parseChordPro(entry.song.content) : null), [entry?.song.content]);
+  const slides = useMemo(() => (song ? stageSlides(song) : []), [song]);
   const parts = slides.length;
   const dir = useMoveDirection(at.index);
   const part = Math.min(at.part, Math.max(0, parts - 1));
@@ -249,6 +261,8 @@ export function LivePage() {
         />
       </header>
       {locked && <LockOverlay onUnlock={() => setLocked(false)} />}
+      <CueOverlay cue={state.cue} me={myId} />
+      {picking && <SignalsDialog signals={signals} onPick={(s) => room.signal(s)} onClose={() => setPicking(false)} />}
 
       <SongPanel
         key={entry.item.id}
@@ -262,13 +276,26 @@ export function LivePage() {
           follow: following || leading,
           onPart: leading ? (p) => move(at.index, p) : undefined,
           bar: leading ? (
-            <div className="live-parts" role="group" aria-label="Dirigir">
-              <button className="live-parts__btn" disabled={isFirst} onClick={prevPart}>
-                <Icon name="left" size={22} /> Parte anterior
-              </button>
-              <button className="live-parts__btn live-parts__btn--next" disabled={isLast} onClick={nextPart}>
-                Parte siguiente <Icon name="right" size={22} />
-              </button>
+            <div className="live-lead" role="group" aria-label="Dirigir">
+              <div className="live-parts">
+                <button className="live-parts__btn" disabled={isFirst} onClick={prevPart}>
+                  <Icon name="left" size={22} /> Parte anterior
+                </button>
+                <button className="live-parts__btn live-parts__btn--next" disabled={isLast} onClick={nextPart}>
+                  Parte siguiente <Icon name="right" size={22} />
+                </button>
+              </div>
+              <div className="live-cues">
+                <button
+                  className="live-cues__btn"
+                  onClick={() => room.count(clampBpm(parseBpm(song?.metadata.tempo) ?? COUNT_BPM), countBeats(song?.metadata.time))}
+                >
+                  <Icon name="metronome" size={20} /> Contar
+                </button>
+                <button className="live-cues__btn" aria-haspopup="dialog" onClick={() => setPicking(true)}>
+                  <Icon name="signal" size={20} /> Señales
+                </button>
+              </div>
             </div>
           ) : undefined,
         }}

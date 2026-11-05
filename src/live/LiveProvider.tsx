@@ -4,7 +4,7 @@ import { useCloud } from '../cloud/CloudProvider';
 import { LiveRoom, type LiveState } from './room';
 import { supabaseLive } from './supabaseLive';
 
-const CLOSED: LiveState = { loaded: true, session: null, leaderPos: null, peers: [], connected: false };
+const CLOSED: LiveState = { loaded: true, session: null, leaderPos: null, peers: [], connected: false, cue: null };
 
 interface Live {
   /** null: not in a band (or no server). */

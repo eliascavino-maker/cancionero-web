@@ -59,8 +59,8 @@ los permisos.
 - Después de abrirla una vez con internet, la app funciona sin conexión: un
   service worker (`vite-plugin-pwa`) guarda la app y las fuentes.
 - Cuando hay una versión nueva aparece **Hay una versión nueva · Actualizar**.
-  No se actualiza sola, así la página no se recarga en medio de un show. En el
-  modo escenario el aviso no aparece.
+  No se actualiza sola, así la página no se recarga en medio de un show. En
+  ▶ Tocar y en la Sala en vivo el aviso no aparece.
 - En iPhone conviene instalarla en la pantalla de inicio (Compartir → Agregar a
   inicio): Safari puede borrar los datos de sitios que no se abren en 7 días.
 - **Pantalla completa** en iPhone: el navegador no la tiene, así que el botón
@@ -85,11 +85,28 @@ los permisos.
   pausa; la barra espaciadora pausa y reanuda. Mientras se desplaza, la
   pantalla no se apaga, en los navegadores que lo permiten.
 
-## Modo escenario
+## Tocar un setlist
 
 Desde un setlist, **▶ Tocar**. Las flechas ←/→ cambian de canción: sirven
 los pedales Bluetooth para pasar páginas configurados en flechas. El tono que
 elijas ahí se guarda para esa canción en ese setlist.
+
+En **▶ Tocar** y en la **Sala en vivo**:
+
+- **Franja de arriba**: la parte («Estribillo · 2/3 partes», solo en la sala)
+  y la canción («Canción 4 de 12»). Tocarla abre el **mapa** del setlist para
+  saltar a otra canción o parte.
+- **Modo escenario** (ícono de pantalla): negro puro, letra blanca, acordes
+  amarillos y letra más grande (con su propio tamaño, A−/A+). Solo quedan la
+  franja y los botones del director; tocar la canción muestra el resto unos
+  segundos. La pantalla no se apaga. Pide pantalla completa donde el
+  navegador la tiene; en iPhone esconde los controles de la app (instalada,
+  sin barras de Safari). Se recuerda en el dispositivo y en tu cuenta.
+- **Candado**: la pantalla ignora los toques. Se desbloquea manteniendo
+  apretado 2 s (o Enter). Los pedales, el teclado y el director siguen
+  andando.
+- Al cambiar de canción o parte hay una animación corta, salvo con «reducir
+  movimiento» activado en el sistema.
 
 ## Sala en vivo
 
@@ -107,11 +124,21 @@ Solo para los miembros de la banda, cada uno con su cuenta.
   llegan a los demás en unos 60 ms.
 - **Seguir:** quien sigue ve la parte actual marcada y en pantalla, con su
   vista y su resaltado. Moverse a mano o **Dejar de seguir** lo suelta.
+- **Contar:** el director toca **Contar** y a todos les aparece la cuenta
+  grande (4-3-2-1) al BPM de la canción. Los tiempos salen de `{time}` (3/4
+  cuenta 3); sin `{tempo}`, uno por segundo.
+- **Señales:** el director elige un cartel («Último coro», «Cortar»…) y sale
+  grande en todas las pantallas 3,5 s, con su color. Las que tienen «Vibra»
+  hacen vibrar los teléfonos que pueden (Safari en iPhone no). La lista la
+  cambia el owner en **Banda → Señales en vivo** (hasta 12).
+- La cuenta y las señales solo se muestran si vienen de quien dirige.
 - **Por dentro:** quién dirige está en `live_sessions`. La posición va por
   broadcast en el canal privado `live:<banda>`, sin pasar por la base. Presence
   solo dice quién está, porque Supabase limita cuántas veces se actualiza.
   Quien entra tarde o se reconecta pide la posición con `hello`. La sala vence
-  a las 12 h sin cambios.
+  a las 12 h sin cambios. La cuenta (`count`) y las señales (`signal`) van
+  por el mismo canal; la lista de señales está en `bands.live_signals`
+  (migración 6).
 
 ## Estructura
 
