@@ -63,6 +63,11 @@ los permisos.
   modo escenario el aviso no aparece.
 - En iPhone conviene instalarla en la pantalla de inicio (Compartir → Agregar a
   inicio): Safari puede borrar los datos de sitios que no se abren en 7 días.
+- **Pantalla completa** en iPhone: el navegador no la tiene, así que el botón
+  esconde la barra de abajo, el encabezado y los controles, y deja solo la
+  canción. Se sale tocando la pantalla, con el botón chico de arriba o con Esc.
+  En Safari, sin instalar, la primera vez de cada visita avisa cómo sacar
+  también las barras de Safari, hasta que tocás «No mostrar de nuevo».
 
 ## Vista de canción
 

@@ -884,6 +884,29 @@ li.card:hover {
   display: none;
 }
 
+/* The app's own full screen (iPhone has none): only the song. The leader
+   keeps the part buttons. */
+.is-immersive .nav,
+.is-immersive .page__header,
+.is-immersive .toolbar:not(:has(.toolbar__row--live)),
+.is-immersive .toolbar__row:not(.toolbar__row--live) {
+  display: none;
+}
+.is-immersive .toolbar {
+  bottom: calc(8px + env(safe-area-inset-bottom));
+}
+.immersive-exit {
+  position: fixed;
+  z-index: 30;
+  top: calc(6px + env(safe-area-inset-top));
+  right: calc(6px + env(safe-area-inset-right));
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--case) 80%, transparent);
+  color: var(--ceniza);
+}
+
 .player__title {
   flex: 1;
   min-width: 0;
