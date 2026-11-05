@@ -1721,3 +1721,146 @@ html.stage-open body {
 .live .song-panel__sheet {
   padding-bottom: 220px;
 }
+
+/* ------------------------------------------- strip: progress and padlock */
+
+.page__header--strip {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+.live-strip {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.live-strip > .icon-btn {
+  margin-left: auto;
+}
+
+/* ------------------------------------------------------ bloqueo */
+
+.lock {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 16px calc(20px + env(safe-area-inset-bottom));
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  outline: none;
+  cursor: default;
+}
+.lock__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px 8px 8px;
+  border: 1px solid var(--filo-fuerte);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--case) 88%, transparent);
+  color: var(--ceniza);
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: var(--sombra);
+}
+.lock__ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: var(--tungsteno);
+}
+.lock__ring svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+  fill: none;
+  stroke-width: 3;
+}
+.lock__track {
+  stroke: var(--case-luz);
+}
+.lock__fill {
+  stroke: var(--tungsteno);
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.lock--holding .lock__hint {
+  color: var(--papel);
+}
+/* Feedback, not decoration: it runs with reduced motion too. */
+.lock--holding .lock__fill {
+  animation-name: lock-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes lock-fill {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ------------------------------------------------- modo escenario */
+
+/* Pure black, white letters, bright yellow chords: read from far, under lights. */
+:root.stage-mode,
+:root.stage-mode[data-theme='light'] {
+  --telon: #000;
+  --tarima: #0b0b0b;
+  --case: #151515;
+  --case-alto: #1e1e1e;
+  --case-luz: #2a2a2a;
+  --hueco: #000;
+  --papel: #fff;
+  --ceniza: #d9d9d9;
+  --humo: #ababab;
+  --filo: rgb(255 255 255 / 0.14);
+  --filo-fuerte: rgb(255 255 255 / 0.26);
+  --tungsteno: #ffd43b;
+  --tungsteno-vivo: #ffe27a;
+  --foco: rgb(255 212 59 / 0.16);
+  --sobre-tungsteno: #000;
+  --sombra: 0 0 0 1px rgb(255 255 255 / 0.1), 0 12px 32px rgb(0 0 0 / 0.7);
+  color-scheme: dark;
+}
+.stage-mode .cp-song {
+  font-weight: 500;
+}
+.stage-mode .song-panel__sheet {
+  padding-top: 8px;
+}
+/* Until a tap: only what's needed to play (the strip, the leader's buttons). */
+.stage-mode:not(.stage-chrome) .page__header > :not(.stage-keep) {
+  display: none;
+}
+.stage-mode:not(.stage-chrome) .page__header {
+  padding-top: calc(4px + env(safe-area-inset-top));
+  padding-bottom: 4px;
+}
+.stage-mode:not(.stage-chrome) .toolbar:not(:has(.toolbar__row--live)),
+.stage-mode:not(.stage-chrome) .toolbar__row:not(.toolbar__row--live) {
+  display: none;
+}
+.stage-mode .page__header > :not(.stage-keep),
+.stage-mode .toolbar {
+  animation: chrome-in 0.18s var(--ease);
+}
+@keyframes chrome-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-mode .page__header > :not(.stage-keep),
+  .stage-mode .toolbar {
+    animation: none;
+  }
+}

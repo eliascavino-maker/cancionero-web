@@ -3,7 +3,7 @@ import { Library } from '../../data/library';
 import { FakeHub } from '../../live/fakeHub';
 import { LiveTestProvider } from '../../live/LiveProvider';
 import { LiveRoom } from '../../live/room';
-import { LibraryContext, resetPrefsForTests } from '../hooks';
+import { LibraryContext, getPrefs, resetPrefsForTests } from '../hooks';
 import { LivePage } from './LivePage';
 
 // Three parts: verse, chorus, and the chorus again.
@@ -115,4 +115,47 @@ it('closed room', async () => {
   await act(() => sergio.close());
   const s = device(sergio);
   expect(await s.page.findByText(/No hay una sala abierta/)).toBeInTheDocument();
+});
+
+describe('modo escenario', () => {
+  const root = document.documentElement;
+  afterEach(() => root.classList.remove('stage-mode', 'stage-chrome'));
+
+  it('dark, big letters, controls on a tap; remembered', async () => {
+    const s = device(sergio);
+    fireEvent.click(await s.page.findByRole('button', { name: 'Modo escenario' }));
+    // No full screen in this browser (like iPhone Safari): the tip to install it.
+    const tip = await screen.findByRole('dialog', { name: /no deja poner pantalla completa/ });
+    fireEvent.click(within(tip).getByRole('button', { name: 'Entendido' }));
+
+    expect(root.classList.contains('stage-mode')).toBe(true);
+    expect(getPrefs().stageMode).toBe(true);
+    expect(s.container.querySelector<HTMLElement>('.cp-song')!.style.fontSize).toBe('34px');
+    fireEvent.click(s.page.getByRole('button', { name: 'Letra más grande' }));
+    expect(getPrefs()).toMatchObject({ stageFontSize: 36, fontSize: 22 });
+
+    // A tap on the song brings the controls up; another one hides them.
+    fireEvent.click(s.container.querySelector('.cp-song')!);
+    expect(root.classList.contains('stage-chrome')).toBe(true);
+    fireEvent.click(s.container.querySelector('.cp-song')!);
+    expect(root.classList.contains('stage-chrome')).toBe(false);
+
+    fireEvent.click(s.page.getByRole('button', { name: 'Modo escenario' }));
+    expect(root.classList.contains('stage-mode')).toBe(false);
+    expect(getPrefs().stageMode).toBe(false);
+  });
+});
+
+it('locked: touches do nothing, but the leader still arrives and keys still work', async () => {
+  const s = device(sergio);
+  const l = device(leo);
+  fireEvent.click(await s.page.findByRole('button', { name: 'Ser director' }));
+  await waitFor(() => expect(l.page.getByRole('button', { name: 'Dejar de seguir' })).toBeInTheDocument());
+  fireEvent.click(l.page.getByRole('button', { name: 'Bloquear la pantalla' }));
+  expect(screen.getByRole('dialog', { name: 'Pantalla bloqueada' })).toBeInTheDocument();
+
+  fireEvent.click(s.page.getByRole('button', { name: /Parte siguiente/ }));
+  await waitFor(() => expect(l.now()).toContain('Coro Uno'));
+  fireEvent.keyDown(screen.getByRole('dialog', { name: 'Pantalla bloqueada' }), { key: 'ArrowRight' });
+  await waitFor(() => expect(l.page.getByText(/2\/2 · Peña/)).toBeInTheDocument());
 });

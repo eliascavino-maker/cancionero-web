@@ -6,6 +6,8 @@ export interface AccountPrefs {
   chosen?: boolean;
   view?: 'chords' | 'lyrics';
   highlight?: boolean;
+  /** Modo escenario on. */
+  stage?: boolean;
 }
 
 /** The account's row in the band, as far as "¿Quién sos?" goes. */
@@ -57,4 +59,15 @@ export function accountStep(
     saved.view === prefs.view &&
     saved.highlight === prefs.highlight;
   return same ? { kind: 'none' } : { kind: 'save', musicianId, prefs };
+}
+
+export type StageStep = { kind: 'none' } | { kind: 'adopt'; on: boolean } | { kind: 'save'; on: boolean };
+
+/**
+ * Modo escenario with the account. A device that never chose takes the
+ * account's; a choice made here goes to the account.
+ */
+export function stageStep(local: boolean | undefined, saved: boolean | undefined): StageStep {
+  if (local === undefined) return saved === undefined ? { kind: 'none' } : { kind: 'adopt', on: saved };
+  return local === saved ? { kind: 'none' } : { kind: 'save', on: local };
 }

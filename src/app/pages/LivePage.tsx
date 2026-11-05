@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { parseChordPro } from '../../chordpro/parser';
 import { askConfirm, tell } from '../../components/ask';
-import { FullscreenButton } from '../../components/FullscreenButton';
+import { FullscreenButton, canGoFull } from '../../components/FullscreenButton';
 import { Icon } from '../../components/Icon';
 import { explain } from '../../cloud/CloudProvider';
 import { useRoom } from '../../live/LiveProvider';
 import { LeaderChanged, type LivePos } from '../../live/room';
 import type { SetlistEntry } from '../../data/library';
 import { navigate, useLibrary, useLive } from '../hooks';
+import { LockButton, LockOverlay } from '../Lock';
 import { SongPanel } from '../SongPanel';
+import { useStageMode } from '../stageMode';
 import { stageSlides } from '../StageView';
 
 /** The leader's song in this setlist: by position, or by song if the list moved. */
@@ -36,6 +38,8 @@ export function LivePage() {
   const leaderId = session?.leaderId ?? null;
   const leading = !!leaderId && leaderId === myId;
   const [follow, setFollow] = useState(true);
+  const stage = useStageMode();
+  const [locked, setLocked] = useState(false);
   const [local, setLocal] = useState({ index: 0, part: 0 });
 
   const lp = state.leaderPos;
@@ -147,7 +151,7 @@ export function LivePage() {
 
   return (
     <div className="page page--song live">
-      <header className="page__header page__header--sticky live__header">
+      <header className="page__header page__header--sticky page__header--strip live__header">
         <a className="icon-btn" href={`#/setlist/${setlistId}`} aria-label="Salir de la sala">
           <Icon name="close" />
         </a>
@@ -173,7 +177,16 @@ export function LivePage() {
         >
           <Icon name="next" size={20} />
         </button>
-        <FullscreenButton />
+        <button
+          className="icon-btn"
+          aria-label="Modo escenario"
+          title="Modo escenario"
+          aria-pressed={stage.on}
+          onClick={stage.toggle}
+        >
+          <Icon name="stage" />
+        </button>
+        {(!stage.on || canGoFull()) && <FullscreenButton />}
         <details className="menu">
           <summary className="icon-btn" aria-label="Más opciones de la sala">
             <Icon name="more" />
@@ -223,7 +236,11 @@ export function LivePage() {
             )}
           </div>
         </div>
+        <div className="live-strip stage-keep">
+          <LockButton onLock={() => setLocked(true)} />
+        </div>
       </header>
+      {locked && <LockOverlay onUnlock={() => setLocked(false)} />}
 
       <SongPanel
         key={entry.item.id}
@@ -231,6 +248,7 @@ export function LivePage() {
         transpose={transpose}
         onTransposeChange={(n) => lib.setItemTranspose(entry.item.id, n)}
         songKey={entry.song.id}
+        stage={stage.on}
         live={{
           part: leaderId ? part : -1,
           follow: following || leading,

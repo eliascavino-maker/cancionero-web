@@ -1,4 +1,4 @@
-import { accountStep, musicianIdFor } from '../cloud/account';
+import { accountStep, musicianIdFor, stageStep } from '../cloud/account';
 import { BAND } from '../data/band';
 import { getPrefs, resetPrefsForTests } from './hooks';
 import { type MeState, type Musician, chooseMe, getMe, litSinger, resetMeForTests } from './me';
@@ -72,5 +72,19 @@ describe('accountStep', () => {
 
   it('a name the band does not have goes as no musician', () => {
     expect(musicianIdFor({ name: 'Otro', sings: true, color: '#000000' }, roster)).toBeNull();
+  });
+});
+
+describe('stageStep (modo escenario with the account)', () => {
+  it("a device that never chose takes the account's", () => {
+    expect(stageStep(undefined, true)).toEqual({ kind: 'adopt', on: true });
+    expect(stageStep(undefined, false)).toEqual({ kind: 'adopt', on: false });
+    expect(stageStep(undefined, undefined)).toEqual({ kind: 'none' });
+  });
+
+  it('a choice made here goes to the account', () => {
+    expect(stageStep(true, undefined)).toEqual({ kind: 'save', on: true });
+    expect(stageStep(false, true)).toEqual({ kind: 'save', on: false });
+    expect(stageStep(true, true)).toEqual({ kind: 'none' });
   });
 });

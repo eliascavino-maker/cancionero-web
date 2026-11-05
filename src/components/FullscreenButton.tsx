@@ -10,7 +10,7 @@ type Nav = Navigator & { standalone?: boolean };
 
 const doc = () => document as Doc;
 const isFull = () => !!(doc().fullscreenElement ?? doc().webkitFullscreenElement);
-const canGoFull = () => {
+export const canGoFull = () => {
   const el = document.documentElement as El;
   return typeof el.requestFullscreen === 'function' || typeof el.webkitRequestFullscreen === 'function';
 };
@@ -63,19 +63,38 @@ export function resetFullscreenForTests() {
   tipShown = false;
 }
 
+/** The browser's full screen, if it has one. False where it doesn't (iPhone). */
+async function requestFull(): Promise<boolean> {
+  const el = document.documentElement as El;
+  if (el.requestFullscreen) await el.requestFullscreen({ navigationUI: 'hide' });
+  else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+  else return false;
+  return true;
+}
+
+export async function exitFullscreen(): Promise<void> {
+  if (isFull()) await (doc().exitFullscreen?.() ?? doc().webkitExitFullscreen?.());
+}
+
+/**
+ * Modo escenario: the browser's full screen where there is one. On iPhone in
+ * Safari, the tip to install it; modo escenario hides the app's own bars.
+ */
+export async function enterFullscreen(): Promise<void> {
+  if (isImmersive()) return;
+  if (!(await requestFull())) await installTip();
+}
+
 export async function toggleFullscreen(): Promise<void> {
   if (appFull) {
     setAppFull(false);
     return;
   }
   if (isFull()) {
-    await (doc().exitFullscreen?.() ?? doc().webkitExitFullscreen?.());
+    await exitFullscreen();
     return;
   }
-  const el = document.documentElement as El;
-  if (el.requestFullscreen) await el.requestFullscreen({ navigationUI: 'hide' });
-  else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
-  else {
+  if (!(await requestFull())) {
     // iPhone: web pages can't go full screen, so the app hides its own bars.
     if (!isInstalled()) await installTip();
     setAppFull(true);

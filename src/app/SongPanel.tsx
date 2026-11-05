@@ -18,7 +18,7 @@ import {
   useSavedLevel,
   useWakeLock,
 } from './autoscroll';
-import { type Prefs, usePrefs } from './hooks';
+import { type Prefs, STAGE_FONT, usePrefs } from './hooks';
 import { litSinger, useMe } from './me';
 import { PartsDialog } from './PartsDialog';
 import { StageView, sectionTitle, stageSlides } from './StageView';
@@ -52,6 +52,7 @@ export function SongPanel({
   songKey,
   onContentChange,
   live,
+  stage: stageMode = false,
 }: {
   content: string;
   transpose: number;
@@ -59,8 +60,13 @@ export function SongPanel({
   songKey?: string;
   onContentChange?: (content: string) => void;
   live?: LivePart;
+  /** Modo escenario: its own, bigger letter size. */
+  stage?: boolean;
 }) {
   const [prefs, setPrefs] = usePrefs();
+  const fontSize = stageMode ? prefs.stageFontSize : prefs.fontSize;
+  const fontLimits = stageMode ? STAGE_FONT : { min: 14, max: 44 };
+  const setFontSize = (n: number) => set(stageMode ? { stageFontSize: n } : { fontSize: n });
   const mine = litSinger(useMe());
 
   // ----- editing the text (moving chords, BPM). Edits show at once; saves
@@ -234,7 +240,7 @@ export function SongPanel({
       <div className="song-panel__sheet" ref={sheet} data-testid="sheet" onPointerDown={() => playing && setPlaying(false)}>
         <SongView
           song={shown}
-          fontSize={prefs.fontSize}
+          fontSize={fontSize}
           mine={mine}
           currentPart={live?.part}
           onPartTap={live?.onPart}
@@ -292,7 +298,7 @@ export function SongPanel({
           }}
           bpm={bpm}
           pxPerSecond={speed}
-          fontSize={prefs.fontSize}
+          fontSize={fontSize}
           mine={mine}
           index={live?.part}
           onIndexChange={live?.onPart}
@@ -545,16 +551,16 @@ export function SongPanel({
             <button
               className="icon-btn"
               aria-label="Letra más chica"
-              disabled={prefs.fontSize <= 14}
-              onClick={() => set({ fontSize: prefs.fontSize - 2 })}
+              disabled={fontSize <= fontLimits.min}
+              onClick={() => setFontSize(fontSize - 2)}
             >
               <Icon name="textSmaller" />
             </button>
             <button
               className="icon-btn"
               aria-label="Letra más grande"
-              disabled={prefs.fontSize >= 44}
-              onClick={() => set({ fontSize: prefs.fontSize + 2 })}
+              disabled={fontSize >= fontLimits.max}
+              onClick={() => setFontSize(fontSize + 2)}
             >
               <Icon name="textLarger" />
             </button>

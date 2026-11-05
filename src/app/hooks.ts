@@ -52,9 +52,14 @@ export interface Prefs {
   showChords: boolean;
   /** Dark by default: easier to read on a dim stage. */
   theme: 'dark' | 'light';
+  /** Modo escenario in the live room and ▶ Tocar. Undefined: never chosen on this device. */
+  stageMode?: boolean;
+  /** Letter size in modo escenario: bigger than the normal one. */
+  stageFontSize: number;
 }
 
-const DEFAULT_PREFS: Prefs = { fontSize: 22, showChords: true, theme: 'dark' };
+export const STAGE_FONT = { min: 24, max: 64 };
+const DEFAULT_PREFS: Prefs = { fontSize: 22, showChords: true, theme: 'dark', stageFontSize: 34 };
 const PREFS_KEY = 'cancionero.prefs';
 
 function readPrefs(): Prefs {

@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
-import { FullscreenButton } from '../../components/FullscreenButton';
+import { useEffect, useState } from 'react';
+import { FullscreenButton, canGoFull } from '../../components/FullscreenButton';
 import { Icon } from '../../components/Icon';
+import { LockButton, LockOverlay } from '../Lock';
 import { SongPanel } from '../SongPanel';
+import { useStageMode } from '../stageMode';
 import { navigate, useLibrary, useLive } from '../hooks';
 
 /**
@@ -16,6 +18,8 @@ export function PlayerPage({ setlistId, index }: { setlistId: string; index: num
     [setlistId],
   );
   const count = data?.entries.length ?? 0;
+  const stage = useStageMode();
+  const [locked, setLocked] = useState(false);
   const go = (i: number) => i >= 0 && i < count && navigate(`/play/${setlistId}/${i}`);
 
   useEffect(() => {
@@ -38,8 +42,8 @@ export function PlayerPage({ setlistId, index }: { setlistId: string; index: num
   const next = data.entries[index + 1];
 
   return (
-    <div className="page page--song">
-      <header className="page__header page__header--sticky">
+    <div className="page page--song player">
+      <header className="page__header page__header--sticky page__header--strip">
         <a className="icon-btn" href={`#/setlist/${setlistId}`} aria-label="Salir del modo en vivo">
           <Icon name="close" />
         </a>
@@ -60,14 +64,28 @@ export function PlayerPage({ setlistId, index }: { setlistId: string; index: num
         >
           <Icon name="next" size={20} />
         </button>
-        <FullscreenButton />
+        <button
+          className="icon-btn"
+          aria-label="Modo escenario"
+          title="Modo escenario"
+          aria-pressed={stage.on}
+          onClick={stage.toggle}
+        >
+          <Icon name="stage" />
+        </button>
+        {(!stage.on || canGoFull()) && <FullscreenButton />}
+        <div className="live-strip stage-keep">
+          <LockButton onLock={() => setLocked(true)} />
+        </div>
       </header>
+      {locked && <LockOverlay onUnlock={() => setLocked(false)} />}
       <SongPanel
         key={entry.item.id}
         content={entry.song.content}
         transpose={entry.item.transpose}
         onTransposeChange={(n) => lib.setItemTranspose(entry.item.id, n)}
         songKey={entry.song.id}
+        stage={stage.on}
         onContentChange={(c) => lib.saveSong(c, entry.song.id)}
       />
     </div>

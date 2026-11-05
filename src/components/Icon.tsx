@@ -40,6 +40,10 @@ const PATHS = {
   share: 'M12 15V4M8 8l4-4 4 4M6 12v8h12v-8',
   copy: 'M9 9h10v11H9zM5 15V4h10',
   logout: 'M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10',
+  lock: 'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
+  metronome: 'M9.5 3h5l3.5 17H6zM12 16l5-9M8 16h8',
+  signal: 'M4 10v4h3l7 4V6l-7 4zM17.5 9.5a3.5 3.5 0 0 1 0 5',
+  map: 'M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2zM9 4v14M15 6v14',
 } as const;
 
 export type IconName = keyof typeof PATHS;

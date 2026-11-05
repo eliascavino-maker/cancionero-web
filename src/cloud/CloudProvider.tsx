@@ -3,7 +3,7 @@ import { type ReactNode, createContext, useCallback, useContext, useEffect, useM
 import { setPrefs, getPrefs, useLibrary, usePrefs } from '../app/hooks';
 import { type Musician, getMe, setMe, useMe } from '../app/me';
 import { BAND } from '../data/band';
-import { accountStep } from './account';
+import { type AccountPrefs, accountStep, stageStep } from './account';
 import { supabaseRemote } from './remote';
 import { supabase } from './supabase';
 import { Sync, type SyncStatus } from './sync';
@@ -256,11 +256,17 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
       setMe(step.me);
       if (step.showChords !== undefined) setPrefs({ ...getPrefs(), showChords: step.showChords });
     }
-    if (step.kind !== 'save') return;
-    const { musicianId } = step;
+    const stage = stageStep(prefs.stageMode, (band.prefs as AccountPrefs).stage);
+    if (stage.kind === 'adopt') setPrefs({ ...getPrefs(), stageMode: stage.on });
+    if (step.kind !== 'save' && stage.kind !== 'save') return;
+    const musicianId = step.kind === 'save' ? step.musicianId : band.musicianId;
+    const changed: AccountPrefs = {
+      ...(step.kind === 'save' ? step.prefs : {}),
+      ...(stage.kind === 'save' ? { stage: stage.on } : {}),
+    };
     // Wait a moment: switching Letra/Acordes back and forth saves once.
     const timer = setTimeout(async () => {
-      const next = { ...band, musicianId, prefs: { ...band.prefs, ...step.prefs } };
+      const next = { ...band, musicianId, prefs: { ...band.prefs, ...changed } };
       try {
         await check(
           client
@@ -280,7 +286,7 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
       if (me && withId && me.id !== withId.id) setMe({ ...getMe(), me: withId });
     }, 1000);
     return () => clearTimeout(timer);
-  }, [client, user, band, musicians, meState, prefs.showChords, onlineCount]);
+  }, [client, user, band, musicians, meState, prefs.showChords, prefs.stageMode, onlineCount]);
 
   const value = useMemo<Cloud>(() => {
     const myName = () => String(user?.user_metadata?.name ?? '');
