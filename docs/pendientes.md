@@ -32,7 +32,7 @@ Migración 006 (señales de la banda). Lo demás va por broadcast en `live:<band
 
 ## Etapa C — Música
 
-- [ ] Transposición por persona (`band_members.prefs.capo`), sin cambiar el tono real.
+- [x] Transposición por persona (`band_members.prefs.capo`), sin cambiar el tono real.
 
 ## Etapa D — Importar y marca (migraciones 008 y 009, Edge Function)
 

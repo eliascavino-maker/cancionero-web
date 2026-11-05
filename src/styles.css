@@ -722,6 +722,18 @@ li.card:hover {
 .toolbar .speed {
   min-width: 44px;
 }
+/* Small phones: Letra/Acordes, indications, edit and the key fit in one row. */
+@media (max-width: 400px) {
+  .toolbar__row {
+    gap: 2px;
+  }
+  .toolbar .segmented button {
+    padding: 0 6px;
+  }
+  .toolbar .key-display {
+    min-width: 40px;
+  }
+}
 .toolbar__group {
   display: flex;
   align-items: center;
@@ -2233,6 +2245,30 @@ html.stage-open body {
 .cue-toggle[aria-pressed='false'] {
   color: var(--humo);
   background: linear-gradient(to top right, transparent 47%, currentColor 47% 53%, transparent 53%) center / 22px 22px no-repeat;
+}
+
+/* ------------------------------------------------------------ mi capo */
+
+.capo-btn {
+  position: relative;
+}
+.capo-btn--on {
+  color: var(--tungsteno);
+}
+.capo-btn__fret {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: var(--tungsteno);
+  color: var(--sobre-tungsteno);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
 }
 
 /* ------------------------------------------------------------ arreglos */

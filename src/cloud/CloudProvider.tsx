@@ -3,7 +3,7 @@ import { type ReactNode, createContext, useCallback, useContext, useEffect, useM
 import { setPrefs, getPrefs, useLibrary, usePrefs } from '../app/hooks';
 import { type Musician, getMe, setMe, useMe } from '../app/me';
 import { BAND } from '../data/band';
-import { type AccountPrefs, accountStep, stageStep } from './account';
+import { type AccountPrefs, accountStep, applyCapoEdits, capoEditsLeft, capoStep, cleanCapoMap, stageStep } from './account';
 import { supabaseRemote } from './remote';
 import { supabase } from './supabase';
 import { Sync, type SyncStatus } from './sync';
@@ -265,16 +265,27 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
     }
     const stage = stageStep(prefs.stageMode, (band.prefs as AccountPrefs).stage);
     if (stage.kind === 'adopt') setPrefs({ ...getPrefs(), stageMode: stage.on });
-    if (step.kind !== 'save' && stage.kind !== 'save') return;
+    const capo = capoStep(prefs.capo, prefs.capoEdits, (band.prefs as AccountPrefs).capo);
+    if (capo.kind === 'adopt') setPrefs({ ...getPrefs(), capo: capo.capo });
+    if (step.kind !== 'save' && stage.kind !== 'save' && capo.kind !== 'save') return;
     const musicianId = step.kind === 'save' ? step.musicianId : band.musicianId;
     const changed: AccountPrefs = {
       ...(step.kind === 'save' ? step.prefs : {}),
       ...(stage.kind === 'save' ? { stage: stage.on } : {}),
+      ...(capo.kind === 'save' ? { capo: capo.capo } : {}),
     };
     // Wait a moment: switching Letra/Acordes back and forth saves once.
     const timer = setTimeout(async () => {
       const next = { ...band, musicianId, prefs: { ...band.prefs, ...changed } };
       try {
+        if (capo.kind === 'save') {
+          // Another device may have put capos since this one read them: only this device's changes go on top.
+          const { data } = await check(
+            client.from('band_members').select('prefs').eq('band_id', band.bandId).eq('user_id', user.id).maybeSingle(),
+          );
+          const fresh = cleanCapoMap((data?.prefs as AccountPrefs | undefined)?.capo) ?? {};
+          next.prefs.capo = applyCapoEdits(fresh, capo.sent);
+        }
         await check(
           client
             .from('band_members')
@@ -287,13 +298,19 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
       }
       cacheBand(user.id, next);
       setBand(next);
+      if (capo.kind === 'save') {
+        // Changed again while saving: those stay pending, and shown.
+        const p = getPrefs();
+        const left = capoEditsLeft(p.capoEdits, capo.sent);
+        setPrefs({ ...p, capo: applyCapoEdits(next.prefs.capo ?? {}, left), capoEdits: left });
+      }
       // The list from the band has the server's ids.
       const me = getMe().me;
       const withId = musicians.find((m) => m.id === musicianId);
       if (me && withId && me.id !== withId.id) setMe({ ...getMe(), me: withId });
     }, 1000);
     return () => clearTimeout(timer);
-  }, [client, user, band, musicians, meState, prefs.showChords, prefs.stageMode, onlineCount]);
+  }, [client, user, band, musicians, meState, prefs.showChords, prefs.stageMode, prefs.capo, prefs.capoEdits, onlineCount]);
 
   const value = useMemo<Cloud>(() => {
     const myName = () => String(user?.user_metadata?.name ?? '');

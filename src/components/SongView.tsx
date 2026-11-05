@@ -49,6 +49,15 @@ export interface SongViewOptions {
   cueEdit?: CueEdit;
 }
 
+/** The player's own capo: chords are drawn as shapes, the header keeps the real key. */
+export interface MyCapo {
+  fret: number;
+  /** The key the band plays in. */
+  key?: string;
+  /** The key of the shapes (the real one minus the capo). */
+  shapes?: string;
+}
+
 export interface CueEdit {
   /** A lyric line was tapped (its source line): add an indication above it. */
   onLine: (line: number) => void;
@@ -251,11 +260,22 @@ function EditableChord({ chord, at, edit }: { chord: string; at: ChordRef; edit:
   );
 }
 
-function SongHeader({ metadata, onTempoClick }: { metadata: SongMetadata; onTempoClick?: () => void }) {
+function SongHeader({
+  metadata,
+  onTempoClick,
+  capo,
+}: {
+  metadata: SongMetadata;
+  onTempoClick?: () => void;
+  capo?: MyCapo;
+}) {
   const subtitle = [...metadata.subtitles, artistOf(metadata)].filter(Boolean).join(' · ');
   const tempo = metadata.tempo ? `♩ ${metadata.tempo}` : onTempoClick ? '♩ BPM' : undefined;
-  const keyInfo = metadata.key && `Tono: ${metadata.key}`;
-  const before = [keyInfo, metadata.capo ? `Capo ${metadata.capo}` : undefined];
+  // With my capo the chords are shapes: the key shown is still the band's.
+  const key = capo ? capo.key : metadata.key;
+  const keyInfo = key && `Tono: ${key}`;
+  const capoInfo = capo ? `Mi capo ${capo.fret}` : metadata.capo ? `Capo ${metadata.capo}` : undefined;
+  const before = [keyInfo, capoInfo];
   const after = [metadata.time];
   const info = [...before, tempo, ...after].filter(Boolean) as string[];
 
@@ -274,7 +294,17 @@ function SongHeader({ metadata, onTempoClick }: { metadata: SongMetadata; onTemp
               </li>
             ) : i === keyInfo ? (
               <li key={i} className="cp-info__key">
-                Tono: <ChordName chord={metadata.key!} />
+                Tono: <ChordName chord={key!} />
+              </li>
+            ) : i === capoInfo && capo ? (
+              <li key={i} className="cp-info__capo">
+                {i}
+                {capo.shapes && (
+                  <>
+                    {' · formas de '}
+                    <ChordName chord={capo.shapes} />
+                  </>
+                )}
               </li>
             ) : (
               <li key={i}>{i}</li>
@@ -637,8 +667,9 @@ export function SongView({
   song,
   showHeader = true,
   onTempoClick,
+  capo,
   ...opts
-}: { song: Song; showHeader?: boolean; onTempoClick?: () => void } & SongViewOptions) {
+}: { song: Song; showHeader?: boolean; onTempoClick?: () => void; capo?: MyCapo } & SongViewOptions) {
   let lastChorus: LastChorus | undefined;
   const sections = song.sections.map((section, i) => {
     if (section.kind === 'chorus') lastChorus = { section, index: i };
@@ -646,7 +677,7 @@ export function SongView({
   });
   return (
     <article className="cp-song" style={{ fontSize: opts.fontSize ? `${opts.fontSize}px` : undefined }}>
-      {showHeader && <SongHeader metadata={song.metadata} onTempoClick={onTempoClick} />}
+      {showHeader && <SongHeader metadata={song.metadata} onTempoClick={onTempoClick} capo={capo} />}
       {sections}
     </article>
   );

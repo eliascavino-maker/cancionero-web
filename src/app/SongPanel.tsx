@@ -8,6 +8,7 @@ import { askText } from '../components/ask';
 import { ChordName } from '../components/ChordName';
 import { Icon } from '../components/Icon';
 import { SongView } from '../components/SongView';
+import { MAX_CAPO, suggestCapo, withCapo } from '../music/capo';
 import { effectiveKey, normalize, transposeSong } from '../music/transposer';
 import {
   DEFAULT_LEVEL,
@@ -19,6 +20,7 @@ import {
   useSavedLevel,
   useWakeLock,
 } from './autoscroll';
+import { useCapo } from './capo';
 import { type Prefs, STAGE_FONT, usePrefs } from './hooks';
 import { litSinger, useMe } from './me';
 import { PartsDialog } from './PartsDialog';
@@ -87,7 +89,9 @@ export function SongPanel({
   };
 
   // Bottom bar: normal controls, the edit menu, or one of the editors.
-  const [mode, setMode] = useState<'play' | 'tools' | 'move' | 'tempo' | 'parts' | 'notes' | 'voices' | 'cues'>('play');
+  const [mode, setMode] = useState<'play' | 'tools' | 'move' | 'tempo' | 'parts' | 'notes' | 'voices' | 'cues' | 'capo'>(
+    'play',
+  );
   const moving = mode === 'move';
   const editingTempo = mode === 'tempo';
   const [selected, setSelected] = useState<ChordRef | null>(null);
@@ -147,13 +151,17 @@ export function SongPanel({
     if (tapped !== null) setBpm(tapped);
   };
   const transposed = useMemo(() => transposeSong(parsed, transpose), [parsed, transpose]);
+  // My capo: I see the shapes; the band's key (and what others see) stays.
+  const [capo, setCapo] = useCapo(songKey);
+  const showCapo = capo > 0 && (prefs.showChords || moving);
+  const shapes = useMemo(() => (showCapo ? withCapo(transposed, capo) : transposed), [transposed, capo, showCapo]);
   // Live: one section per part, so a part number means the same on every device.
   const inLive = live !== undefined;
   const shown = useMemo(
-    () => (inLive ? { ...transposed, sections: stageSlides(transposed) } : transposed),
-    [transposed, inLive],
+    () => (inLive ? { ...shapes, sections: stageSlides(shapes) } : shapes),
+    [shapes, inLive],
   );
-  const key = effectiveKey(shown);
+  const key = effectiveKey(transposed);
   const set = (p: Partial<Prefs>) => setPrefs({ ...prefs, ...p });
 
   // ----- auto-scroll
@@ -246,6 +254,7 @@ export function SongPanel({
       <div className="song-panel__sheet" ref={sheet} data-testid="sheet" onPointerDown={() => playing && setPlaying(false)}>
         <SongView
           song={shown}
+          capo={showCapo ? { fret: capo, key: transposed.metadata.key, shapes: effectiveKey(shapes) } : undefined}
           fontSize={fontSize}
           mine={mine}
           currentPart={live?.part}
@@ -424,6 +433,47 @@ export function SongPanel({
             ) : (
               <span className="toolbar__hint">Tocá la primera y la última línea que canta alguien</span>
             )}
+            <span className="toolbar__spacer" />
+            <button className="btn btn--primary" onClick={stopMoving}>
+              Listo
+            </button>
+          </div>
+        </div>
+      ) : mode === 'capo' ? (
+        <div className="toolbar" role="toolbar" aria-label="Mi capo">
+          <div className="toolbar__row toolbar__row--wrap">
+            <div className="toolbar__group" role="group" aria-label="Traste del capo">
+              <button className="icon-btn" aria-label="Bajar el capo" disabled={capo === 0} onClick={() => setCapo(capo - 1)}>
+                <Icon name="minus" />
+              </button>
+              <span className="speed" aria-live="polite">
+                <strong>{capo || '—'}</strong>
+                <small>{capo ? 'traste' : 'sin capo'}</small>
+              </span>
+              <button
+                className="icon-btn"
+                aria-label="Subir el capo"
+                disabled={capo >= MAX_CAPO}
+                onClick={() => setCapo(capo + 1)}
+              >
+                <Icon name="plus" />
+              </button>
+            </div>
+            <button className="btn" onClick={() => setCapo(suggestCapo(transposed))} title="El capo que deja los acordes más fáciles">
+              Sugerir
+            </button>
+            <button className="btn" disabled={capo === 0} onClick={() => setCapo(0)}>
+              Sin capo
+            </button>
+            <span className="toolbar__hint">
+              {key ? (
+                <>
+                  Solo para vos: la banda sigue en <ChordName chord={key} />
+                </>
+              ) : (
+                'Solo para vos: la banda sigue en su tono'
+              )}
+            </span>
             <span className="toolbar__spacer" />
             <button className="btn btn--primary" onClick={stopMoving}>
               Listo
@@ -618,6 +668,17 @@ export function SongPanel({
             </button>
           </div>
           <span className="toolbar__spacer" />
+          {prefs.showChords && (
+            <button
+              className={capo ? 'icon-btn capo-btn capo-btn--on' : 'icon-btn capo-btn'}
+              aria-label={capo ? `Mi capo: traste ${capo}` : 'Mi capo'}
+              title="Capo solo para vos"
+              onClick={() => setMode('capo')}
+            >
+              <Icon name="capo" />
+              {capo > 0 && <span className="capo-btn__fret">{capo}</span>}
+            </button>
+          )}
           <div className="toolbar__group" role="group" aria-label="Tamaño de letra">
             <button
               className="icon-btn"

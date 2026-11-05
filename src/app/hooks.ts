@@ -58,6 +58,10 @@ export interface Prefs {
   stageFontSize: number;
   /** Indications (`{x_cue}`: "4 compases de intro", "x2") in Letra and Acordes. */
   showCues: boolean;
+  /** My capo per song id (fret 1..11). Only this player sees the shapes; the band's key stays. */
+  capo?: Record<string, number>;
+  /** Capo changes not saved to the account yet, per song id (0 = taken off). */
+  capoEdits?: Record<string, number>;
 }
 
 export const STAGE_FONT = { min: 24, max: 64 };

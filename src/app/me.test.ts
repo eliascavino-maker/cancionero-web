@@ -1,4 +1,4 @@
-import { accountStep, musicianIdFor, stageStep } from '../cloud/account';
+import { accountStep, applyCapoEdits, capoEditsLeft, capoStep, musicianIdFor, stageStep } from '../cloud/account';
 import { BAND } from '../data/band';
 import { getPrefs, resetPrefsForTests } from './hooks';
 import { type MeState, type Musician, chooseMe, getMe, litSinger, resetMeForTests } from './me';
@@ -86,5 +86,32 @@ describe('stageStep (modo escenario with the account)', () => {
     expect(stageStep(true, undefined)).toEqual({ kind: 'save', on: true });
     expect(stageStep(false, true)).toEqual({ kind: 'save', on: false });
     expect(stageStep(true, true)).toEqual({ kind: 'none' });
+  });
+});
+
+describe('capoStep (my capo with the account)', () => {
+  it('changes made here go up on top of what the account has', () => {
+    const step = capoStep({ a: 2, b: 5 }, { b: 5, c: 0 }, { a: 2, c: 3, d: 1 });
+    expect(step).toEqual({ kind: 'save', capo: { a: 2, b: 5, d: 1 }, sent: { b: 5, c: 0 } });
+  });
+
+  it("with nothing pending, the account's capos are the ones shown", () => {
+    expect(capoStep({ a: 2 }, {}, { a: 4 })).toEqual({ kind: 'adopt', capo: { a: 4 } });
+    // Taken off on another device.
+    expect(capoStep({ a: 2 }, undefined, {})).toEqual({ kind: 'adopt', capo: {} });
+    expect(capoStep({ a: 2 }, undefined, { a: 2 })).toEqual({ kind: 'none' });
+    // An account that never had capos doesn't wipe this device's.
+    expect(capoStep({ a: 2 }, undefined, undefined)).toEqual({ kind: 'none' });
+  });
+
+  it('broken data from the server is left out', () => {
+    expect(capoStep(undefined, undefined, { a: 2, b: 'x', c: 40, d: 0 })).toEqual({ kind: 'adopt', capo: { a: 2 } });
+    expect(capoStep(undefined, undefined, [1, 2])).toEqual({ kind: 'none' });
+  });
+
+  it('a change made while saving stays pending', () => {
+    const left = capoEditsLeft({ a: 3, b: 0 }, { a: 2, b: 0 });
+    expect(left).toEqual({ a: 3 });
+    expect(applyCapoEdits({ a: 2, c: 1 }, left)).toEqual({ a: 3, c: 1 });
   });
 });

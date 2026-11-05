@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { SPEED_LEVELS, nearestLevel, parseDuration } from './autoscroll';
 import { SongPanel } from './SongPanel';
-import { resetPrefsForTests } from './hooks';
+import { getPrefs, resetPrefsForTests } from './hooks';
 
 describe('parseDuration', () => {
   it.each([
@@ -224,6 +224,56 @@ e|--3--|
 
     fireEvent.click(second().getByRole('button', { name: 'Angel' }));
     expect(saved.at(-1)).toBe(src);
+  });
+
+  it('Mi capo: I see the shapes, the band keeps its key, and it is remembered per song', () => {
+    const shown = () => [...document.querySelectorAll('.cp-chord')].map((c) => c.textContent);
+    const { unmount } = render(
+      <SongPanel content={'{title: X}\n{key: A}\n[A]Hola [D]mundo [E]ya'} transpose={1} onTransposeChange={() => {}} songKey="s1" />,
+    );
+    expect(shown()).toEqual(['Bb', 'Eb', 'F']);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mi capo' }));
+    const bar = screen.getByRole('toolbar', { name: 'Mi capo' });
+    expect(within(bar).getByText(/la banda sigue en/)).toHaveTextContent('la banda sigue en Bb');
+    fireEvent.click(within(bar).getByRole('button', { name: 'Sugerir' }));
+    // Bb Eb F: capo 1 gives A D E, all open.
+    expect(shown()).toEqual(['A', 'D', 'E']);
+    fireEvent.click(within(bar).getByRole('button', { name: 'Subir el capo' }));
+    fireEvent.click(within(bar).getByRole('button', { name: 'Subir el capo' }));
+    expect(shown()).toEqual(['G', 'C', 'D']);
+    expect(document.querySelector('.cp-info__capo')).toHaveTextContent('Mi capo 3 · formas de G');
+    expect(document.querySelector('.cp-info__key')).toHaveTextContent('Tono: Bb');
+    fireEvent.click(within(bar).getByRole('button', { name: 'Bajar el capo' }));
+    expect(shown()).toEqual(['Ab', 'Db', 'Eb']);
+    fireEvent.click(within(bar).getByRole('button', { name: 'Subir el capo' }));
+    fireEvent.click(within(bar).getByRole('button', { name: 'Listo' }));
+
+    // The key control shows the band's key, not the shapes.
+    expect(screen.getByRole('button', { name: 'Mi capo: traste 3' })).toBeInTheDocument();
+    expect(document.querySelector('.key-display strong')).toHaveTextContent('Bb');
+    // Pending for the account, and remembered for this song only.
+    expect(getPrefs()).toMatchObject({ capo: { s1: 3 }, capoEdits: { s1: 3 } });
+    unmount();
+    render(<SongPanel content={'[A]la'} transpose={0} onTransposeChange={() => {}} songKey="s2" />);
+    expect(shown()).toEqual(['A']);
+    expect(screen.getByRole('button', { name: 'Mi capo' })).toBeInTheDocument();
+  });
+
+  it('Mi capo: only in Acordes, and "Sin capo" takes it off', () => {
+    render(<SongPanel content={'{key: A}\n[A]Hola'} transpose={0} onTransposeChange={() => {}} songKey="s1" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Mi capo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Subir el capo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Subir el capo' }));
+    expect(screen.getByText('G')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Sin capo' }));
+    expect(screen.getByText('A')).toBeInTheDocument();
+    expect(document.querySelector('.cp-info__capo')).toBeNull();
+    expect(getPrefs()).toMatchObject({ capo: {}, capoEdits: { s1: 0 } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Listo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Letra' }));
+    expect(screen.queryByRole('button', { name: /Mi capo/ })).toBeNull();
   });
 
   it('no editing without a place to save', () => {

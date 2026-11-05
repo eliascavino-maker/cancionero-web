@@ -37,6 +37,9 @@
   background: var(--case);
   color: var(--ceniza);
 }
+.cp-info li.cp-info__capo {
+  color: var(--tungsteno);
+}
 .cp-info li.cp-info__key {
   background: var(--foco);
   color: var(--tungsteno);

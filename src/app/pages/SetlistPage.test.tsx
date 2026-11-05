@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { Library } from '../../data/library';
-import { LibraryContext } from '../hooks';
+import { LibraryContext, getPrefs, resetPrefsForTests, setPrefs } from '../hooks';
 import { SetlistPage } from './SetlistPage';
 
 // jsdom has no PointerEvent: a MouseEvent with a pointerId is enough here.
@@ -68,4 +68,14 @@ it('picks which arrangement plays', async () => {
   fireEvent.change(pick, { target: { value: acustica } });
   await waitFor(async () => expect((await lib.getSetlistEntries(setlist))[0].song.id).toBe(acustica));
   await waitFor(() => expect(screen.getByRole('combobox', { name: 'Arreglo de Uno' })).toHaveValue(acustica));
+});
+
+it('shows my capo on my cards only', async () => {
+  const [, dos] = await lib.getSetlistEntries(setlist);
+  resetPrefsForTests();
+  setPrefs({ ...getPrefs(), capo: { [dos.song.id]: 3 } });
+  show();
+  expect(await screen.findByText('Mi capo 3')).toBeInTheDocument();
+  expect(screen.getAllByText(/Mi capo/)).toHaveLength(1);
+  setPrefs({ ...getPrefs(), capo: {} });
 });

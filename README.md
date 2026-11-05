@@ -88,6 +88,15 @@ los permisos.
   «2ª voz · Angel» al lado. Se marca en ✎ → Voces (eligiendo líneas) o, para
   palabras sueltas, seleccionándolas en el editor de texto y tocando
   **Segunda voz**. A quien la canta se le resaltan esas líneas.
+- **Mi capo** (botón con las cuerdas, en Acordes): cada músico pone su capo en
+  una canción y ve las formas de los acordes para tocar con ese capo, sin
+  cambiar el tono real. La cabecera dice «Tono: Bb · Mi capo 3 · formas de G».
+  **Sugerir** elige el capo (hasta el 7) que deja las formas más fáciles
+  (G, C, D, A, E, Am, Em, Dm…). Se suma al tono del setlist y al del director
+  en la Sala en vivo. Lo ve solo quien lo puso: en su tarjeta del setlist dice
+  «Mi capo 3». Cada arreglo tiene el suyo. Se guarda en el dispositivo y, en
+  una banda, en tu cuenta (`band_members.prefs.capo`), así lo ves igual en el
+  celu y en la compu.
 - **Autoscroll** (▶): baja solo la página. 🐢/🐇 cambian la velocidad, que se
   recuerda por canción. Si la canción tiene `{duration: 3:30}`, arranca en
   `auto`: llega al final en ese tiempo. Tocar la pantalla o mover la rueda
@@ -173,6 +182,7 @@ Solo para los miembros de la banda, cada uno con su cuenta.
 | `src/chordpro/writer.ts` | `Song` → texto ChordPro (guardar una transposición) |
 | `src/music/chord.ts` | Notas y acordes, notación inglesa y latina |
 | `src/music/transposer.ts` | Transposición de acordes, tonos y canciones |
+| `src/music/capo.ts` | Formas con capo y el capo sugerido |
 | `src/components/SongView.tsx` | Dibuja la canción con los acordes sobre la letra |
 | `src/data/library.ts` | IndexedDB: canciones, setlists, orden, respaldo |
 | `src/cloud/sync.ts` | Sube y baja cambios con la banda; resuelve conflictos |

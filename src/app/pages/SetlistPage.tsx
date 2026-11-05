@@ -6,7 +6,8 @@ import { transposeKey } from '../../music/transposer';
 import { type SetlistEntry, type SongRecord, songLabel } from '../../data/library';
 import { explain, useCloud } from '../../cloud/CloudProvider';
 import { useRoom } from '../../live/LiveProvider';
-import { navigate, useLibrary, useLive } from '../hooks';
+import { navigate, useLibrary, useLive, usePrefs } from '../hooks';
+import { cleanCapo } from '../../music/capo';
 
 /** Songs of one setlist: reorder, add, remove, play. */
 export function SetlistPage({ id }: { id: string }) {
@@ -216,6 +217,8 @@ function SortableList({
   groups: Map<string, SongRecord[]>;
 }) {
   const lib = useLibrary();
+  // My capos: only I see them.
+  const [{ capo: capos }] = usePrefs();
   const list = useRef<HTMLOListElement>(null);
   const geo = useRef<Geometry | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
@@ -286,6 +289,7 @@ function SortableList({
         const key = song.songKey && transposeKey(song.songKey, item.transpose);
         const dragged = drag?.from === i;
         const versions = groups.get(song.arrangementOf ?? song.id);
+        const capo = cleanCapo(capos?.[song.id]);
         const { n, shift } = place(i);
         return (
           <li
@@ -303,6 +307,7 @@ function SortableList({
                     // With a picker the name is already there.
                     versions ? null : song.arrangementName,
                     item.transpose ? `${item.transpose > 0 ? '+' : ''}${item.transpose} semitonos` : null,
+                    capo ? `Mi capo ${capo}` : null,
                   ]
                     .filter(Boolean)
                     .join(' · ') || ' '}

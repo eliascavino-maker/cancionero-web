@@ -1,4 +1,5 @@
 import type { MeState, Musician } from '../app/me';
+import { cleanCapo } from '../music/capo';
 
 /** What `band_members.prefs` keeps: the choice made on the first device, for the next ones. */
 export interface AccountPrefs {
@@ -8,7 +9,12 @@ export interface AccountPrefs {
   highlight?: boolean;
   /** Modo escenario on. */
   stage?: boolean;
+  /** My capo per song id. */
+  capo?: CapoMap;
 }
+
+/** Fret per song id; songs without a capo aren't there. */
+export type CapoMap = Record<string, number>;
 
 /** The account's row in the band, as far as "¿Quién sos?" goes. */
 export interface AccountChoice {
@@ -70,4 +76,51 @@ export type StageStep = { kind: 'none' } | { kind: 'adopt'; on: boolean } | { ki
 export function stageStep(local: boolean | undefined, saved: boolean | undefined): StageStep {
   if (local === undefined) return saved === undefined ? { kind: 'none' } : { kind: 'adopt', on: saved };
   return local === saved ? { kind: 'none' } : { kind: 'save', on: local };
+}
+
+export type CapoStep =
+  | { kind: 'none' }
+  /** The account has other capos (set on another device): take them. */
+  | { kind: 'adopt'; capo: CapoMap }
+  /** Changes made here go to the account: `capo` is the new whole map, `sent` the changes in it. */
+  | { kind: 'save'; capo: CapoMap; sent: CapoMap };
+
+/** Only frets 1..11 under song ids; anything else (old or broken data) is left out. */
+export function cleanCapoMap(value: unknown): CapoMap | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const out: CapoMap = {};
+  for (const [id, fret] of Object.entries(value)) if (cleanCapo(fret)) out[id] = fret as number;
+  return out;
+}
+
+/** `map` with `edits` on it: 0 takes the song out. */
+export function applyCapoEdits(map: CapoMap, edits: CapoMap): CapoMap {
+  const out = { ...map };
+  for (const [id, fret] of Object.entries(edits)) {
+    if (cleanCapo(fret)) out[id] = fret;
+    else delete out[id];
+  }
+  return out;
+}
+
+const sameCapo = (a: CapoMap, b: CapoMap) =>
+  Object.keys(a).length === Object.keys(b).length && Object.entries(a).every(([id, fret]) => b[id] === fret);
+
+/**
+ * My capos with the account. Changes made here go up first (only those
+ * songs, so another device's capos stay); with nothing pending, the account's
+ * map is the one shown.
+ */
+export function capoStep(local: CapoMap | undefined, edits: CapoMap | undefined, saved: unknown): CapoStep {
+  const account = cleanCapoMap(saved);
+  if (edits && Object.keys(edits).length) return { kind: 'save', capo: applyCapoEdits(account ?? {}, edits), sent: edits };
+  if (!account || sameCapo(local ?? {}, account)) return { kind: 'none' };
+  return { kind: 'adopt', capo: account };
+}
+
+/** Edits still pending after `sent` was saved: those changed again meanwhile. */
+export function capoEditsLeft(edits: CapoMap | undefined, sent: CapoMap): CapoMap {
+  const left: CapoMap = {};
+  for (const [id, fret] of Object.entries(edits ?? {})) if (sent[id] !== fret) left[id] = fret;
+  return left;
 }
