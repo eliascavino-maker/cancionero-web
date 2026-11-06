@@ -45,6 +45,20 @@ const SUPABASE_STUB = `
   grant select, insert on realtime.messages to anon, authenticated;
   grant usage on sequence realtime.messages_id_seq to anon, authenticated;
   grant execute on function realtime.topic() to anon, authenticated;
+  -- Storage: lo que usan las políticas (buckets y objects con RLS).
+  create schema storage;
+  create table storage.buckets (
+    id text primary key, name text not null, public boolean default false,
+    file_size_limit bigint, allowed_mime_types text[]
+  );
+  create table storage.objects (
+    id uuid primary key default gen_random_uuid(),
+    bucket_id text references storage.buckets, name text not null, owner uuid default auth.uid()
+  );
+  alter table storage.objects enable row level security;
+  grant usage on schema storage to anon, authenticated, service_role;
+  grant select on storage.buckets to anon, authenticated;
+  grant select, insert, update, delete on storage.objects to anon, authenticated;
 `;
 
 /** Lo que Supabase da solo a lo que se crea en public. */
@@ -519,6 +533,61 @@ describe('importar desde un link', () => {
     expect(await count(A)).toBe(1);
     const host = (await db.query<{ host: string }>('select host from private.url_imports where user_id = $1', [A])).rows[0].host;
     expect(host).toBe('cifraclub.com.br');
+  });
+});
+
+describe('logo de la banda', () => {
+  const path = () => `${band}/logo-1700000000000.webp`;
+  const upload = (user: string | null, name: string, opts: { anonymous?: boolean } = {}) =>
+    as(user, `insert into storage.objects (bucket_id, name) values ('band-logos', $1) returning name`, [name], opts);
+  const visible = (user: string | null, opts: { anonymous?: boolean } = {}) =>
+    as<{ name: string }>(user, `select name from storage.objects where bucket_id = 'band-logos'`, [], opts).then((r) =>
+      r.map((o) => o.name),
+    );
+  const logo = async () =>
+    (await db.query<{ logo_path: string | null }>('select logo_path from public.bands where id = $1', [band])).rows[0].logo_path;
+
+  it('el bucket es privado: hasta 512 KB, sin SVG', async () => {
+    const b = (await db.query('select public, file_size_limit, allowed_mime_types from storage.buckets where id = $1', ['band-logos']))
+      .rows[0];
+    expect(b).toEqual({ public: false, file_size_limit: 524288, allowed_mime_types: ['image/png', 'image/jpeg', 'image/webp'] });
+  });
+
+  it('solo el owner sube a la carpeta de su banda', async () => {
+    await expect(upload(B, path())).rejects.toThrow(/row-level security/);
+    await expect(upload(C, path())).rejects.toThrow(/row-level security/);
+    await expect(upload(A, `../${band}/logo-1.webp`)).rejects.toThrow(/row-level security/);
+    await expect(upload(A, `${band}/sub/logo-1.webp`)).rejects.toThrow(/row-level security/);
+    expect(await upload(A, path())).toEqual([{ name: path() }]);
+  });
+
+  it('lo ven los miembros; ni otra banda, ni invitados, ni anon', async () => {
+    expect(await visible(A)).toEqual([path()]);
+    expect(await visible(B)).toEqual([path()]);
+    expect(await visible(C)).toEqual([]);
+    expect(await visible(B, { anonymous: true })).toEqual([]);
+    expect(await visible(null)).toEqual([]);
+  });
+
+  it('el owner lo pone y lo saca; solo rutas de su carpeta', async () => {
+    await expect(as(B, 'select public.set_band_logo($1, $2)', [band, path()])).rejects.toThrow(/owner/);
+    await expect(as(B, 'update public.bands set logo_path = $2 where id = $1', [band, path()])).rejects.toThrow(/permission denied/);
+    await as(A, 'select public.set_band_logo($1, $2)', [band, path()]);
+    expect(await logo()).toBe(path());
+    await expect(
+      as(A, 'select public.set_band_logo($1, $2)', [band, '00000000-0000-4000-8000-000000000999/logo-1.webp']),
+    ).rejects.toThrow(/bands_logo_path/);
+    await expect(as(A, 'select public.set_band_logo($1, $2)', [band, `${band}/logo-1.svg`])).rejects.toThrow(/bands_logo_path/);
+    await as(A, 'select public.set_band_logo($1, null)', [band]);
+    expect(await logo()).toBeNull();
+  });
+
+  it('un miembro no lo borra ni lo pisa; el owner sí', async () => {
+    await as(B, `delete from storage.objects where bucket_id = 'band-logos'`);
+    await as(B, `update storage.objects set name = $1 where bucket_id = 'band-logos'`, [`${band}/logo-2.webp`]);
+    expect(await visible(A)).toEqual([path()]);
+    await as(A, `delete from storage.objects where bucket_id = 'band-logos' and name = $1`, [path()]);
+    expect(await visible(A)).toEqual([]);
   });
 });
 

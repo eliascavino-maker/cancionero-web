@@ -50,6 +50,10 @@ falta configurar el servidor.
 - Si dos personas editan la misma canción a la vez, queda la que llegó
   primero y la otra se guarda como «Título (conflicto)». En los setlists gana
   el último cambio.
+- **Logo** (Banda → Logo, solo el owner): PNG, JPG o WebP; la app lo achica a
+  512 px. Sale en la pantalla Banda, en la Sala en vivo y en la portada del
+  PDF de un setlist. Se guarda en Storage (bucket privado `band-logos`, solo
+  la banda lo ve) y queda en el dispositivo para verlo sin conexión.
 - Todos crean y editan. Solo el owner borra canciones, invita, saca miembros
   y borra la banda. Borrar no es definitivo: va a **Banda → Borrados**.
 - **Historial** (en la canción y en el menú del setlist): quién cambió qué y

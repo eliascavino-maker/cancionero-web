@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { parseChordPro } from '../../chordpro/parser';
 import { askConfirm, tell } from '../../components/ask';
 import { FullscreenButton, canGoFull } from '../../components/FullscreenButton';
+import { useBandLogo } from '../../cloud/logo';
 import { Icon } from '../../components/Icon';
 import { explain, useCloud } from '../../cloud/CloudProvider';
 import { useRoom } from '../../live/LiveProvider';
@@ -29,6 +30,7 @@ function leaderIndex(entries: SetlistEntry[], pos: LivePos): number {
  * reach everyone at once. Without a leader, each one moves on their own.
  */
 export function LivePage() {
+  const logo = useBandLogo();
   const lib = useLibrary();
   const { room, state } = useRoom();
   const session = state.session;
@@ -179,6 +181,7 @@ export function LivePage() {
         >
           <Icon name="prev" size={20} />
         </button>
+        {logo && <img className="band-logo live__logo" src={logo} alt="" />}
         <div className="player__title">
           <strong>
             {at.index + 1}/{entries.length} · {data.setlist.name}

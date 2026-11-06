@@ -18,6 +18,8 @@ export interface Membership {
   prefs: Record<string, unknown>;
   /** The director's signals as the band keeps them (`bands.live_signals`); see `bandSignals`. */
   liveSignals?: unknown;
+  /** The band's logo in Storage (`bands.logo_path`): null without one, undefined before migration 9. */
+  logoPath?: string | null;
 }
 
 export interface Cloud {
@@ -184,6 +186,9 @@ function Connected({ client, children }: { client: SupabaseClient; children: Rea
       // Without migration 006 the column isn't there: the factory signals.
       const { data: b, error } = await client.from('bands').select('live_signals').eq('id', next.bandId).maybeSingle();
       next.liveSignals = error ? null : ((b as { live_signals?: unknown } | null)?.live_signals ?? null);
+      // Without migration 9 there is no logo.
+      const logo = await client.from('bands').select('logo_path').eq('id', next.bandId).maybeSingle();
+      next.logoPath = logo.error ? undefined : ((logo.data as { logo_path?: string | null } | null)?.logo_path ?? null);
     }
     cacheBand(user.id, next);
     setBand(next);

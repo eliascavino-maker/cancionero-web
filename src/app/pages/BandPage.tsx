@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, useCallback, useEffect, useState } from 'react';
+import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { askConfirm, askText, tell } from '../../components/ask';
 import { Icon } from '../../components/Icon';
 import { explain, useCloud } from '../../cloud/CloudProvider';
@@ -7,6 +7,7 @@ import { useLibrary, useLive } from '../hooks';
 import { MeCard } from '../WhoAreYou';
 import { SignalsEditor } from '../SignalsEditor';
 import { bandSignals } from '../../live/signals';
+import { removeLogo, setLogo, shrinkLogo, useBandLogo } from '../../cloud/logo';
 
 /** Runs an async action, with "busy" and a readable error. */
 function useAction() {
@@ -63,6 +64,7 @@ function ErrorText({ error }: { error: string | null }) {
  */
 export function BandPage({ invite }: { invite?: string }) {
   const cloud = useCloud();
+  const logo = useBandLogo();
 
   let body: ReactNode;
   if (!cloud.configured) {
@@ -96,6 +98,7 @@ export function BandPage({ invite }: { invite?: string }) {
         <Members />
         {cloud.band.role === 'owner' && <Invites />}
         {cloud.band.role === 'owner' && <Signals />}
+        {cloud.band.role === 'owner' && cloud.band.logoPath !== undefined && <Logo />}
         <Trash />
         <Account />
       </>
@@ -105,6 +108,7 @@ export function BandPage({ invite }: { invite?: string }) {
   return (
     <div className="page band">
       <header className="page__header">
+        {logo && <img className="band-logo" src={logo} alt="" />}
         <h1>{cloud.band?.bandName ?? 'Banda'}</h1>
       </header>
       {body}
@@ -441,6 +445,61 @@ function Members() {
           ))}
         </ul>
       )}
+    </Section>
+  );
+}
+
+// -------------------------------------------------------------------- logo
+
+/** The band's logo: on this page, in the live room and on the PDF cover. Only the owner changes it. */
+function Logo() {
+  const cloud = useCloud();
+  const band = cloud.band!;
+  const logo = useBandLogo();
+  const input = useRef<HTMLInputElement>(null);
+  const { run, busy, error } = useAction();
+
+  const upload = (file: File) =>
+    run(async () => {
+      await setLogo(cloud.client!, band.bandId, band.logoPath, await shrinkLogo(file));
+      await cloud.refreshBand();
+    });
+  const remove = async () => {
+    if (!band.logoPath) return;
+    const ok = await askConfirm('Se saca de la banda y de los PDF.', { title: '¿Quitar el logo?', ok: 'Quitar', danger: true });
+    if (ok) await run(async () => {
+      await removeLogo(cloud.client!, band.bandId, band.logoPath!);
+      await cloud.refreshBand();
+    });
+  };
+
+  return (
+    <Section title="Logo">
+      <p className="band__line">Sale arriba en esta pantalla, en la Sala en vivo y en la portada de los PDF. PNG, JPG o WebP.</p>
+      <div className="band__actions">
+        {logo && <img className="band-logo band-logo--big" src={logo} alt="Logo de la banda" />}
+        <button className="btn" disabled={busy} onClick={() => input.current?.click()}>
+          <Icon name="upload" size={18} /> {busy ? 'Subiendo…' : band.logoPath ? 'Cambiar logo' : 'Subir logo'}
+        </button>
+        {band.logoPath && (
+          <button className="btn" disabled={busy} onClick={remove}>
+            Quitar
+          </button>
+        )}
+        <input
+          ref={input}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          hidden
+          aria-label="Archivo del logo"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void upload(f);
+            e.target.value = '';
+          }}
+        />
+      </div>
+      <ErrorText error={error} />
     </Section>
   );
 }

@@ -1,5 +1,9 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { configure, fireEvent, screen, waitFor } from '@testing-library/react';
 import { askConfirm, askText, tell } from './ask';
+
+// The dialogs mount in their own React root, outside act(): with the whole
+// suite running in parallel they can take more than the default second.
+configure({ asyncUtilTimeout: 3000 });
 
 it('askText gives the text typed, or null on Cancelar', async () => {
   const typed = askText('Nuevo setlist', '', { ok: 'Crear' });

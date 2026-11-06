@@ -8,6 +8,7 @@ import { explain, useCloud } from '../../cloud/CloudProvider';
 import { useRoom } from '../../live/LiveProvider';
 import { navigate, useLibrary, useLive, usePrefs } from '../hooks';
 import { ExportPdfDialog } from '../print';
+import { useBandLogo } from '../../cloud/logo';
 import { cleanCapo } from '../../music/capo';
 
 /** Songs of one setlist: reorder, add, remove, play. */
@@ -25,6 +26,7 @@ export function SetlistPage({ id }: { id: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const menu = useRef<HTMLDetailsElement>(null);
   const [pdf, setPdf] = useState(false);
+  const logo = useBandLogo();
 
   if (data === undefined) return null;
   if (data === null) return <p className="empty">El setlist no existe.</p>;
@@ -138,7 +140,7 @@ export function SetlistPage({ id }: { id: string }) {
       {pdf && (
         <ExportPdfDialog
           songs={entries.map((e) => ({ id: e.song.id, content: e.song.content, transpose: e.item.transpose }))}
-          cover={{ title: setlist.name, band: cloud.band?.bandName }}
+          cover={{ title: setlist.name, band: cloud.band?.bandName, logo: logo ?? undefined }}
           name={setlist.name}
           onClose={() => setPdf(false)}
         />

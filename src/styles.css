@@ -161,6 +161,27 @@ textarea {
 
 /* ------------------------------------------------------------ band page */
 
+.band-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: var(--case);
+}
+.live__logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+@media (max-width: 420px) {
+  .live__logo {
+    display: none;
+  }
+}
+.band-logo--big {
+  width: 72px;
+  height: 72px;
+}
 .band__lead {
   margin: 0 0 20px;
   color: var(--ceniza);
