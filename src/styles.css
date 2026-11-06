@@ -999,6 +999,28 @@ li.card:hover {
 }
 
 /* "Pegar letra": title fields + one big box for the lyrics. */
+.link-import {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.link-import input {
+  flex: 1 1 200px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px dashed var(--filo-fuerte);
+  border-radius: var(--r-boton);
+  background: var(--hueco);
+  color: var(--papel);
+  font: inherit;
+}
+.link-import__problem {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--ceniza);
+  font-size: 0.9rem;
+}
 .paste__fields {
   display: flex;
   flex-wrap: wrap;

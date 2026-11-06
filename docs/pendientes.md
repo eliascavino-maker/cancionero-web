@@ -36,6 +36,6 @@ Migración 006 (señales de la banda). Lo demás va por broadcast en `live:<band
 
 ## Etapa D — Importar y marca (migraciones 008 y 009, Edge Function)
 
-- [ ] Importar desde un link con la Edge Function `import-url` (solo miembros,
+- [x] Importar desde un link con la Edge Function `import-url` (solo miembros,
   con límite de uso). Si no se puede leer, ofrecer pegar el texto.
 - [ ] Logo de la banda en Storage. Antes: crear «Exportar PDF».

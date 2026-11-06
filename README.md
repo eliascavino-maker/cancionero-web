@@ -27,6 +27,12 @@ falta configurar el servidor.
 - **Exportar / Importar** (en Biblioteca) baja o carga un respaldo `.json`.
   Sin banda, importar reemplaza todo; con banda, agrega lo del respaldo.
 - El editor abre archivos `.cho`, `.chopro`, `.chordpro`, `.pro`, `.txt`.
+- **Importar desde un link** (Biblioteca → ⋯, o el campo de link en «Nueva
+  canción»; solo en una banda): trae título, artista y letra con acordes de
+  una página (LaCuerda, Cifra Club, Ultimate Guitar, AcordesWeb y casi
+  cualquiera que muestre la canción en texto) y la deja en el editor para
+  revisarla antes de guardar. Hasta 20 por hora y 100 por día por persona. Si
+  no se puede leer, dice por qué y se pega el texto a mano.
 
 ## Banda y sincronización
 
@@ -53,6 +59,18 @@ de verificación en `supabase/verify/` (todas las filas tienen que dar
 `ok = true`). `supabase/diagnostics/privilegios.sql` muestra qué privilegios
 tienen anon y authenticated y cuáles sobran. `npm test` las aplica en un Postgres local (PGlite) y prueba
 los permisos.
+
+**Edge Function `import-url`** (para «Importar desde un link», necesita la
+migración 8). Está en `supabase/functions/import-url/index.ts`, en un solo
+archivo y sin imports:
+
+- Desde el Dashboard: Edge Functions → Deploy a new function → Via editor,
+  nombre `import-url`, pegar el archivo y Deploy. Dejar prendido «Verify JWT».
+- O con la CLI: `supabase functions deploy import-url --project-ref <ref>`.
+
+No necesita secrets: usa `SUPABASE_URL` y `SUPABASE_ANON_KEY`, que Supabase
+ya pone. Antes de bajar una página llama a `claim_import` con el JWT de quien
+pide, que controla que sea miembro de una banda y el límite.
 
 ## Sin conexión
 
@@ -187,6 +205,7 @@ Solo para los miembros de la banda, cada uno con su cuenta.
 | `src/data/library.ts` | IndexedDB: canciones, setlists, orden, respaldo |
 | `src/cloud/sync.ts` | Sube y baja cambios con la banda; resuelve conflictos |
 | `src/cloud/CloudProvider.tsx` | Sesión, banda y cuándo sincronizar |
+| `supabase/functions/import-url/` | Edge Function: trae una canción desde un link |
 | `src/live/room.ts` | Sala en vivo: director, posición por broadcast, quién está |
 | `supabase/` | Migraciones, consultas de verificación y tests de permisos |
 | `src/app/` | Pantallas, rutas y preferencias |

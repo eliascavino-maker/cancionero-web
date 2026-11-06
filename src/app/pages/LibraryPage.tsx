@@ -109,6 +109,16 @@ export function LibraryPage() {
               >
                 <Icon name="file" /> Importar acordes (.docx / .txt)
               </button>
+              {cloud.band && (
+                <button
+                  onClick={() => {
+                    closeMenu();
+                    navigate('/edit/link');
+                  }}
+                >
+                  <Icon name="download" /> Importar desde un link
+                </button>
+              )}
               {cloud.canDeleteSongs && (
                 <button
                   onClick={() => {

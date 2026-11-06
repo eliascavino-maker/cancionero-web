@@ -470,6 +470,58 @@ describe('arreglos', () => {
   });
 });
 
+describe('importar desde un link', () => {
+  const D = '60000000-0000-4000-8000-00000000000d'; // cuenta sin banda
+  const claim = (user: string | null, host = 'lacuerda.net', anonymous = false) =>
+    as(user, 'select public.claim_import($1)', [host], { anonymous });
+  const count = async (user: string) =>
+    Number((await db.query<{ n: string }>('select count(*) as n from private.url_imports where user_id = $1', [user])).rows[0].n);
+
+  beforeAll(async () => {
+    await db.query('insert into auth.users (id) values ($1)', [D]);
+  });
+
+  it('solo los miembros de una banda; ni invitados ni cuentas sueltas ni anon', async () => {
+    await claim(B);
+    expect(await count(B)).toBe(1);
+    await expect(claim(D)).rejects.toThrow(/miembros de una banda/);
+    await expect(claim(B, 'x', true)).rejects.toThrow(/miembros de una banda/);
+    await expect(claim(null)).rejects.toThrow(/permission denied/);
+    await expect(claim(B, '')).rejects.toThrow(/no válida/);
+  });
+
+  it('nadie lee ni escribe la tabla directo', async () => {
+    await expect(as(B, 'select * from private.url_imports')).rejects.toThrow(/permission denied/);
+    await expect(as(B, `insert into private.url_imports (user_id, host) values ($1, 'x')`, [B])).rejects.toThrow(
+      /permission denied/,
+    );
+    await expect(as(B, 'delete from private.url_imports')).rejects.toThrow(/permission denied/);
+  });
+
+  it('20 por hora y 100 por día; lo de más de un día se borra', async () => {
+    await db.query('delete from private.url_imports where user_id = $1', [A]);
+    for (let i = 0; i < 20; i++) await claim(A);
+    await expect(claim(A)).rejects.toThrow(/límite/);
+    // Una hora después se puede de nuevo.
+    await db.query(`update private.url_imports set created_at = created_at - interval '61 minutes' where user_id = $1`, [A]);
+    await claim(A);
+    // Con 100 en el día, no.
+    await db.query(
+      `insert into private.url_imports (user_id, host, created_at)
+       select $1, 'x', now() - interval '2 hours' from generate_series(1, 79)`,
+      [A],
+    );
+    expect(await count(A)).toBe(100);
+    await expect(claim(A)).rejects.toThrow(/límite/);
+    // Al día siguiente lo viejo se borra.
+    await db.query(`update private.url_imports set created_at = created_at - interval '1 day' where user_id = $1`, [A]);
+    await claim(A, 'CifraClub.com.br');
+    expect(await count(A)).toBe(1);
+    const host = (await db.query<{ host: string }>('select host from private.url_imports where user_id = $1', [A])).rows[0].host;
+    expect(host).toBe('cifraclub.com.br');
+  });
+});
+
 describe('señales del director', () => {
   const signals = () =>
     one(as<{ live_signals: unknown }>(B, 'select live_signals from public.bands where id = $1', [band]));

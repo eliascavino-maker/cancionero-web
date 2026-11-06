@@ -24,6 +24,7 @@ function Page({ route }: { route: string }) {
     case 'song':
       return parts[2] === 'historial' ? <SongHistoryPage id={parts[1]} /> : <SongPage key={parts[1]} id={parts[1]} />;
     case 'edit':
+      if (parts[1] === 'link') return <EditorPage key="link" fromLink />;
       return <EditorPage key={parts[1]} id={parts[1] === 'new' ? undefined : parts[1]} />;
     case 'setlists':
       return <SetlistsPage />;

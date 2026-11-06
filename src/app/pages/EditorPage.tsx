@@ -4,6 +4,8 @@ import { type TextEdit, insertCueLine, toggleHarmony } from '../../chordpro/harm
 import { parseChordPro } from '../../chordpro/parser';
 import { Icon } from '../../components/Icon';
 import { SongView } from '../../components/SongView';
+import { useCloud } from '../../cloud/CloudProvider';
+import { type ImportedSong, importFromUrl } from '../../cloud/importUrl';
 import { navigate, useLibrary } from '../hooks';
 
 const PASTE_HINT = `Pegá acá la letra, con o sin acordes arriba.
@@ -15,10 +17,70 @@ el pre-coro y el puente.
 Si querés, podés marcar partes con "Coro:", "Verso 2", etc.`;
 
 /**
- * New song: paste lyrics and the structure is detected ("Pegar letra").
+ * "Traer de un link": the Edge Function reads the chord page and the song
+ * lands in the paste box, to check before saving. If it can't, the reason
+ * shows and the paste box is right there.
+ */
+function LinkImport({ focus, onSong, onFail }: { focus: boolean; onSong: (s: ImportedSong) => void; onFail: () => void }) {
+  const cloud = useCloud();
+  const [url, setUrl] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState('');
+  const canImport = !!cloud.client && !!cloud.band;
+
+  if (!canImport) {
+    return focus ? (
+      <p className="link-import__problem" role="status">
+        Traer una canción desde un link es para los miembros de una banda. Copiala de la página y pegala abajo.
+      </p>
+    ) : null;
+  }
+
+  const bring = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!url.trim() || busy) return;
+    setBusy(true);
+    setProblem('');
+    try {
+      onSong(await importFromUrl(cloud.client!, url));
+      setUrl('');
+    } catch (err) {
+      setProblem(`${err instanceof Error ? err.message : 'No se pudo importar.'} Copiala de la página y pegala abajo.`);
+      onFail();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form className="link-import" onSubmit={bring}>
+      <input
+        type="url"
+        inputMode="url"
+        aria-label="Link de la canción"
+        placeholder="Link de una página de acordes"
+        autoFocus={focus}
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+      />
+      <button className="btn" type="submit" disabled={busy || !url.trim()}>
+        <Icon name="download" size={18} /> {busy ? 'Trayendo…' : 'Traer'}
+      </button>
+      {problem && (
+        <p className="link-import__problem" role="alert">
+          {problem}
+        </p>
+      )}
+    </form>
+  );
+}
+
+/**
+ * New song: paste lyrics and the structure is detected ("Pegar letra"), or
+ * bring them from a link.
  * Existing song: edit the ChordPro source, or paste the lyrics again.
  */
-export function EditorPage({ id }: { id?: string }) {
+export function EditorPage({ id, fromLink = false }: { id?: string; fromLink?: boolean }) {
   const lib = useLibrary();
   const isNew = id === undefined;
   const [mode, setMode] = useState<'paste' | 'chordpro'>(isNew ? 'paste' : 'chordpro');
@@ -28,6 +90,7 @@ export function EditorPage({ id }: { id?: string }) {
   const [saving, setSaving] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const sourceBox = useRef<HTMLTextAreaElement>(null);
+  const pasteBox = useRef<HTMLTextAreaElement>(null);
   const [toolHint, setToolHint] = useState('');
 
   useEffect(() => {
@@ -126,6 +189,13 @@ export function EditorPage({ id }: { id?: string }) {
       <div className={`editor editor--${tab}`}>
         {mode === 'paste' ? (
           <div className="editor__pane paste">
+            {isNew && (
+              <LinkImport
+                focus={fromLink}
+                onSong={(s) => setPaste({ title: s.title, artist: s.artist, key: '', tempo: '', text: s.text })}
+                onFail={() => pasteBox.current?.focus()}
+              />
+            )}
             <div className="paste__fields">
               <input className="paste__title" placeholder="Título" aria-label="Título" {...field('title')} />
               <input placeholder="Artista" aria-label="Artista" {...field('artist')} />
@@ -142,6 +212,7 @@ export function EditorPage({ id }: { id?: string }) {
               />
             </div>
             <textarea
+              ref={pasteBox}
               className="paste__text"
               aria-label="Letra"
               placeholder={PASTE_HINT}
