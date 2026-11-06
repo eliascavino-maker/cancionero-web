@@ -47,6 +47,7 @@ const PATHS = {
   cue: 'M6 21V4M6 4h11.5l-2.5 4 2.5 4H6',
   // Three strings with a capo across them.
   capo: 'M7 3v18M12 3v18M17 3v18M4 9h16v3H4z',
+  print: 'M7 9V3h10v6M7 18H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M7 14h10v7H7z',
 } as const;
 
 export type IconName = keyof typeof PATHS;

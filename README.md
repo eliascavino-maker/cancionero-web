@@ -27,6 +27,12 @@ falta configurar el servidor.
 - **Exportar / Importar** (en Biblioteca) baja o carga un respaldo `.json`.
   Sin banda, importar reemplaza todo; con banda, agrega lo del respaldo.
 - El editor abre archivos `.cho`, `.chopro`, `.chordpro`, `.pro`, `.txt`.
+- **Exportar PDF** (en la canción, y en el menú ⋯ del setlist): abre la
+  ventana de imprimir del sistema, donde se elige «Guardar como PDF». Letra o
+  Acordes, con o sin indicaciones, y con tu capo si tenés uno. La canción sale
+  en el tono que tenés en pantalla; el setlist, en el suyo, con una portada
+  (banda, nombre y lista con los tonos) y una canción por hoja. Negro sobre
+  blanco: la segunda voz y las indicaciones se distinguen sin color.
 - **Importar desde un link** (Biblioteca → ⋯, o el campo de link en «Nueva
   canción»; solo en una banda): trae título, artista y letra con acordes de
   una página (LaCuerda, Cifra Club, Ultimate Guitar, AcordesWeb y casi

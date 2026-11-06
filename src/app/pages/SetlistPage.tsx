@@ -7,6 +7,7 @@ import { type SetlistEntry, type SongRecord, songLabel } from '../../data/librar
 import { explain, useCloud } from '../../cloud/CloudProvider';
 import { useRoom } from '../../live/LiveProvider';
 import { navigate, useLibrary, useLive, usePrefs } from '../hooks';
+import { ExportPdfDialog } from '../print';
 import { cleanCapo } from '../../music/capo';
 
 /** Songs of one setlist: reorder, add, remove, play. */
@@ -23,6 +24,7 @@ export function SetlistPage({ id }: { id: string }) {
   );
   const dialog = useRef<HTMLDialogElement>(null);
   const menu = useRef<HTMLDetailsElement>(null);
+  const [pdf, setPdf] = useState(false);
 
   if (data === undefined) return null;
   if (data === null) return <p className="empty">El setlist no existe.</p>;
@@ -92,6 +94,15 @@ export function SetlistPage({ id }: { id: string }) {
                   <Icon name="history" /> Historial
                 </button>
               )}
+              <button
+                disabled={entries.length === 0}
+                onClick={() => {
+                  menu.current?.removeAttribute('open');
+                  setPdf(true);
+                }}
+              >
+                <Icon name="print" /> Exportar PDF
+              </button>
               <button onClick={remove} style={{ color: 'var(--poncho)' }}>
                 <Icon name="trash" /> Borrar setlist
               </button>
@@ -124,6 +135,14 @@ export function SetlistPage({ id }: { id: string }) {
         <SortableList setlistId={id} entries={entries} groups={groups} />
       )}
 
+      {pdf && (
+        <ExportPdfDialog
+          songs={entries.map((e) => ({ id: e.song.id, content: e.song.content, transpose: e.item.transpose }))}
+          cover={{ title: setlist.name, band: cloud.band?.bandName }}
+          name={setlist.name}
+          onClose={() => setPdf(false)}
+        />
+      )}
       <dialog ref={dialog} className="dialog" onClick={(e) => e.target === dialog.current && dialog.current.close()}>
         <SongPicker onPick={(songId) => lib.addSongToSetlist(id, songId)} onClose={() => dialog.current?.close()} />
       </dialog>

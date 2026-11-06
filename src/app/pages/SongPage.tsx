@@ -9,6 +9,7 @@ import { useCloud } from '../../cloud/CloudProvider';
 import { songLabel } from '../../data/library';
 import { ArrangementBar } from '../Arrangements';
 import { SongPanel } from '../SongPanel';
+import { ExportPdfDialog } from '../print';
 import { navigate, useLibrary, useLive } from '../hooks';
 
 export function SongPage({ id }: { id: string }) {
@@ -16,6 +17,7 @@ export function SongPage({ id }: { id: string }) {
   const cloud = useCloud();
   const song = useLive((l) => l.getSong(id).then((s) => s ?? null), [id]);
   const [transpose, setTranspose] = useState(0);
+  const [pdf, setPdf] = useState(false);
 
   if (song === undefined) return null;
   if (song === null) return <p className="empty">La canción no existe.</p>;
@@ -55,6 +57,9 @@ export function SongPage({ id }: { id: string }) {
               <Icon name="save" size={18} /> Guardar tono
             </button>
           )}
+          <button className="icon-btn" aria-label="Exportar PDF" title="Exportar PDF" onClick={() => setPdf(true)}>
+            <Icon name="print" />
+          </button>
           <button className="icon-btn" aria-label="Editar" title="Editar" onClick={() => navigate(`/edit/${song.id}`)}>
             <Icon name="edit" />
           </button>
@@ -70,6 +75,13 @@ export function SongPage({ id }: { id: string }) {
           )}
         </div>
       </header>
+      {pdf && (
+        <ExportPdfDialog
+          songs={[{ id: song.id, content: song.content, transpose }]}
+          name={songLabel(song)}
+          onClose={() => setPdf(false)}
+        />
+      )}
       <ArrangementBar song={song} transpose={transpose} />
       <SongPanel
         content={song.content}

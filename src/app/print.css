@@ -1,0 +1,156 @@
+/* Exportar PDF: only the sheet goes on paper, black on white, no screen colors. */
+
+.print-root {
+  display: none;
+}
+
+.pdf__hint {
+  margin: 0 0 14px;
+  color: var(--ceniza);
+  font-size: 0.92rem;
+}
+.pdf__view {
+  margin-bottom: 12px;
+}
+.pdf__check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  font-weight: 600;
+}
+.pdf__check input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--tungsteno);
+}
+
+@media print {
+  @page {
+    margin: 14mm 14mm 16mm;
+  }
+  html.printing,
+  html.printing body {
+    background: #fff !important;
+  }
+  html.printing body > :not(.print-root) {
+    display: none !important;
+  }
+  html.printing .print-root {
+    display: block;
+  }
+}
+
+.print-sheet {
+  /* Paper: every screen color goes to black or gray. */
+  --telon: #fff;
+  --tarima: #fff;
+  --case: #fff;
+  --case-alto: #f2f2f2;
+  --hueco: #fff;
+  --papel: #000;
+  --ceniza: #444;
+  --humo: #666;
+  --filo: #bbb;
+  --filo-fuerte: #888;
+  --tungsteno: #000;
+  --foco: #fff;
+  background: #fff;
+  color: #000;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.print-song + .print-song,
+.print-cover + .print-song {
+  break-before: page;
+}
+.print-sheet .cp-section {
+  break-inside: avoid;
+}
+.print-sheet .cp-title {
+  font-size: 1.9em;
+}
+.print-sheet .cp-chord {
+  font-weight: 800;
+}
+.print-sheet .cp-info li {
+  border: 1px solid #888;
+  background: #fff;
+  color: #000;
+}
+.print-sheet .cp-cue {
+  border: 1px solid #000;
+  border-left-width: 3px;
+  background: #fff;
+}
+/* The second voice is read by its style (italic, dotted), not by color. */
+.print-sheet .cp-harmony,
+.print-sheet .cp-harmony-tag {
+  color: #000;
+}
+.print-sheet .cp-harmony {
+  text-decoration-color: #000;
+}
+.print-sheet .cp-harmony-tag {
+  border-color: #000;
+}
+
+.print-cover {
+  padding-top: 18mm;
+  text-align: center;
+  font-family: var(--font-letra);
+}
+.print-cover__logo {
+  display: block;
+  max-width: 45mm;
+  max-height: 45mm;
+  margin: 0 auto 8mm;
+  object-fit: contain;
+}
+.print-cover__band {
+  margin: 0;
+  font-family: var(--font-cartel);
+  font-size: 14pt;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #444;
+}
+.print-cover__title {
+  margin: 2mm 0 10mm;
+  font-family: var(--font-cartel);
+  font-size: 30pt;
+  line-height: 1.1;
+}
+.print-cover__list {
+  width: min(130mm, 100%);
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  counter-reset: n;
+  text-align: left;
+  font-size: 14pt;
+}
+.print-cover__list li {
+  display: flex;
+  gap: 4mm;
+  align-items: baseline;
+  padding: 2mm 0;
+  border-bottom: 1px solid #ccc;
+  counter-increment: n;
+}
+.print-cover__list li::before {
+  content: counter(n) '.';
+  min-width: 8mm;
+  color: #666;
+  font-family: var(--font-cartel);
+  font-weight: 700;
+}
+.print-cover__list li > :first-of-type {
+  flex: 1;
+}
+.print-cover__key {
+  font-family: var(--font-cartel);
+  font-weight: 800;
+}

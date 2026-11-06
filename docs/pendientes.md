@@ -38,4 +38,5 @@ Migración 006 (señales de la banda). Lo demás va por broadcast en `live:<band
 
 - [x] Importar desde un link con la Edge Function `import-url` (solo miembros,
   con límite de uso). Si no se puede leer, ofrecer pegar el texto.
+- [x] Exportar PDF (canción y setlist con portada), sin librerías: ventana de imprimir.
 - [ ] Logo de la banda en Storage. Antes: crear «Exportar PDF».
