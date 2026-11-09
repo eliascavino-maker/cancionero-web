@@ -3645,3 +3645,142 @@ html.stage-open body {
   background: var(--tecla-alta);
   box-shadow: inset 0 0 0 1px var(--tinta);
 }
+
+/* ----- Inicio: the top of the Biblioteca */
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.home__label {
+  margin: 4px 0 8px;
+  font-family: var(--font-letra);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--humo);
+}
+.home__label--library {
+  margin: 10px 0 0;
+}
+.home-live {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--vivo) 55%, transparent);
+  border-radius: var(--r-panel);
+  background: color-mix(in srgb, var(--vivo) 10%, var(--fondo));
+  text-decoration: none;
+}
+.home-live__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.home-live__text strong {
+  font-family: var(--font-marca);
+  font-size: 1.15rem;
+}
+.home-live__text small {
+  color: var(--grafito);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-live__go {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+}
+.home-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px;
+  border: 1px solid var(--filo);
+  border-radius: var(--r-panel);
+}
+.home-card__eyebrow {
+  color: var(--humo);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.home-card__title {
+  font-family: var(--font-marca);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-decoration: none;
+}
+.home-card__title:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.home-card__meta {
+  color: var(--humo);
+  font-size: 0.9rem;
+}
+.home-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.home-recent {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px;
+  padding: 0 16px 2px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.home-recent::-webkit-scrollbar {
+  display: none;
+}
+.home-recent a {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  width: 132px;
+  min-height: 84px;
+  padding: 12px;
+  border: 1px solid var(--filo);
+  border-radius: var(--r-panel);
+  text-decoration: none;
+  transition: border-color var(--t-toque) var(--ease);
+}
+.home-recent a:hover {
+  border-color: var(--filo-fuerte);
+}
+.home-recent__title {
+  font-family: var(--font-marca);
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.15;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.home-recent__key {
+  color: var(--acorde);
+  font-weight: 700;
+}
+.home-band {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--humo);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.home-band:hover {
+  color: var(--grafito);
+}

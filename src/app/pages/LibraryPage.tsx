@@ -10,6 +10,7 @@ import { readDocument } from '../../importer/docx';
 import { useCloud } from '../../cloud/CloudProvider';
 import type { SongRecord } from '../../data/library';
 import { AddToSetlistDialog } from '../AddToSetlist';
+import { HomeStrip } from '../Home';
 import { exportBackup, importBackup } from '../backup';
 import { BandSongsDialog } from '../BandSongsDialog';
 import { ImportChartDialog } from '../ImportChartDialog';
@@ -214,6 +215,8 @@ export function LibraryPage() {
           </button>
         </div>
       )}
+
+      {!selected && <HomeStrip />}
 
       <label className="search">
         <Icon name="search" size={20} />

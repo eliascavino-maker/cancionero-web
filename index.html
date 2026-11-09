@@ -8,13 +8,27 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="apple-mobile-web-app-title" content="Cancionero" />
+    <meta name="apple-mobile-web-app-title" content="En Contra" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-    <title>Cancionero</title>
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <style>
+      /* Splash: shown until the app draws (React replaces #root's content). */
+      html, body { margin: 0; background: #000; }
+      .splash { position: fixed; inset: 0; display: grid; place-items: center; align-content: center; gap: 18px; color: #fff; font: 700 1.5rem 'Liberation Serif', 'Times New Roman', serif; }
+      .splash svg { width: 72px; height: auto; }
+      @media (prefers-reduced-motion: no-preference) { .splash { animation: splash-in 0.6s ease-out both; } }
+      @keyframes splash-in { from { opacity: 0; } }
+    </style>
+    <title>En Contra · Cancionero</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="splash" role="img" aria-label="En Contra">
+        <svg viewBox="119 71 274 330" aria-hidden="true"><path d="M128 80H384V264A128 128 0 0 1 128 264Z" fill="none" stroke="#fff" stroke-width="18"/><path d="M236 120h30v200h-30zM166 120h100v18h-100zM196 162h70v16h-70zM166 202h100v18h-100zM166 120h12v28h-12zM166 192h12v28h-12zM236 220h100v18h-100zM236 302h100v18h-100zM324 220h12v30h-12zM324 290h12v30h-12z" fill="#fff"/></svg>
+        <span>En Contra</span>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -15,7 +15,7 @@ export default defineConfig({
       // public/manifest.webmanifest is the manifest; the plugin doesn't write one.
       manifest: false,
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,woff2,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2,webmanifest}'],
         cleanupOutdatedCaches: true,
       },
     }),
