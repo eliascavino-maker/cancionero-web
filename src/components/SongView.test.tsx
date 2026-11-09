@@ -73,9 +73,11 @@ describe('SongView', () => {
 {eoc}
 {c: Lento}`);
     expect(screen.getByRole('heading', { name: 'Mi canción' })).toBeInTheDocument();
-    for (const text of ['Yo', 'Tono: G', 'Capo 3', 'Verso 1', 'Estribillo', 'Lento']) {
+    for (const text of ['Yo', 'Verso 1', 'Estribillo', 'Lento']) {
       expect(screen.getByText(text)).toBeInTheDocument();
     }
+    expect(document.querySelector('.cp-info__key')).toHaveTextContent('Tono G');
+    expect(document.querySelector('.cp-info__capo')).toHaveTextContent('Capo 3');
   });
 
   it('{chorus} repeats the last chorus', () => {

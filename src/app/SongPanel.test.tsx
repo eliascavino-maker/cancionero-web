@@ -85,7 +85,7 @@ e|--3--|
     fireEvent.click(screen.getByRole('button', { name: 'Más BPM' }));
     expect(saved).toEqual(['{title: X}\n{tempo: 91}\n[C]la']);
     expect(screen.getByRole('spinbutton', { name: 'BPM' })).toHaveValue(91);
-    expect(screen.getByText('♩ 91')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cambiar BPM' })).toHaveTextContent('91');
 
     // Typing a number saves it when leaving the field (out of range is clamped).
     const field = screen.getByRole('spinbutton', { name: 'BPM' });
@@ -94,7 +94,7 @@ e|--3--|
     expect(saved.at(-1)).toBe('{title: X}\n{tempo: 128}\n[C]la');
     fireEvent.change(screen.getByRole('spinbutton', { name: 'BPM' }), { target: { value: '999' } });
     fireEvent.blur(screen.getByRole('spinbutton', { name: 'BPM' }));
-    expect(screen.getByText('♩ 300')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cambiar BPM' })).toHaveTextContent('300');
     fireEvent.click(screen.getByRole('button', { name: 'Listo' }));
     expect(screen.getByRole('button', { name: 'Desplazar automáticamente' })).toBeInTheDocument();
   });
@@ -243,7 +243,7 @@ e|--3--|
     fireEvent.click(within(bar).getByRole('button', { name: 'Subir el capo' }));
     expect(shown()).toEqual(['G', 'C', 'D']);
     expect(document.querySelector('.cp-info__capo')).toHaveTextContent('Mi capo 3 · formas de G');
-    expect(document.querySelector('.cp-info__key')).toHaveTextContent('Tono: Bb');
+    expect(document.querySelector('.cp-info__key')).toHaveTextContent('Tono Bb');
     fireEvent.click(within(bar).getByRole('button', { name: 'Bajar el capo' }));
     expect(shown()).toEqual(['Ab', 'Db', 'Eb']);
     fireEvent.click(within(bar).getByRole('button', { name: 'Subir el capo' }));
@@ -267,7 +267,7 @@ e|--3--|
     fireEvent.click(screen.getByRole('button', { name: 'Subir el capo' }));
     expect(screen.getByText('G')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Sin capo' }));
-    expect(screen.getByText('A')).toBeInTheDocument();
+    expect(document.querySelector('.cp-chord')).toHaveTextContent('A');
     expect(document.querySelector('.cp-info__capo')).toBeNull();
     expect(getPrefs()).toMatchObject({ capo: {}, capoEdits: { s1: 0 } });
 

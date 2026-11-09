@@ -1,16 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { parseChordPro } from '../../chordpro/parser';
 import { writeChordPro } from '../../chordpro/writer';
 import { askConfirm } from '../../components/ask';
 import { FullscreenButton } from '../../components/FullscreenButton';
 import { Icon } from '../../components/Icon';
+import { Menu } from '../../components/Menu';
 import { transposeSong } from '../../music/transposer';
 import { useCloud } from '../../cloud/CloudProvider';
 import { songLabel } from '../../data/library';
 import { ArrangementBar } from '../Arrangements';
 import { SongPanel } from '../SongPanel';
 import { ExportPdfDialog } from '../print';
-import { navigate, useLibrary, useLive } from '../hooks';
+import { markRecent, navigate, useLibrary, useLive } from '../hooks';
+import { AddToSetlistDialog } from '../AddToSetlist';
 
 export function SongPage({ id }: { id: string }) {
   const lib = useLibrary();
@@ -18,6 +20,10 @@ export function SongPage({ id }: { id: string }) {
   const song = useLive((l) => l.getSong(id).then((s) => s ?? null), [id]);
   const [transpose, setTranspose] = useState(0);
   const [pdf, setPdf] = useState(false);
+  const [adding, setAdding] = useState(false);
+  useEffect(() => {
+    if (song) markRecent(song.id);
+  }, [song?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (song === undefined) return null;
   if (song === null) return <p className="empty">La canción no existe.</p>;
@@ -46,7 +52,7 @@ export function SongPage({ id }: { id: string }) {
   return (
     <div className="page page--song">
       <header className="page__header page__header--sticky">
-        <a className="icon-btn" href="#/" aria-label="Volver a canciones">
+        <a className="icon-btn" href="#/" aria-label="Volver a la biblioteca">
           <Icon name="back" />
         </a>
         <span className="page__spacer" />
@@ -57,22 +63,17 @@ export function SongPage({ id }: { id: string }) {
               <Icon name="save" size={18} /> Guardar tono
             </button>
           )}
-          <button className="icon-btn" aria-label="Exportar PDF" title="Exportar PDF" onClick={() => setPdf(true)}>
-            <Icon name="print" />
-          </button>
-          <button className="icon-btn" aria-label="Editar" title="Editar" onClick={() => navigate(`/edit/${song.id}`)}>
-            <Icon name="edit" />
-          </button>
-          {cloud.band && (
-            <a className="icon-btn" href={`#/song/${song.id}/historial`} aria-label="Historial" title="Historial">
-              <Icon name="history" />
-            </a>
-          )}
-          {cloud.canDeleteSongs && (
-            <button className="icon-btn icon-btn--danger" aria-label="Borrar" title="Borrar" onClick={remove}>
-              <Icon name="trash" />
-            </button>
-          )}
+          <Menu
+            label="Más opciones"
+            title={songLabel(song)}
+            items={[
+              { label: 'Editar', icon: 'edit', onSelect: () => navigate(`/edit/${song.id}`) },
+              { label: 'Exportar PDF', icon: 'print', onSelect: () => setPdf(true) },
+              { label: 'Historial', icon: 'history', onSelect: () => navigate(`/song/${song.id}/historial`), hidden: !cloud.band },
+              { label: 'Agregar a un setlist', icon: 'list', onSelect: () => setAdding(true) },
+              { label: 'Borrar', icon: 'trash', danger: true, onSelect: remove, hidden: !cloud.canDeleteSongs },
+            ]}
+          />
         </div>
       </header>
       {pdf && (
@@ -82,6 +83,7 @@ export function SongPage({ id }: { id: string }) {
           onClose={() => setPdf(false)}
         />
       )}
+      {adding && <AddToSetlistDialog songId={song.id} title={songLabel(song)} onClose={() => setAdding(false)} />}
       <ArrangementBar song={song} transpose={transpose} />
       <SongPanel
         content={song.content}

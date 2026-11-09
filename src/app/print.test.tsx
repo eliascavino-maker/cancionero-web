@@ -40,7 +40,7 @@ describe('PrintSheet', () => {
     setPrefs({ ...getPrefs(), capo: { s1: 3 } });
     render(<PrintSheet songs={[cusco]} opts={{ chords: true, cues: true, capo: true }} />);
     expect(chords()).toEqual(['G', 'C']);
-    expect(document.querySelector('.cp-info__key')).toHaveTextContent('Tono: Bb');
+    expect(document.querySelector('.cp-info__key')).toHaveTextContent('Tono Bb');
     expect(document.querySelector('.cp-info__capo')).toHaveTextContent('Mi capo 3 · formas de G');
   });
 });

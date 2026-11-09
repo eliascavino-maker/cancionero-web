@@ -1,4 +1,4 @@
-import { type CSSProperties, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { type CSSProperties, Fragment, type ReactNode } from 'react';
 import {
   type LyricLine,
   type Song,
@@ -13,7 +13,7 @@ import {
   lyricsOf,
 } from '../chordpro/song';
 import type { ChordRef } from '../chordpro/moveChord';
-import { PLAYERS, colorOf, shortName, singsIn, splitByMembers } from '../data/band';
+import { PLAYERS, colorOf, singsIn, splitByMembers } from '../data/band';
 import { ChordName } from './ChordName';
 import { splitIntoWords } from './words';
 import './SongView.css';
@@ -270,45 +270,50 @@ function SongHeader({
   capo?: MyCapo;
 }) {
   const subtitle = [...metadata.subtitles, artistOf(metadata)].filter(Boolean).join(' · ');
-  const tempo = metadata.tempo ? `♩ ${metadata.tempo}` : onTempoClick ? '♩ BPM' : undefined;
   // With my capo the chords are shapes: the key shown is still the band's.
   const key = capo ? capo.key : metadata.key;
-  const keyInfo = key && `Tono: ${key}`;
-  const capoInfo = capo ? `Mi capo ${capo.fret}` : metadata.capo ? `Capo ${metadata.capo}` : undefined;
-  const before = [keyInfo, capoInfo];
-  const after = [metadata.time];
-  const info = [...before, tempo, ...after].filter(Boolean) as string[];
+  const fret = capo ? capo.fret : metadata.capo;
+  const showTempo = !!metadata.tempo || !!onTempoClick;
+  const any = key || fret || showTempo || metadata.time;
 
   return (
     <header className="cp-header">
       {metadata.title && <h1 className="cp-title">{metadata.title}</h1>}
       {subtitle && <p className="cp-subtitle">{subtitle}</p>}
-      {info.length > 0 && (
+      {any && (
         <ul className="cp-info">
-          {info.map((i) =>
-            i === tempo && onTempoClick ? (
-              <li key={i} className="cp-info__tempo">
+          {key && (
+            <li className="cp-info__key">
+              <span className="cp-info__label">Tono</span> <ChordName chord={key} />
+            </li>
+          )}
+          {fret && (
+            <li className="cp-info__capo">
+              <span className="cp-info__label">{capo ? 'Mi capo' : 'Capo'}</span> {fret}
+              {capo?.shapes && (
+                <>
+                  {' · formas de '}
+                  <ChordName chord={capo.shapes} />
+                </>
+              )}
+            </li>
+          )}
+          {showTempo && (
+            <li className="cp-info__tempo">
+              <span className="cp-info__label">BPM</span>{' '}
+              {onTempoClick ? (
                 <button type="button" aria-label="Cambiar BPM" onClick={onTempoClick}>
-                  {i}
+                  {metadata.tempo ?? '—'}
                 </button>
-              </li>
-            ) : i === keyInfo ? (
-              <li key={i} className="cp-info__key">
-                Tono: <ChordName chord={key!} />
-              </li>
-            ) : i === capoInfo && capo ? (
-              <li key={i} className="cp-info__capo">
-                {i}
-                {capo.shapes && (
-                  <>
-                    {' · formas de '}
-                    <ChordName chord={capo.shapes} />
-                  </>
-                )}
-              </li>
-            ) : (
-              <li key={i}>{i}</li>
-            ),
+              ) : (
+                metadata.tempo
+              )}
+            </li>
+          )}
+          {metadata.time && (
+            <li>
+              <span className="cp-info__label">Compás</span> {metadata.time}
+            </li>
           )}
         </ul>
       )}
@@ -456,45 +461,6 @@ function bracketsFor(section: SongSection, hide: boolean | undefined): { bracket
   return { brackets, slots: keys.length };
 }
 
-/**
- * The singer's name inside a bracket. If it doesn't fit (a one-line bracket),
- * it shrinks to a short form ("Lea", "An") and then to an initial.
- * Measured on screen, so a bigger font brings the full name back.
- */
-function BracketName({ name }: { name: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const [level, setLevel] = useState(0);
-  const forms = [name, shortName(name), name[0]];
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    const box = el?.parentElement;
-    if (!el || !box) return;
-    if (level < forms.length - 1 && el.offsetHeight > box.clientHeight - 2) setLevel(level + 1);
-  });
-
-  // Start again from the full name when the bracket changes size.
-  useEffect(() => {
-    const box = ref.current?.parentElement;
-    if (!box || typeof ResizeObserver === 'undefined') return;
-    let last = box.clientHeight;
-    const ro = new ResizeObserver(() => {
-      if (box.clientHeight !== last) {
-        last = box.clientHeight;
-        setLevel(0);
-      }
-    });
-    ro.observe(box);
-    return () => ro.disconnect();
-  }, []);
-
-  return (
-    <span ref={ref} className="cp-bracket__name">
-      {forms[level]}
-    </span>
-  );
-}
-
 function VoicedLines({
   section,
   original,
@@ -519,6 +485,9 @@ function VoicedLines({
     if (hasHarmony(line) && singsIn(opts.mine, line.harmony ?? [])) return 'lead';
     return singsIn(opts.mine, backing) ? 'backing' : null;
   };
+  // The names go above the line where a voice starts (lead voices, then coros).
+  const starts = new Map<number, Bracket[]>();
+  for (const b of brackets) starts.set(b.start, [...(starts.get(b.start) ?? []), b]);
   const lyricSources = original.lines.flatMap((l) => (l.type === 'lyric' && l.source !== undefined ? [l.source] : []));
   const sel = opts.voiceEdit?.selected;
 
@@ -579,6 +548,24 @@ function VoicedLines({
           {content}
         </div>
       );
+    } else if (opts.mine && line.type === 'lyric' && lyricsOf(line).trim() && (line.singers ?? lead).length) {
+      // Someone else's line (we know who sings it): a step back, so mine stand out.
+      content = <div className="cp-other">{content}</div>;
+    }
+    const tags = starts.get(i);
+    if (tags) {
+      content = (
+        <>
+          <div className="cp-voice-tag" aria-hidden="true">
+            {tags.map((b) => (
+              <span key={`${b.slot}`} className={b.backing ? 'cp-voice-tag__name cp-voice-tag__name--backing' : 'cp-voice-tag__name'} style={memberStyle(colorOf(b.name))}>
+                {b.backing ? `coro ${b.name}` : b.name}
+              </span>
+            ))}
+          </div>
+          {content}
+        </>
+      );
     }
     return slots ? (
       <div key={i} className="cp-voiced__line" style={{ gridRow: i + 1, gridColumn: slots + 1 }}>
@@ -601,9 +588,7 @@ function VoicedLines({
           role="img"
           aria-label={`${b.backing ? 'Coro' : 'Canta'}: ${b.name}`}
           title={`${b.backing ? 'Coro' : 'Canta'}: ${b.name}`}
-        >
-          <BracketName name={b.name} />
-        </span>
+        />
       ))}
     </div>
   );
@@ -624,6 +609,7 @@ function Section(props: { section: SongSection; index: number; opts: SongViewOpt
     <section
       className={`cp-section cp-section--${section.kind}${now ? ' cp-section--now' : ''}${opts.onPartTap ? ' cp-section--tappable' : ''}`}
       data-part={live ? index : undefined}
+      data-section={index}
       aria-current={now ? 'step' : undefined}
       onClick={opts.onPartTap ? () => opts.onPartTap!(index) : undefined}
     >
@@ -668,8 +654,16 @@ export function SongView({
   showHeader = true,
   onTempoClick,
   capo,
+  afterHeader,
   ...opts
-}: { song: Song; showHeader?: boolean; onTempoClick?: () => void; capo?: MyCapo } & SongViewOptions) {
+}: {
+  song: Song;
+  showHeader?: boolean;
+  onTempoClick?: () => void;
+  capo?: MyCapo;
+  /** Drawn right under the header (the song's map). */
+  afterHeader?: ReactNode;
+} & SongViewOptions) {
   let lastChorus: LastChorus | undefined;
   const sections = song.sections.map((section, i) => {
     if (section.kind === 'chorus') lastChorus = { section, index: i };
@@ -678,6 +672,7 @@ export function SongView({
   return (
     <article className="cp-song" style={{ fontSize: opts.fontSize ? `${opts.fontSize}px` : undefined }}>
       {showHeader && <SongHeader metadata={song.metadata} onTempoClick={onTempoClick} capo={capo} />}
+      {afterHeader}
       {sections}
     </article>
   );

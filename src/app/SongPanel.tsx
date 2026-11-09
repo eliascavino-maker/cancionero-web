@@ -24,8 +24,10 @@ import { useCapo } from './capo';
 import { type Prefs, STAGE_FONT, usePrefs } from './hooks';
 import { litSinger, useMe } from './me';
 import { PartsDialog } from './PartsDialog';
+import { SongMap } from './SongMap';
 import { StageView, sectionTitle, stageSlides } from './StageView';
 import { isImmersive } from '../components/FullscreenButton';
+import { useHideOnScroll } from './hideOnScroll';
 import type { VoiceSelection } from '../components/SongView';
 import { ALL, SINGERS, colorOf } from '../data/band';
 
@@ -174,6 +176,10 @@ export function SongPanel({
   const speed = auto ? (durationSpeed ?? SPEED_LEVELS[DEFAULT_LEVEL]) : SPEED_LEVELS[savedLevel ?? DEFAULT_LEVEL];
   const level = savedLevel ?? (auto ? nearestLevel(speed) : DEFAULT_LEVEL);
 
+  // Phones: the second row of controls (speed, capo, size…) opens with "Más controles".
+  const [more, setMore] = useState(false);
+  useHideOnScroll(!inLive && !playing && mode === 'play');
+
   // Letra in full screen: play shows one part at a time (StageView) instead of scrolling.
   const [stage, setStage] = useState(false);
   const togglePlay = () => {
@@ -257,6 +263,7 @@ export function SongPanel({
           capo={showCapo ? { fret: capo, key: transposed.metadata.key, shapes: effectiveKey(shapes) } : undefined}
           fontSize={fontSize}
           mine={mine}
+          afterHeader={!inLive && mode === 'play' ? <SongMap sections={shown.sections} sheet={sheet} /> : undefined}
           currentPart={live?.part}
           onPartTap={live?.onPart}
           showChords={moving || (prefs.showChords && mode !== 'voices' && mode !== 'notes')}
@@ -588,9 +595,9 @@ export function SongPanel({
           </div>
         </div>
       ) : (
-      <div className="toolbar" role="toolbar" aria-label="Controles de la canción">
+      <div className={`toolbar toolbar--play${more ? ' toolbar--more' : ''}`} role="toolbar" aria-label="Controles de la canción">
         {live?.bar && <div className="toolbar__row toolbar__row--live">{live.bar}</div>}
-        <div className="toolbar__row">
+        <div className="toolbar__row toolbar__row--main">
           <div className="segmented" role="group" aria-label="Vista">
             <button aria-pressed={!prefs.showChords} onClick={() => set({ showChords: false })}>
               Letra
@@ -599,25 +606,9 @@ export function SongPanel({
               Acordes
             </button>
           </div>
-          {hasCues && (
-            <button
-              className="icon-btn cue-toggle"
-              aria-label="Indicaciones"
-              title={prefs.showCues ? 'Ocultar las indicaciones' : 'Mostrar las indicaciones'}
-              aria-pressed={prefs.showCues}
-              onClick={() => set({ showCues: !prefs.showCues })}
-            >
-              <Icon name="cue" />
-            </button>
-          )}
-          {onContentChange && (
-            <button className="icon-btn" aria-label="Editar canción" title="Mover acordes, notas, partes, BPM" onClick={() => setMode('tools')}>
-              <Icon name="edit" />
-            </button>
-          )}
           <span className="toolbar__spacer" />
           {prefs.showChords && (
-            <div className="toolbar__group" role="group" aria-label="Tono">
+            <div className="toolbar__group toolbar__key" role="group" aria-label="Tono">
               <button className="icon-btn" aria-label="Bajar medio tono" onClick={() => onTransposeChange(normalize(transpose - 1))}>
                 <Icon name="minus" />
               </button>
@@ -635,16 +626,24 @@ export function SongPanel({
               </button>
             </div>
           )}
-        </div>
-        <div className="toolbar__row toolbar__row--play">
+          <button
+            className="icon-btn toolbar__more-btn"
+            aria-label={more ? 'Menos controles' : 'Más controles'}
+            aria-expanded={more}
+            onClick={() => setMore(!more)}
+          >
+            <Icon name="settings" />
+          </button>
           <button
             className="play-btn"
             aria-pressed={playing}
             aria-label={playing ? 'Pausar desplazamiento' : 'Desplazar automáticamente'}
             onClick={togglePlay}
           >
-            <Icon name={playing ? 'pause' : 'play'} size={26} />
+            <Icon name={playing ? 'pause' : 'play'} size={22} />
           </button>
+        </div>
+        <div className="toolbar__row toolbar__row--extra">
           <div className="toolbar__group" role="group" aria-label="Velocidad">
             <button
               className="icon-btn icon-btn--small"
@@ -668,6 +667,17 @@ export function SongPanel({
             </button>
           </div>
           <span className="toolbar__spacer" />
+          {hasCues && (
+            <button
+              className="icon-btn cue-toggle"
+              aria-label="Indicaciones"
+              title={prefs.showCues ? 'Ocultar las indicaciones' : 'Mostrar las indicaciones'}
+              aria-pressed={prefs.showCues}
+              onClick={() => set({ showCues: !prefs.showCues })}
+            >
+              <Icon name="cue" />
+            </button>
+          )}
           {prefs.showChords && (
             <button
               className={capo ? 'icon-btn capo-btn capo-btn--on' : 'icon-btn capo-btn'}
@@ -677,6 +687,11 @@ export function SongPanel({
             >
               <Icon name="capo" />
               {capo > 0 && <span className="capo-btn__fret">{capo}</span>}
+            </button>
+          )}
+          {onContentChange && (
+            <button className="icon-btn" aria-label="Editar canción" title="Mover acordes, notas, partes, BPM" onClick={() => setMode('tools')}>
+              <Icon name="edit" />
             </button>
           )}
           <div className="toolbar__group" role="group" aria-label="Tamaño de letra">

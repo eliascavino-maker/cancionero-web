@@ -750,7 +750,9 @@ li.card:hover {
   padding: 4px 0 150px;
 }
 
-/* Compact bar: two short rows on phones, a single row on wider screens. */
+/* The song controls. Phones: one row (view, key, more, play); "Más controles"
+   opens a second one. From 700 px everything fits in one line. Scrolling down
+   hides it (.chrome-away), scrolling up brings it back. */
 .toolbar {
   position: fixed;
   left: calc(50% + var(--side-w) / 2);
@@ -761,16 +763,14 @@ li.card:hover {
   flex-wrap: wrap;
   align-items: center;
   column-gap: 12px;
-  row-gap: 2px;
-  padding: 4px 6px;
+  row-gap: 4px;
+  padding: 5px 6px;
   border: 1px solid var(--filo-fuerte);
   border-radius: var(--r-panel);
-  background: color-mix(in srgb, var(--hoja) 94%, transparent);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: var(--hoja);
   box-shadow: var(--sombra);
   z-index: 19;
-  transition: bottom 0.25s var(--ease);
+  transition: transform var(--t-parte) var(--ease), bottom var(--t-parte) var(--ease);
 }
 .app--stage .toolbar {
   bottom: calc(12px + env(safe-area-inset-bottom));
@@ -781,47 +781,89 @@ li.card:hover {
   align-items: center;
   gap: 4px;
 }
+.toolbar--play .toolbar__row--main,
+.toolbar--play .toolbar__row--extra {
+  flex: 1 1 100%;
+}
+.toolbar--play .toolbar__row--extra {
+  display: none;
+  padding-top: 4px;
+  border-top: 1px solid var(--filo);
+}
+.toolbar--play.toolbar--more .toolbar__row--extra {
+  display: flex;
+}
+.toolbar__more-btn[aria-expanded='true'] {
+  background: var(--tecla-alta);
+}
+@media (min-width: 700px) {
+  .toolbar--play .toolbar__row--main,
+  .toolbar--play .toolbar__row--extra {
+    flex: 1 1 auto;
+  }
+  .toolbar--play .toolbar__row--extra {
+    display: flex;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .toolbar__more-btn {
+    display: none !important;
+  }
+}
 .toolbar .icon-btn {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
 }
 .toolbar .segmented {
   padding: 3px;
 }
 .toolbar .segmented button {
-  min-height: 32px;
+  min-height: 36px;
   padding: 0 12px;
   font-size: 0.9rem;
 }
+.toolbar .segmented button[aria-pressed='true'] {
+  background: var(--accion);
+  color: var(--sobre-accion);
+}
 .toolbar .key-display {
-  min-width: 48px;
-  height: 38px;
+  min-width: 44px;
+  height: 40px;
 }
 .toolbar .key-display strong {
-  font-size: 1.3rem;
+  font-size: 1.25rem;
 }
 .toolbar .key-display small,
 .toolbar .speed small {
   font-size: 0.62rem;
 }
 .toolbar .play-btn {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
 }
 .toolbar .speed {
   min-width: 44px;
 }
-/* Small phones: Letra/Acordes, indications, edit and the key fit in one row. */
 @media (max-width: 400px) {
   .toolbar__row {
     gap: 2px;
   }
   .toolbar .segmented button {
-    padding: 0 6px;
+    padding: 0 9px;
   }
   .toolbar .key-display {
-    min-width: 40px;
+    min-width: 38px;
   }
+}
+.chrome-away .nav {
+  transform: translateY(110%);
+}
+.chrome-away .toolbar--play:not(:has(.toolbar__row--live)) {
+  transform: translate(-50%, calc(100% + var(--nav-h) + 24px + env(safe-area-inset-bottom)));
+}
+.chrome-away .page__header--sticky {
+  transform: translateY(-110%);
+  opacity: 0;
 }
 .toolbar__group {
   display: flex;
@@ -933,8 +975,7 @@ li.card:hover {
   background: var(--accion);
   color: var(--sobre-accion);
   cursor: pointer;
-  box-shadow: 0 4px 18px color-mix(in srgb, var(--accion) 30%, transparent);
-  transition: transform 0.12s var(--ease), background-color 0.15s;
+  transition: transform var(--t-toque) var(--ease), background-color var(--t-toque) var(--ease);
 }
 .play-btn:hover {
   background: var(--accion-viva);
@@ -975,13 +1016,13 @@ li.card:hover {
   padding: 6px;
   border-radius: 999px;
 }
-.is-scrolling .toolbar__row:not(.toolbar__row--play) {
+.is-scrolling .toolbar__row:not(.toolbar__row--main) {
   display: none;
 }
-.is-scrolling .toolbar__row--play {
+.is-scrolling .toolbar__row--main {
   flex: none;
 }
-.is-scrolling .toolbar__row--play > :not(.play-btn) {
+.is-scrolling .toolbar__row--main > :not(.play-btn) {
   display: none;
 }
 
@@ -2418,9 +2459,9 @@ html.stage-open body {
   cursor: pointer;
 }
 .arrangements__item[aria-current='page'] {
-  border-color: var(--accion);
-  background: var(--foco);
-  color: var(--accion);
+  border-color: var(--tecla-luz);
+  background: var(--tecla-luz);
+  color: var(--tinta);
 }
 .arrangements__tool {
   border-style: dashed;
@@ -3210,4 +3251,45 @@ html.stage-open body {
   .toast {
     animation-name: fade-in !important;
   }
+}
+
+/* ----- the song's map: one bar per part, the one on screen in white */
+.song-map {
+  display: flex;
+  gap: 3px;
+  margin: -0.4em 0 1.4em;
+}
+.song-map__part {
+  flex-basis: 0;
+  min-width: 10px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  position: relative;
+}
+.song-map__part::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 7px;
+  height: 4px;
+  border-radius: 1px;
+  background: var(--tecla-luz);
+  transition: background-color var(--t-parte) var(--ease), transform var(--t-parte) var(--ease);
+}
+.song-map__part:hover::before {
+  background: var(--humo);
+}
+.song-map__part[aria-current]::before {
+  background: var(--tinta);
+}
+
+/* ----- song page header: lighter, the sheet leads */
+.page--song > .page__header {
+  min-height: 56px;
+  padding-top: 8px;
+  padding-bottom: 4px;
 }
