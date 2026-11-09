@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { askConfirm, askText, tell } from '../../components/ask';
 import { ChordName } from '../../components/ChordName';
 import { Icon } from '../../components/Icon';
+import { Menu } from '../../components/Menu';
+import { toast } from '../../components/toast';
 import { transposeKey } from '../../music/transposer';
 import { type SetlistEntry, type SongRecord, songLabel } from '../../data/library';
 import { explain, useCloud } from '../../cloud/CloudProvider';
@@ -24,7 +26,6 @@ export function SetlistPage({ id }: { id: string }) {
     [id],
   );
   const dialog = useRef<HTMLDialogElement>(null);
-  const menu = useRef<HTMLDetailsElement>(null);
   const [pdf, setPdf] = useState(false);
   const logo = useBandLogo();
 
@@ -33,7 +34,6 @@ export function SetlistPage({ id }: { id: string }) {
   const { setlist, entries, groups } = data;
 
   const rename = async () => {
-    menu.current?.removeAttribute('open');
     const name = (await askText('Renombrar setlist', setlist.name))?.trim();
     if (name) await lib.renameSetlist(id, name);
   };
@@ -64,7 +64,6 @@ export function SetlistPage({ id }: { id: string }) {
   };
 
   const remove = async () => {
-    menu.current?.removeAttribute('open');
     const ok = await askConfirm(cloud.band ? 'Las canciones quedan en la biblioteca. Se puede restaurar desde Banda → Borrados.' : 'Las canciones quedan en la biblioteca.', {
       title: `¿Borrar «${setlist.name}»?`,
       ok: 'Borrar',
@@ -83,56 +82,51 @@ export function SetlistPage({ id }: { id: string }) {
         </a>
         <h1>{setlist.name}</h1>
         <div className="page__actions">
-          <details className="menu" ref={menu}>
-            <summary className="icon-btn" aria-label="Más opciones">
-              <Icon name="more" />
-            </summary>
-            <div className="menu__panel">
-              <button onClick={rename}>
-                <Icon name="edit" /> Renombrar
-              </button>
-              {cloud.band && (
-                <button onClick={() => navigate(`/setlist/${id}/historial`)}>
-                  <Icon name="history" /> Historial
-                </button>
-              )}
-              <button
-                disabled={entries.length === 0}
-                onClick={() => {
-                  menu.current?.removeAttribute('open');
-                  setPdf(true);
-                }}
-              >
-                <Icon name="print" /> Exportar PDF
-              </button>
-              <button onClick={remove} style={{ color: 'var(--error)' }}>
-                <Icon name="trash" /> Borrar setlist
-              </button>
-            </div>
-          </details>
+          <Menu
+            label="Más opciones"
+            title={setlist.name}
+            items={[
+              { label: 'Renombrar', icon: 'edit', onSelect: rename },
+              { label: 'Historial', icon: 'history', onSelect: () => navigate(`/setlist/${id}/historial`), hidden: !cloud.band },
+              { label: 'Exportar PDF', icon: 'print', onSelect: () => setPdf(true), hidden: entries.length === 0 },
+              { label: 'Borrar setlist', icon: 'trash', danger: true, onSelect: remove },
+            ]}
+          />
         </div>
       </header>
 
-      <div className="page__actions" style={{ marginBottom: 16 }}>
+      <p className="page__lead">
+        {entries.length === 1 ? '1 canción' : `${entries.length} canciones`}
+        {live.session?.setlistId === id && <span className="live-tag">En vivo ahora</span>}
+      </p>
+
+      <div className="page__buttons">
         <button
-          className="btn btn--primary"
+          className="btn btn--primary btn--big"
           disabled={entries.length === 0}
           onClick={() => navigate(`/play/${id}/0`)}
         >
           <Icon name="play" size={18} /> Tocar
         </button>
         {room && (
-          <button className="btn" disabled={entries.length === 0} onClick={openLive}>
-            <Icon name="band" size={18} /> {live.session?.setlistId === id ? 'Entrar a la sala' : 'Sala en vivo'}
+          <button className="btn btn--big" disabled={entries.length === 0} onClick={openLive}>
+            <Icon name="live" size={20} /> {live.session?.setlistId === id ? 'Entrar a la sala' : 'Sala en vivo'}
           </button>
         )}
-        <button className="btn" onClick={() => dialog.current?.showModal()}>
+        <button className="btn btn--big" onClick={() => dialog.current?.showModal()}>
           <Icon name="plus" size={18} /> Canciones
         </button>
       </div>
 
       {entries.length === 0 ? (
-        <p className="empty">Agregá canciones con "Canciones".</p>
+        <div className="empty">
+          <p>Este setlist está vacío.</p>
+          <div className="empty__actions">
+            <button className="btn btn--primary" onClick={() => dialog.current?.showModal()}>
+              <Icon name="plus" size={18} /> Agregar canciones
+            </button>
+          </div>
+        </div>
       ) : (
         <SortableList setlistId={id} entries={entries} groups={groups} />
       )}
@@ -351,13 +345,22 @@ function SortableList({
                   ))}
                 </select>
               )}
-              <button
-                className="icon-btn icon-btn--small"
-                aria-label={`Quitar ${songLabel(song)}`}
-                onClick={() => lib.removeSetlistItem(item.id)}
-              >
-                <Icon name="close" size={18} />
-              </button>
+              <Menu
+                label={`Opciones de ${songLabel(song)}`}
+                title={songLabel(song)}
+                items={[
+                  { label: 'Abrir la canción', icon: 'music', onSelect: () => navigate(`/song/${song.id}`) },
+                  {
+                    label: 'Quitar del setlist',
+                    icon: 'close',
+                    danger: true,
+                    onSelect: async () => {
+                      await lib.removeSetlistItem(item.id);
+                      toast(`Quitaste «${songLabel(song)}».`, { label: 'Deshacer', run: () => void lib.putBackSetlistItem(item) });
+                    },
+                  },
+                ]}
+              />
               <button
                 className="icon-btn grip"
                 aria-label={`Mover ${song.title} (arrastrá, o usá las flechas)`}

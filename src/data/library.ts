@@ -191,6 +191,21 @@ export class Library {
     return songs.filter((s) => !grouped(s) && matches(s)).sort(byTitle);
   }
 
+  /** Every song not deleted, arrangements too, by title (for the global search). */
+  async allSongs(): Promise<SongRecord[]> {
+    return (await this.db.getAll('songs')).filter(alive).sort(byTitle);
+  }
+
+  /** Puts back a song taken out of a setlist (Deshacer), in the same place. */
+  async putBackSetlistItem(item: SetlistItem): Promise<void> {
+    // Soft-deleted (it was on the server): undelete what's stored, keeping its sync data.
+    // Hard-deleted (never uploaded): store it again as it was.
+    const stored = await this.db.get('setlistItems', item.id);
+    const base = stored ?? item;
+    await this.db.put('setlistItems', touch({ ...base, position: item.position, transpose: item.transpose, deletedAt: undefined }));
+    this.changed();
+  }
+
   /**
    * Songs with arrangements: original id → the original first, then its
    * arrangements by name. Songs without arrangements aren't in it.

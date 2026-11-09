@@ -62,6 +62,28 @@ export interface Prefs {
   capo?: Record<string, number>;
   /** Capo changes not saved to the account yet, per song id (0 = taken off). */
   capoEdits?: Record<string, number>;
+  /** Song ids marked with the star, on this device. */
+  favorites?: string[];
+  /** Songs opened lately, newest first (for Inicio). */
+  recent?: string[];
+  libraryView?: 'list' | 'grid';
+  librarySort?: 'title' | 'recent';
+}
+
+/** Star or unstar a song. */
+export function toggleFavorite(songId: string) {
+  const p = getPrefs();
+  const favs = new Set(p.favorites ?? []);
+  if (favs.has(songId)) favs.delete(songId);
+  else favs.add(songId);
+  setPrefs({ ...p, favorites: [...favs] });
+}
+
+/** Remembers that this song was just opened (keeps the last 12). */
+export function markRecent(songId: string) {
+  const p = getPrefs();
+  const recent = [songId, ...(p.recent ?? []).filter((id) => id !== songId)].slice(0, 12);
+  if (recent.join() !== (p.recent ?? []).join()) setPrefs({ ...p, recent });
 }
 
 export const STAGE_FONT = { min: 24, max: 64 };

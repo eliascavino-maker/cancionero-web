@@ -4,6 +4,7 @@ import { askConfirm, tell } from '../../components/ask';
 import { FullscreenButton, canGoFull } from '../../components/FullscreenButton';
 import { useBandLogo } from '../../cloud/logo';
 import { Icon } from '../../components/Icon';
+import { Menu } from '../../components/Menu';
 import { explain, useCloud } from '../../cloud/CloudProvider';
 import { useRoom } from '../../live/LiveProvider';
 import { LeaderChanged, type LivePos } from '../../live/room';
@@ -206,16 +207,10 @@ export function LivePage() {
           <Icon name="stage" />
         </button>
         {(!stage.on || canGoFull()) && <FullscreenButton />}
-        <details className="menu">
-          <summary className="icon-btn" aria-label="Más opciones de la sala">
-            <Icon name="more" />
-          </summary>
-          <div className="menu__panel">
-            <button onClick={closeRoom} style={{ color: 'var(--error)' }}>
-              <Icon name="close" /> Cerrar la sala
-            </button>
-          </div>
-        </details>
+        <Menu
+          label="Más opciones de la sala"
+          items={[{ label: 'Cerrar la sala', icon: 'close', danger: true, onSelect: closeRoom }]}
+        />
 
         <div className="live__status" role="status" aria-live="polite">
           <span className={`live__who${leaderId ? ' live__who--lead' : ''}`}>

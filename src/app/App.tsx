@@ -14,6 +14,8 @@ import { SetlistPage } from './pages/SetlistPage';
 import { SetlistsPage } from './pages/SetlistsPage';
 import { SongPage } from './pages/SongPage';
 import { UpdatePrompt } from './UpdatePrompt';
+import { SearchPalette, useSearchShortcut } from './SearchPalette';
+import { Toaster } from '../components/toast';
 import { useMe } from './me';
 import { WhoAreYouDialog } from './WhoAreYou';
 
@@ -68,6 +70,8 @@ export function App() {
   const askWho =
     !stage && !!cloud.band && !!cloud.musicians && !me.chosen && !(cloud.band.prefs as { chosen?: boolean }).chosen;
 
+  useSearchShortcut(!stage);
+
   useEffect(() => {
     document.documentElement.dataset.theme = prefs.theme;
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', prefs.theme === 'dark' ? '#000000' : '#ffffff');
@@ -79,6 +83,8 @@ export function App() {
         <Page route={route} />
       </main>
       <UpdatePrompt hidden={stage} />
+      <SearchPalette />
+      <Toaster />
       {askWho && <WhoAreYouDialog />}
       {!stage && (
         <nav className="nav" aria-label="Secciones">

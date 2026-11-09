@@ -104,6 +104,24 @@ describe('setlists', () => {
     expect(after.map((e) => e.item.rev)).toEqual([1, 1]);
   });
 
+  it('putting back a removed song (Deshacer) returns it to its place', async () => {
+    const entries = await lib.getSetlistEntries(setlist);
+    const item = entries[1].item;
+    await lib.removeSetlistItem(item.id);
+    await lib.putBackSetlistItem(item);
+    expect((await lib.getSetlistEntries(setlist)).map((e) => e.song.title)).toEqual(['A', 'B', 'C']);
+  });
+
+  it('putting back an uploaded item undeletes it and keeps its sync data', async () => {
+    const item = (await lib.getSetlistEntries(setlist))[0].item;
+    await lib.markUploaded('setlistItems', item.id, item.rev, { ...item, serverAt: 'x' });
+    await lib.removeSetlistItem(item.id);
+    await lib.putBackSetlistItem(item);
+    const back = await lib.getRecord('setlistItems', item.id);
+    expect(back).toMatchObject({ serverAt: 'x', dirty: 1, deletedAt: undefined });
+    expect((await lib.getSetlistEntries(setlist)).map((e) => e.song.title)).toEqual(['A', 'B', 'C']);
+  });
+
   it('moving changes only the moved item', async () => {
     await lib.moveSetlistItem(setlist, 2, 1);
     const after = await lib.getSetlistEntries(setlist);
