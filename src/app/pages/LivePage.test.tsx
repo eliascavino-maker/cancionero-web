@@ -57,7 +57,7 @@ it('"Ser director": the leader moves by part and the follower goes along', async
   const s = device(sergio);
   const l = device(leo);
   fireEvent.click(await s.page.findByRole('button', { name: 'Ser director' }));
-  await waitFor(() => expect(s.page.getByText('vos')).toBeInTheDocument());
+  await waitFor(() => expect(s.page.getByText('Dirigís vos')).toBeInTheDocument());
   expect(await l.page.findByText('Sergio')).toBeInTheDocument();
   expect(l.page.getByRole('button', { name: 'Tomar la dirección' })).toBeInTheDocument();
   expect(l.page.queryByRole('button', { name: 'Ser director' })).toBeNull();
@@ -69,10 +69,10 @@ it('"Ser director": the leader moves by part and the follower goes along', async
   // Past the last part: the next song.
   fireEvent.click(next);
   fireEvent.click(next);
-  await waitFor(() => expect(l.page.getByText(/2\/2 · Peña/)).toBeInTheDocument());
+  await waitFor(() => expect(l.page.getByRole('button', { name: /Abrir el mapa/ })).toHaveTextContent('Canción 2 de 2'));
   expect(l.now()).toContain('Verso Dos');
   fireEvent.click(s.page.getByRole('button', { name: /Parte anterior/ }));
-  await waitFor(() => expect(l.page.getByText(/1\/2 · Peña/)).toBeInTheDocument());
+  await waitFor(() => expect(l.page.getByRole('button', { name: /Abrir el mapa/ })).toHaveTextContent('Canción 1 de 2'));
 });
 
 it('keys while leading: ↓/AvPág part, → song', async () => {
@@ -83,7 +83,7 @@ it('keys while leading: ↓/AvPág part, → song', async () => {
   fireEvent.keyDown(window, { key: 'PageDown' });
   await waitFor(() => expect(l.now()).toContain('Coro Uno'));
   fireEvent.keyDown(window, { key: 'ArrowRight' });
-  await waitFor(() => expect(l.page.getByText(/2\/2 · Peña/)).toBeInTheDocument());
+  await waitFor(() => expect(l.page.getByRole('button', { name: /Abrir el mapa/ })).toHaveTextContent('Canción 2 de 2'));
 });
 
 it('"Tomar la dirección" asks first', async () => {
@@ -157,7 +157,7 @@ it('locked: touches do nothing, but the leader still arrives and keys still work
   fireEvent.click(s.page.getByRole('button', { name: /Parte siguiente/ }));
   await waitFor(() => expect(l.now()).toContain('Coro Uno'));
   fireEvent.keyDown(screen.getByRole('dialog', { name: 'Pantalla bloqueada' }), { key: 'ArrowRight' });
-  await waitFor(() => expect(l.page.getByText(/2\/2 · Peña/)).toBeInTheDocument());
+  await waitFor(() => expect(l.page.getByRole('button', { name: /Abrir el mapa/ })).toHaveTextContent('Canción 2 de 2'));
 });
 
 it('the strip says where we are; its map jumps (and the leader takes everyone)', async () => {

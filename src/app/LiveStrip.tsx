@@ -35,6 +35,14 @@ export function LiveStrip({
   const current = part && n ? part.slides[Math.min(part.index, n - 1)] : undefined;
   const position = `Canción ${index + 1} de ${entries.length}`;
   const partLabel = current ? `${sectionTitle(current)} · ${part!.index + 1}/${n} partes` : (entries[index] ? songLabel(entries[index].song) : undefined);
+  // What comes next: the next part, or the next song after the last part.
+  const nextSong = entries[index + 1];
+  const next =
+    part && part.index < n - 1
+      ? sectionTitle(part.slides[part.index + 1])
+      : nextSong
+        ? songLabel(nextSong.song)
+        : undefined;
 
   return (
     <div className="live-strip stage-keep">
@@ -46,20 +54,29 @@ export function LiveStrip({
       >
         <span className="progress__text">
           <strong className="progress__part">{partLabel}</strong>
-          <span className="progress__song">{position}</span>
-        </span>
-        <span className="progress__bars" aria-hidden="true">
-          {part && n > 0 && (
-            <span className="progress__parts">
-              {part.slides.map((_, i) => (
-                <span key={i} className={i <= part.index ? 'is-done' : undefined} />
-              ))}
-            </span>
-          )}
-          <span className="progress__setlist">
-            <span style={{ width: `${((index + (n ? (part!.index + 1) / n : 1)) / Math.max(1, entries.length)) * 100}%` }} />
+          <span className="progress__song">
+            {position}
+            {next ? ` · Sigue: ${next}` : ' · Última'}
           </span>
         </span>
+        {part && n > 1 ? (
+          // The map as the band's cross: one bar per part, as long as the part; the current one white, shifted out.
+          <span className="progress__stack" aria-hidden="true">
+            {part.slides.map((s, i) => (
+              <span
+                key={i}
+                className={i === part.index ? 'is-here' : i < part.index ? 'is-done' : undefined}
+                style={{ width: `${40 + Math.min(60, s.lines.filter((l) => l.type === 'lyric').length * 10)}%` }}
+              />
+            ))}
+          </span>
+        ) : (
+          <span className="progress__bars" aria-hidden="true">
+            <span className="progress__setlist">
+              <span style={{ width: `${((index + 1) / Math.max(1, entries.length)) * 100}%` }} />
+            </span>
+          </span>
+        )}
       </button>
       <LockButton onLock={onLock} />
       {map && (

@@ -5,13 +5,14 @@ import { FullscreenButton, canGoFull } from '../../components/FullscreenButton';
 import { useBandLogo } from '../../cloud/logo';
 import { Icon } from '../../components/Icon';
 import { Menu } from '../../components/Menu';
+import { Avatar } from '../../components/Avatar';
 import { explain, useCloud } from '../../cloud/CloudProvider';
 import { useRoom } from '../../live/LiveProvider';
 import { LeaderChanged, type LivePos } from '../../live/room';
 import { COUNT_BPM, bandSignals, countBeats } from '../../live/signals';
 import { clampBpm, parseBpm } from '../../chordpro/tempo';
 import { CueOverlay, SignalsDialog } from '../Cue';
-import { type SetlistEntry, songLabel } from '../../data/library';
+import type { SetlistEntry } from '../../data/library';
 import { navigate, useLibrary, useLive } from '../hooks';
 import { LiveStrip } from '../LiveStrip';
 import { useMoveDirection } from '../motion';
@@ -164,67 +165,56 @@ export function LivePage() {
     return <p className="empty">Esperando el setlist de la sala…</p>;
   }
 
-  const next = entries[at.index + 1];
   const leaderHere = state.peers.some((p) => p.userId === leaderId);
   const others = state.peers.filter((p) => p.userId !== myId).map((p) => p.name);
 
   return (
     <div className="page page--song live" data-dir={dir}>
       <header className="page__header page__header--sticky page__header--strip live__header">
-        <a className="icon-btn" href={`#/setlist/${setlistId}`} aria-label="Salir de la sala">
-          <Icon name="close" />
-        </a>
-        <button
-          className="icon-btn icon-btn--filled"
-          aria-label="Canción anterior"
-          disabled={at.index === 0}
-          onClick={() => move(at.index - 1, 0)}
-        >
-          <Icon name="prev" size={20} />
-        </button>
-        {logo && <img className="band-logo live__logo" src={logo} alt="" />}
-        <div className="player__title">
-          <strong>
-            {at.index + 1}/{entries.length} · {data.setlist.name}
-          </strong>
-          <small>{next ? `Sigue: ${songLabel(next.song)}` : 'Última canción'}</small>
+        <div className="live__top">
+          <span className="live-badge" role="status">
+            EN VIVO
+          </span>
+          {logo && <img className="band-logo live__logo" src={logo} alt="" />}
+          <span className="live__setlist">{data.setlist.name}</span>
+          <button
+            className="icon-btn"
+            aria-label="Modo escenario"
+            title="Modo escenario"
+            aria-pressed={stage.on}
+            onClick={stage.toggle}
+          >
+            <Icon name="stage" />
+          </button>
+          {(!stage.on || canGoFull()) && <FullscreenButton />}
+          <Menu
+            label="Más opciones de la sala"
+            items={[{ label: 'Cerrar la sala', icon: 'close', danger: true, onSelect: closeRoom }]}
+          />
+          <a className="icon-btn" href={`#/setlist/${setlistId}`} aria-label="Salir de la sala">
+            <Icon name="close" />
+          </a>
         </div>
-        <button
-          className="icon-btn icon-btn--filled"
-          aria-label="Canción siguiente"
-          disabled={at.index >= entries.length - 1}
-          onClick={() => move(at.index + 1, 0)}
-        >
-          <Icon name="next" size={20} />
-        </button>
-        <button
-          className="icon-btn"
-          aria-label="Modo escenario"
-          title="Modo escenario"
-          aria-pressed={stage.on}
-          onClick={stage.toggle}
-        >
-          <Icon name="stage" />
-        </button>
-        {(!stage.on || canGoFull()) && <FullscreenButton />}
-        <Menu
-          label="Más opciones de la sala"
-          items={[{ label: 'Cerrar la sala', icon: 'close', danger: true, onSelect: closeRoom }]}
-        />
 
         <div className="live__status" role="status" aria-live="polite">
+          <span className="live__people" aria-label={others.length ? `Con vos: ${others.join(', ')}` : 'Solo vos en la sala'}>
+            {[...(room.me.name ? [room.me.name] : []), ...others].slice(0, 6).map((n, i) => (
+              <Avatar key={`${n}-${i}`} name={n} size={28} ring={(i === 0 && leading) || (!leading && n === session.leaderName)} />
+            ))}
+          </span>
           <span className={`live__who${leaderId ? ' live__who--lead' : ''}`}>
             {leaderId ? (
-              <>
-                Dirige: <strong>{leading ? 'vos' : session.leaderName || 'alguien'}</strong>
-                {!leading && !leaderHere && <small> · no está conectado</small>}
-              </>
+              leading ? (
+                'Dirigís vos'
+              ) : (
+                <>
+                  Dirige <strong>{session.leaderName || 'alguien'}</strong>
+                  {!leaderHere && <small> · no está conectado</small>}
+                </>
+              )
             ) : (
               'Sin director: cada uno navega libre'
             )}
-          </span>
-          <span className="live__people" title={others.join(', ')}>
-            {others.length ? `Con vos: ${others.join(', ')}` : 'Solo vos en la sala'}
           </span>
           {!state.connected && <span className="live__offline">Sin conexión: seguís con lo que tenés</span>}
           <div className="live__actions">
@@ -250,13 +240,31 @@ export function LivePage() {
             )}
           </div>
         </div>
-        <LiveStrip
-          entries={entries}
-          index={at.index}
-          part={{ index: part, slides }}
-          onJump={move}
-          onLock={() => setLocked(true)}
-        />
+        <div className="live__nav stage-keep">
+          <button
+            className="icon-btn"
+            aria-label="Canción anterior"
+            disabled={at.index === 0}
+            onClick={() => move(at.index - 1, 0)}
+          >
+            <Icon name="prev" size={18} />
+          </button>
+          <LiveStrip
+            entries={entries}
+            index={at.index}
+            part={{ index: part, slides }}
+            onJump={move}
+            onLock={() => setLocked(true)}
+          />
+          <button
+            className="icon-btn"
+            aria-label="Canción siguiente"
+            disabled={at.index >= entries.length - 1}
+            onClick={() => move(at.index + 1, 0)}
+          >
+            <Icon name="next" size={18} />
+          </button>
+        </div>
       </header>
       {locked && <LockOverlay onUnlock={() => setLocked(false)} />}
       <CueOverlay cue={state.cue} me={myId} />
@@ -277,10 +285,10 @@ export function LivePage() {
             <div className="live-lead" role="group" aria-label="Dirigir">
               <div className="live-parts">
                 <button className="live-parts__btn" disabled={isFirst} onClick={prevPart}>
-                  <Icon name="left" size={22} /> Parte anterior
+                  <Icon name="up" size={22} /> Parte anterior
                 </button>
                 <button className="live-parts__btn live-parts__btn--next" disabled={isLast} onClick={nextPart}>
-                  Parte siguiente <Icon name="right" size={22} />
+                  <Icon name="down" size={24} /> Parte siguiente
                 </button>
               </div>
               <div className="live-cues">

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FullscreenButton, canGoFull } from '../../components/FullscreenButton';
 import { Icon } from '../../components/Icon';
-import { songLabel } from '../../data/library';
 import { LiveStrip } from '../LiveStrip';
 import { useMoveDirection } from '../motion';
 import { LockOverlay } from '../Lock';
@@ -43,42 +42,40 @@ export function PlayerPage({ setlistId, index }: { setlistId: string; index: num
   if (!data) return null;
   const entry = data.entries[index];
   if (!entry) return <p className="empty">No hay canción en esa posición.</p>;
-  const next = data.entries[index + 1];
 
   return (
     <div className="page page--song player" data-dir={dir}>
-      <header className="page__header page__header--sticky page__header--strip">
-        <a className="icon-btn" href={`#/setlist/${setlistId}`} aria-label="Salir del modo en vivo">
-          <Icon name="close" />
-        </a>
-        <button className="icon-btn icon-btn--filled" aria-label="Canción anterior" disabled={index === 0} onClick={() => go(index - 1)}>
-          <Icon name="prev" size={20} />
-        </button>
-        <div className="player__title">
-          <strong>
-            {index + 1}/{count} · {data.setlist?.name}
-          </strong>
-          <small>{next ? `Sigue: ${songLabel(next.song)}` : 'Última canción'}</small>
+      <header className="page__header page__header--sticky page__header--strip live__header">
+        <div className="live__top">
+          <a className="icon-btn" href={`#/setlist/${setlistId}`} aria-label="Salir del modo en vivo">
+            <Icon name="close" />
+          </a>
+          <span className="live__setlist">{data.setlist?.name}</span>
+          <button
+            className="icon-btn"
+            aria-label="Modo escenario"
+            title="Modo escenario"
+            aria-pressed={stage.on}
+            onClick={stage.toggle}
+          >
+            <Icon name="stage" />
+          </button>
+          {(!stage.on || canGoFull()) && <FullscreenButton />}
         </div>
-        <button
-          className="icon-btn icon-btn--filled"
-          aria-label="Canción siguiente"
-          disabled={index >= count - 1}
-          onClick={() => go(index + 1)}
-        >
-          <Icon name="next" size={20} />
-        </button>
-        <button
-          className="icon-btn"
-          aria-label="Modo escenario"
-          title="Modo escenario"
-          aria-pressed={stage.on}
-          onClick={stage.toggle}
-        >
-          <Icon name="stage" />
-        </button>
-        {(!stage.on || canGoFull()) && <FullscreenButton />}
-        <LiveStrip entries={data.entries} index={index} onJump={go} onLock={() => setLocked(true)} />
+        <div className="live__nav stage-keep">
+          <button className="icon-btn" aria-label="Canción anterior" disabled={index === 0} onClick={() => go(index - 1)}>
+            <Icon name="prev" size={18} />
+          </button>
+          <LiveStrip entries={data.entries} index={index} onJump={go} onLock={() => setLocked(true)} />
+          <button
+            className="icon-btn"
+            aria-label="Canción siguiente"
+            disabled={index >= count - 1}
+            onClick={() => go(index + 1)}
+          >
+            <Icon name="next" size={18} />
+          </button>
+        </div>
       </header>
       {locked && <LockOverlay onUnlock={() => setLocked(false)} />}
       <SongPanel

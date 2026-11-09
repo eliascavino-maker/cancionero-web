@@ -3293,3 +3293,239 @@ html.stage-open body {
   padding-top: 8px;
   padding-bottom: 4px;
 }
+
+/* ----- live room and ▶ Tocar: "professional control" up top, the part big */
+.live__header {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 4px;
+  padding-top: calc(6px + env(safe-area-inset-top));
+}
+.live__top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.live-badge {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 14px;
+  background: var(--vivo);
+  color: var(--sobre-vivo);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.live-badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: on-air 2s ease-in-out infinite;
+}
+@keyframes on-air {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-badge::before {
+    animation: none;
+  }
+}
+.live__setlist {
+  flex: 1;
+  min-width: 0;
+  padding: 0 6px;
+  font-family: var(--font-marca);
+  font-size: 1.2rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.live__status {
+  flex: none;
+  gap: 6px 12px;
+  padding: 8px 0 4px;
+}
+.live__people {
+  display: inline-flex;
+  min-width: 0;
+  padding: 4px;
+  overflow: visible;
+}
+.live__people .avatar + .avatar {
+  margin-left: -6px;
+  box-shadow: 0 0 0 2px var(--fondo);
+}
+.live__people .avatar--lead + .avatar,
+.live__people .avatar + .avatar--lead {
+  margin-left: 2px;
+}
+.live__who {
+  color: var(--grafito);
+  font-weight: 600;
+}
+.live__who::before,
+.live__who--lead::before {
+  display: none;
+}
+.live__who strong {
+  font-family: var(--font-letra);
+  font-size: 1rem;
+  color: var(--tinta);
+}
+.live__who small {
+  color: var(--humo);
+}
+.live__offline {
+  color: var(--grafito);
+}
+.live__actions {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+}
+.live__actions .btn {
+  flex: 0 1 auto;
+  min-height: 40px;
+}
+.live__actions .btn--primary {
+  flex: 1 1 100%;
+  min-height: 52px;
+}
+.btn--primary.live__lead {
+  font-family: var(--font-letra);
+  font-size: 1.05rem;
+}
+
+.live__nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.live__nav > .icon-btn {
+  flex: none;
+  color: var(--grafito);
+}
+.live__nav .live-strip {
+  flex: 1;
+  min-width: 0;
+}
+.progress {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--r-boton);
+  background: none;
+}
+.progress:hover {
+  background: var(--tecla);
+}
+.progress__text {
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.progress__part {
+  font-family: var(--font-marca);
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--tinta);
+  max-width: 100%;
+}
+.progress__song {
+  color: var(--humo);
+  font-weight: 500;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The band's cross as the song map: stacked bars, the current one white and out. */
+.progress__stack {
+  flex: none;
+  width: 52px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.progress__stack > span {
+  height: 4px;
+  border-radius: 1px;
+  background: var(--tecla-luz);
+  transition: background-color var(--t-parte) var(--ease), transform var(--t-parte) var(--ease);
+}
+.progress__stack > .is-done {
+  background: var(--humo);
+}
+.progress__stack > .is-here {
+  background: var(--tinta);
+  transform: translateX(8px);
+}
+.progress__bars {
+  width: 52px;
+  flex: none;
+}
+
+/* The leader's buttons: big, one hand, no doubt about which is "next". */
+.live-lead {
+  gap: 8px;
+}
+.live-cues__btn {
+  min-height: 52px;
+  border-color: var(--filo-fuerte);
+  background: none;
+  font-family: var(--font-letra);
+}
+.live-parts {
+  grid-template-columns: 2fr 3fr;
+  gap: 8px;
+}
+.live-parts__btn {
+  flex-direction: column;
+  gap: 2px;
+  min-height: 84px;
+  border: 0;
+  border-radius: var(--r-panel);
+  background: var(--tecla-alta);
+  font-family: var(--font-letra);
+  font-size: 1.05rem;
+}
+.live-parts__btn--next {
+  background: var(--accion);
+  color: var(--sobre-accion);
+  font-size: 1.15rem;
+}
+.signals__btn {
+  font-family: var(--font-letra);
+}
+.cue__beat,
+.cue__sign {
+  font-family: var(--font-marca);
+}
+.cue__beat {
+  color: var(--tinta);
+}
+.cue__sign {
+  letter-spacing: -0.01em;
+  animation: sign-in 0.28s var(--ease);
+}
+@keyframes sign-in {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(-12px);
+  }
+}
