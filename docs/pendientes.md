@@ -40,3 +40,20 @@ Migración 006 (señales de la banda). Lo demás va por broadcast en `live:<band
   con límite de uso). Si no se puede leer, ofrecer pegar el texto.
 - [x] Exportar PDF (canción y setlist con portada), sin librerías: ventana de imprimir.
 - [x] Logo de la banda en Storage. Antes: crear «Exportar PDF».
+
+## Rediseño (dirección A, «Cancionero»)
+
+Sistema en `docs/design-system.md`. Sin migraciones: solo interfaz.
+
+- [x] 1. Tokens blanco y negro, Tinos, color solo funcional, navegación de 4 secciones
+  (barra lateral desde 900 px). Arreglo: controles de ▶ Tocar fuera de la pantalla.
+- [x] 2. Componentes: menú/hoja, diálogos como hojas en el celular, toasts con
+  Deshacer, avatares, esqueletos, búsqueda global (Ctrl K). Biblioteca y setlist.
+- [x] 3. Vista de canción: fila de datos, mapa de partes, voces con raya fina,
+  controles en una fila que se esconden al bajar.
+- [x] 4. Sala en vivo, ▶ Tocar y modo escenario.
+- [x] 5. Banda y ajustes por secciones.
+- [x] 6. Inicio, splash e ícono (escudo EC provisorio).
+- [ ] Cambiar el escudo provisorio por el SVG de la banda (`src/components/BrandMark.tsx`
+  y `public/icon.svg`; después regenerar los PNG).
+- [ ] Favoritas: hoy quedan en el dispositivo; llevarlas a la cuenta como el capo.
