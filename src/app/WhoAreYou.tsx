@@ -85,7 +85,7 @@ export function MeCard() {
   const sings = !!state.me?.sings;
   return (
     <section className="band__section who-card">
-      <h2 className="band__title">Vos</h2>
+      <h3 className="band__title">Vos</h3>
       <MusicianPicker
         musicians={musicians}
         current={state.chosen ? (state.me?.name ?? null) : undefined}

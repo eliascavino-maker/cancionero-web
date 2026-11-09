@@ -5,6 +5,8 @@ import { explain, useCloud } from '../../cloud/CloudProvider';
 import type { SyncStatus } from '../../cloud/sync';
 import { useLibrary, useLive } from '../hooks';
 import { MeCard } from '../WhoAreYou';
+import { DataSettings, Group, GroupIndex, ReadingSettings, StageSetting, ThemeSetting } from '../Settings';
+import { Avatar } from '../../components/Avatar';
 import { SignalsEditor } from '../SignalsEditor';
 import { bandSignals } from '../../live/signals';
 import { removeLogo, setLogo, shrinkLogo, useBandLogo } from '../../cloud/logo';
@@ -42,7 +44,7 @@ function useReloadOnline(load: () => Promise<unknown>) {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="band__section">
-      <h2 className="band__title">{title}</h2>
+      <h3 className="band__title">{title}</h3>
       {children}
     </section>
   );
@@ -66,53 +68,76 @@ export function BandPage({ invite }: { invite?: string }) {
   const cloud = useCloud();
   const logo = useBandLogo();
 
-  let body: ReactNode;
+  const band = cloud.band;
+  const owner = band?.role === 'owner';
+  let bandBody: ReactNode;
+  let accountBody: ReactNode = null;
   if (!cloud.configured) {
-    body = <p className="empty">Esta copia de la app no tiene servidor: todo queda en este dispositivo.</p>;
+    bandBody = <p className="band__line">Esta copia de la app no tiene servidor: todo queda en este dispositivo.</p>;
   } else if (!cloud.ready) {
-    body = null;
+    bandBody = null;
   } else if (!cloud.user) {
-    body = (
-      <>
-        <p className="band__lead">
-          Con una cuenta, las canciones y los setlists de la banda están en todos tus dispositivos y en los de
-          los demás.
-        </p>
-        <AuthForm />
-      </>
+    bandBody = (
+      <p className="band__lead">
+        Con una cuenta, las canciones y los setlists de la banda están en todos tus dispositivos y en los de los
+        demás. Entrá en «Cuenta».
+      </p>
     );
-  } else if (!cloud.band) {
-    body = (
-      <>
-        <JoinOrCreate invite={invite} />
-        <Account />
-      </>
-    );
+    accountBody = <AuthForm />;
+  } else if (!band) {
+    bandBody = <JoinOrCreate invite={invite} />;
+    accountBody = <Account />;
   } else {
-    body = (
+    bandBody = (
       <>
-        {invite && <p className="band__lead">Ya estás en «{cloud.band.bandName}».</p>}
+        {invite && <p className="band__lead">Ya estás en «{band.bandName}».</p>}
         {cloud.needsLink && <LinkChoice />}
-        {cloud.sync && <SyncCard status={cloud.sync} />}
-        <MeCard />
         <Members />
-        {cloud.band.role === 'owner' && <Invites />}
-        {cloud.band.role === 'owner' && <Signals />}
-        {cloud.band.role === 'owner' && cloud.band.logoPath !== undefined && <Logo />}
-        <Trash />
-        <Account />
+        {owner && <Invites />}
+        {owner && band.logoPath !== undefined && <Logo />}
       </>
     );
+    accountBody = <Account />;
   }
+
+  const groups = [
+    { id: 'vista', title: 'Vista' },
+    { id: 'lectura', title: 'Lectura' },
+    { id: 'vivo', title: 'En vivo' },
+    { id: 'banda', title: 'Banda' },
+    { id: 'cuenta', title: 'Cuenta' },
+    { id: 'datos', title: 'Datos' },
+  ];
 
   return (
     <div className="page band">
       <header className="page__header">
         {logo && <img className="band-logo" src={logo} alt="" />}
-        <h1>{cloud.band?.bandName ?? 'Banda'}</h1>
+        <h1>{band?.bandName ?? 'Banda'}</h1>
       </header>
-      {body}
-      {!(cloud.configured && cloud.user && cloud.band) && cloud.ready && <MeCard />}
+      <GroupIndex groups={groups} />
+      {cloud.sync && band && <SyncCard status={cloud.sync} />}
+      <Group id="vista" title="Vista">
+        <MeCard />
+        <ThemeSetting />
+      </Group>
+      <Group id="lectura" title="Lectura">
+        <ReadingSettings />
+      </Group>
+      <Group id="vivo" title="En vivo">
+        <StageSetting />
+        {owner && <Signals />}
+      </Group>
+      <Group id="banda" title="Banda">
+        {bandBody}
+      </Group>
+      <Group id="cuenta" title="Cuenta">
+        {accountBody ?? <p className="band__line">Sin servidor no hay cuentas.</p>}
+      </Group>
+      <Group id="datos" title="Datos">
+        <DataSettings />
+        {band && <Trash />}
+      </Group>
     </div>
   );
 }
@@ -429,6 +454,7 @@ function Members() {
         <ul className="list">
           {members.map((m) => (
             <li key={m.user_id} className="card">
+              <Avatar name={m.display_name || '?'} size={36} />
               <span className="card__main">
                 <span className="card__title">
                   {m.display_name || 'Sin nombre'}

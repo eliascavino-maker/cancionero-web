@@ -10,6 +10,7 @@ import { readDocument } from '../../importer/docx';
 import { useCloud } from '../../cloud/CloudProvider';
 import type { SongRecord } from '../../data/library';
 import { AddToSetlistDialog } from '../AddToSetlist';
+import { exportBackup, importBackup } from '../backup';
 import { BandSongsDialog } from '../BandSongsDialog';
 import { ImportChartDialog } from '../ImportChartDialog';
 import { openSearch } from '../SearchPalette';
@@ -97,31 +98,6 @@ export function LibraryPage() {
     toast(`Hiciste una copia de «${s.title}».`, { label: 'Abrir', run: () => navigate(`/song/${id}`) });
   };
 
-  const exportBackup = async () => {
-    const data = await lib.exportAll();
-    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `cancionero-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const importBackup = async (file: File) => {
-    const ok = await askConfirm(
-      cloud.band
-        ? `Agrega sus canciones y setlists a «${cloud.band.bandName}». No reemplaza nada.`
-        : 'Reemplaza todas las canciones y setlists de este navegador.',
-      { title: '¿Importar la copia?', ok: 'Importar', danger: !cloud.band },
-    );
-    if (!ok) return;
-    try {
-      await lib.importAll(JSON.parse(await file.text()));
-    } catch (e) {
-      await tell(e instanceof Error ? e.message : 'No se pudo importar el archivo.');
-    }
-  };
-
   // ----- what the list shows
   const arrangementsOf = (id: string) => (groups?.get(id)?.length ?? 1) - 1;
   const inSetlists = (id: string) => setlists?.filter((s) => s.songs.has(id)).map((s) => s.name) ?? [];
@@ -182,7 +158,7 @@ export function LibraryPage() {
                 onSelect: () => setSelected(new Set()),
                 hidden: !cloud.canDeleteSongs,
               },
-              { label: 'Exportar respaldo', icon: 'download', onSelect: exportBackup },
+              { label: 'Exportar respaldo', icon: 'download', onSelect: () => exportBackup(lib) },
               { label: 'Importar respaldo', icon: 'upload', onSelect: () => fileInput.current?.click() },
               {
                 label: prefs.theme === 'dark' ? 'Tema claro' : 'Tema oscuro',
@@ -202,7 +178,7 @@ export function LibraryPage() {
             hidden
             onChange={(e) => {
               const f = e.target.files?.[0];
-              if (f) importBackup(f);
+              if (f) importBackup(lib, f, cloud.band?.bandName);
               e.target.value = '';
             }}
           />
