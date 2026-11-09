@@ -125,7 +125,7 @@ export function LibraryPage() {
                     closeMenu();
                     setSelected(new Set());
                   }}
-                  style={{ color: 'var(--poncho)' }}
+                  style={{ color: 'var(--error)' }}
                 >
                   <Icon name="trash" /> Eliminar canciones
                 </button>

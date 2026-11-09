@@ -6,7 +6,7 @@
 
 .pdf__hint {
   margin: 0 0 14px;
-  color: var(--ceniza);
+  color: var(--grafito);
   font-size: 0.92rem;
 }
 .pdf__view {
@@ -22,7 +22,7 @@
 .pdf__check input {
   width: 20px;
   height: 20px;
-  accent-color: var(--tungsteno);
+  accent-color: var(--tinta);
 }
 
 @media print {
@@ -43,17 +43,19 @@
 
 .print-sheet {
   /* Paper: every screen color goes to black or gray. */
-  --telon: #fff;
-  --tarima: #fff;
-  --case: #fff;
-  --case-alto: #f2f2f2;
+  --fondo: #fff;
+  --hoja: #fff;
+  --tecla: #fff;
+  --tecla-alta: #f2f2f2;
+  --tecla-luz: #e6e6e6;
   --hueco: #fff;
-  --papel: #000;
-  --ceniza: #444;
+  --tinta: #000;
+  --grafito: #444;
   --humo: #666;
   --filo: #bbb;
   --filo-fuerte: #888;
-  --tungsteno: #000;
+  --acorde: #000;
+  --acorde-suave: #fff;
   --foco: #fff;
   background: #fff;
   color: #000;
@@ -110,7 +112,7 @@
 }
 .print-cover__band {
   margin: 0;
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-size: 14pt;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -119,7 +121,7 @@
 }
 .print-cover__title {
   margin: 2mm 0 10mm;
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-size: 30pt;
   line-height: 1.1;
 }
@@ -144,13 +146,13 @@
   content: counter(n) '.';
   min-width: 8mm;
   color: #666;
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-weight: 700;
 }
 .print-cover__list li > :first-of-type {
   flex: 1;
 }
 .print-cover__key {
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-weight: 800;
 }

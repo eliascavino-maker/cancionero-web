@@ -8,8 +8,10 @@ import { LibraryContext } from './app/hooks';
 import { Library } from './data/library';
 import '@fontsource-variable/atkinson-hyperlegible-next';
 import '@fontsource-variable/atkinson-hyperlegible-next/wght-italic.css';
-import '@fontsource/barlow-semi-condensed/600.css';
-import '@fontsource/barlow-semi-condensed/700.css';
+import '@fontsource/tinos/latin-400.css';
+import '@fontsource/tinos/latin-400-italic.css';
+import '@fontsource/tinos/latin-700.css';
+import '@fontsource/tinos/latin-700-italic.css';
 import './styles.css';
 
 // Ask the browser not to clear the library when space runs low.

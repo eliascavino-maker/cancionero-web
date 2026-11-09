@@ -94,7 +94,7 @@ export interface NoteEdit {
 // Keeps an empty cell one line tall so rows stay aligned.
 const ZWSP = '​';
 
-const memberStyle = (color: string | undefined) => ({ '--m': color ?? 'var(--ceniza)' }) as CSSProperties;
+const memberStyle = (color: string | undefined) => ({ '--m': color ?? 'var(--grafito)' }) as CSSProperties;
 
 /** A band member's name in their color. */
 export function MemberName({ name }: { name: string }) {

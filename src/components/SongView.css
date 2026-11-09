@@ -8,7 +8,7 @@
   margin: 4px 0 1.2em;
 }
 .cp-title {
-  font-family: var(--font-cartel);
+  font-family: var(--font-marca);
   font-size: 1.75em;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -19,7 +19,7 @@
 .cp-subtitle {
   margin: 0.25em 0 0;
   font-size: 0.8em;
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 .cp-info {
   display: flex;
@@ -34,16 +34,16 @@
 .cp-info li {
   padding: 4px 12px;
   border-radius: var(--r-chico);
-  background: var(--case);
-  color: var(--ceniza);
+  background: var(--tecla);
+  color: var(--grafito);
 }
 .cp-info li.cp-info__capo {
-  color: var(--tungsteno);
+  color: var(--acorde);
 }
 .cp-info li.cp-info__key {
-  background: var(--foco);
-  color: var(--tungsteno);
-  font-family: var(--font-cartel);
+  background: var(--acorde-suave);
+  color: var(--acorde);
+  font-family: var(--font-letra);
   font-weight: 700;
   font-size: 1.12em;
 }
@@ -57,18 +57,17 @@
   padding: 0.5em 12px 0.6em;
   margin-inline: -12px;
   border-radius: 14px;
-  background: radial-gradient(130% 150% at 0% 0%, var(--foco), color-mix(in srgb, var(--foco) 30%, transparent) 55%, transparent 85%);
 }
 .cp-label {
   display: inline-block;
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-size: max(14px, 0.66em);
   font-weight: 600;
   color: var(--humo);
   margin-bottom: 0.25em;
 }
 .cp-section--chorus .cp-label {
-  color: var(--tungsteno);
+  color: var(--tinta);
 }
 
 .cp-line {
@@ -92,11 +91,11 @@
   flex-direction: column;
 }
 .cp-chord {
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-weight: 700;
   font-size: 0.95em;
   line-height: 1.15;
-  color: var(--tungsteno);
+  color: var(--acorde);
   padding-right: 0.35em;
 }
 .cp-chord--empty {
@@ -110,8 +109,8 @@
   font-weight: 600;
   padding: 0.3em 0.8em;
   border-radius: var(--r-chico);
-  background: var(--case);
-  color: var(--ceniza);
+  background: var(--tecla);
+  color: var(--grafito);
 }
 .cp-comment--italic {
   font-style: italic;
@@ -142,22 +141,22 @@
   align-self: flex-start;
   margin: 0 0.15em 0 0;
   padding: 0 0.2em;
-  border: 1px dashed color-mix(in srgb, var(--tungsteno) 55%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--acorde) 55%, transparent);
   border-radius: 6px;
   background: none;
   font: inherit;
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-weight: 700;
   font-size: 0.95em;
   line-height: 1.15;
-  color: var(--tungsteno);
+  color: var(--acorde);
   cursor: pointer;
 }
 .cp-chord--selected {
   border-style: solid;
-  border-color: var(--tungsteno);
-  background: var(--tungsteno);
-  color: var(--sobre-tungsteno);
+  border-color: var(--acorde);
+  background: var(--acorde);
+  color: var(--sobre-acorde);
 }
 
 /* Tappable tempo chip: opens the BPM editor. */
@@ -189,15 +188,15 @@
   padding: 0;
   font-size: max(12px, 0.55em);
   font-weight: 600;
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 .cp-parts-btn {
   margin-bottom: 0.35em;
   padding: 2px 10px;
-  border: 1px dashed var(--tungsteno);
+  border: 1px dashed var(--tinta);
   border-radius: 999px;
   background: none;
-  color: var(--tungsteno);
+  color: var(--tinta);
   font: inherit;
   font-size: max(12px, 0.5em);
   font-weight: 700;
@@ -210,7 +209,7 @@
   padding: 0.05em 0.6em;
   border-radius: 999px;
   background: color-mix(in srgb, var(--m) 18%, transparent);
-  color: color-mix(in srgb, var(--m) 75%, var(--papel));
+  color: color-mix(in srgb, var(--m) 75%, var(--tinta));
   font-weight: 700;
 }
 .cp-parts li {
@@ -224,7 +223,7 @@
   margin-right: 2px;
 }
 .cp-parts__all {
-  color: var(--papel);
+  color: var(--tinta);
 }
 
 /* Notes above the lyrics: [*Silencio largo]. They float, so they never push words apart. */
@@ -246,10 +245,10 @@
   font-style: italic;
   font-weight: 600;
   line-height: 1.5;
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 .cp-note__member {
-  color: color-mix(in srgb, var(--m) 80%, var(--papel));
+  color: color-mix(in srgb, var(--m) 80%, var(--tinta));
   font-style: normal;
   font-weight: 800;
 }
@@ -257,22 +256,22 @@
   padding: 0 0.4em;
   border: 1px dashed var(--humo);
   border-radius: 6px;
-  background: var(--telon);
+  background: var(--fondo);
   cursor: pointer;
 }
 .cp-note--selected {
   border-style: solid;
-  border-color: var(--tungsteno);
+  border-color: var(--tinta);
 }
 .cp-word--tappable {
   border-radius: 6px;
   cursor: pointer;
-  outline: 1px dashed color-mix(in srgb, var(--ceniza) 45%, transparent);
+  outline: 1px dashed color-mix(in srgb, var(--grafito) 45%, transparent);
   outline-offset: 1px;
 }
 .cp-word--tappable:hover,
 .cp-word--tappable:focus-visible {
-  background: var(--case-alto);
+  background: var(--tecla-alta);
 }
 
 /* Who sings: a colored bracket "[" to the left of the lines, with the name. */
@@ -313,7 +312,7 @@
   letter-spacing: 0.04em;
   line-height: 1;
   white-space: nowrap;
-  color: color-mix(in srgb, var(--m) 80%, var(--papel));
+  color: color-mix(in srgb, var(--m) 80%, var(--tinta));
 }
 .cp-bracket--backing .cp-bracket__name {
   font-style: italic;
@@ -326,7 +325,7 @@
   padding: 0 0.3em;
   border-radius: 8px;
   cursor: pointer;
-  outline: 1px dashed color-mix(in srgb, var(--ceniza) 40%, transparent);
+  outline: 1px dashed color-mix(in srgb, var(--grafito) 40%, transparent);
   outline-offset: -1px;
 }
 .cp-pick + .cp-pick,
@@ -334,7 +333,7 @@
   margin-top: 2px;
 }
 .cp-pick--selected {
-  outline: 2px solid var(--tungsteno);
+  outline: 2px solid var(--anillo);
   background: var(--foco);
 }
 
@@ -364,17 +363,17 @@
   transition: background-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
 }
 .cp-section--now {
-  background: color-mix(in srgb, var(--tungsteno) 9%, transparent);
-  box-shadow: inset 4px 0 0 var(--tungsteno);
+  background: color-mix(in srgb, var(--tinta) 9%, transparent);
+  box-shadow: inset 4px 0 0 var(--tinta);
 }
 .cp-section--now .cp-label {
-  color: var(--tungsteno);
+  color: var(--tinta);
 }
 .cp-section--tappable {
   cursor: pointer;
 }
 .cp-section--tappable:not(.cp-section--now):hover {
-  background: color-mix(in srgb, var(--papel) 4%, transparent);
+  background: color-mix(in srgb, var(--tinta) 4%, transparent);
 }
 
 /* Indications: {x_cue: 4 compases de intro}. Own row, never over the lyrics. */
@@ -386,25 +385,25 @@
   max-width: 100%;
   margin: 0.2em 0 0.3em;
   padding: 0.15em 0.7em 0.15em 0.55em;
-  border-left: 3px solid var(--tungsteno);
+  border-left: 3px solid var(--tinta);
   border-radius: 0 var(--r-chico) var(--r-chico) 0;
-  background: color-mix(in srgb, var(--tungsteno) 10%, transparent);
-  font-family: var(--font-cartel);
+  background: color-mix(in srgb, var(--tinta) 10%, transparent);
+  font-family: var(--font-letra);
   font-size: max(13px, 0.66em);
   font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1.35;
-  color: var(--papel);
+  color: var(--tinta);
 }
 .cp-cue::before {
   content: '▸';
-  color: var(--tungsteno);
+  color: var(--tinta);
 }
 .cp-cue--editable {
-  border-top: 1px dashed var(--tungsteno);
-  border-right: 1px dashed var(--tungsteno);
-  border-bottom: 1px dashed var(--tungsteno);
-  font-family: var(--font-cartel);
+  border-top: 1px dashed var(--tinta);
+  border-right: 1px dashed var(--tinta);
+  border-bottom: 1px dashed var(--tinta);
+  font-family: var(--font-letra);
   cursor: pointer;
 }
 .cp-cue-add {
@@ -423,7 +422,7 @@
   min-width: 0;
 }
 .cp-harmony {
-  color: color-mix(in srgb, var(--h, #c4b5fd) 80%, var(--papel));
+  color: color-mix(in srgb, var(--h, #c4b5fd) 80%, var(--tinta));
   font-style: italic;
   text-decoration: underline dotted color-mix(in srgb, var(--h, #c4b5fd) 85%, transparent);
   text-decoration-thickness: 0.09em;
@@ -439,5 +438,5 @@
   font-style: italic;
   font-weight: 700;
   white-space: nowrap;
-  color: color-mix(in srgb, var(--h, #c4b5fd) 80%, var(--papel));
+  color: color-mix(in srgb, var(--h, #c4b5fd) 80%, var(--tinta));
 }

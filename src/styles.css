@@ -1,66 +1,88 @@
-/* Telón: the stage at night. Black curtain, paper lyrics, tungsten chords.
-   Read from a music stand ~1.5 m away, in low light, without glare. */
+/* En Contra: black and white like the band's mark. Color only when it says
+   something: chords, who sings, live / offline / error / ok, the leader's signals.
+   Read from a music stand ~1.5 m away, in low light. See docs/design-system.md. */
 :root {
-  /* Surfaces, from the curtain up. Same warm hue, only lightness changes. */
-  --telon: #131011;
-  --tarima: #1a1516;
-  --case: #211b1c;
-  --case-alto: #2a2324;
-  --case-luz: #352d2e;
-  /* Inset fields (search, inputs): darker than the curtain. */
-  --hueco: #0d0a0b;
+  /* Surfaces, from the floor up. One neutral hue, only lightness changes. */
+  --fondo: #000000;
+  --hoja: #121212;
+  --tecla: #1c1c1c;
+  --tecla-alta: #262626;
+  --tecla-luz: #333333;
+  /* Inset fields (search, inputs). */
+  --hueco: #121212;
 
-  /* Text: paper, not pure white, so it doesn't glow in the dark. */
-  --papel: #efe7da;
-  --ceniza: #b3a89f;
-  --humo: #958a84;
+  /* Text, four levels. */
+  --tinta: #ffffff;
+  --grafito: #bdbdbd;
+  --humo: #8a8a8a;
+  --tenue: #5c5c5c;
 
   /* Hairlines. */
-  --filo: rgb(239 231 218 / 0.09);
-  --filo-fuerte: rgb(239 231 218 / 0.16);
+  --filo: rgb(255 255 255 / 0.11);
+  --filo-fuerte: rgb(255 255 255 / 0.2);
+  /* A neutral light: selected rows, the part being played. */
+  --foco: rgb(255 255 255 / 0.07);
 
-  /* The one accent: chords, the key, the main action. */
-  --tungsteno: #ffaf3a;
-  --tungsteno-vivo: #ffc265;
-  --foco: rgb(255 175 58 / 0.12);
-  --sobre-tungsteno: #1f1404;
+  /* The main action: white with black letters. No brand accent. */
+  --accion: #ffffff;
+  --accion-viva: #e3e3e3;
+  --sobre-accion: #000000;
+  --anillo: #ffffff;
 
-  /* Only for deleting. */
-  --poncho: #f0565a;
-  --sobre-poncho: #1a0506;
+  /* Functional color. */
+  --acorde: #f5a524;
+  --acorde-suave: rgb(245 165 36 / 0.14);
+  --sobre-acorde: #000000;
+  --vivo: #ff3b30;
+  --sobre-vivo: #ffffff;
+  --error: #ff7a70;
+  --sobre-error: #000000;
+  --ok: #4cd47a;
 
-  --sombra: 0 0 0 1px rgb(239 231 218 / 0.06), 0 12px 32px rgb(0 0 0 / 0.5);
+  --sombra: 0 0 0 1px rgb(255 255 255 / 0.08), 0 16px 40px rgb(0 0 0 / 0.6);
 
   --r-chico: 6px;
   --r-boton: 10px;
-  --r-panel: 16px;
+  --r-panel: 14px;
+  --r-hoja: 20px;
   --nav-h: 64px;
   --font-letra: 'Atkinson Hyperlegible Next Variable', 'Atkinson Hyperlegible Next', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-cartel: 'Barlow Semi Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-marca: 'Tinos', 'Liberation Serif', 'DejaVu Serif', 'Times New Roman', serif;
   --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --t-toque: 150ms;
+  --t-hoja: 200ms;
+  --t-parte: 250ms;
   color-scheme: dark;
 }
 
-/* Ensayo: daylight rehearsal. Same names, inverted values. */
+/* Claro: daylight rehearsal. Same names, black on white. */
 :root[data-theme='light'] {
-  --telon: #faf8f5;
-  --tarima: #ffffff;
-  --case: #f3f0eb;
-  --case-alto: #ebe7e0;
-  --case-luz: #dfd9d0;
-  --hueco: #ffffff;
-  --papel: #1b1716;
-  --ceniza: #5e5550;
-  --humo: #7a706a;
-  --filo: rgb(27 23 22 / 0.1);
-  --filo-fuerte: rgb(27 23 22 / 0.18);
-  --tungsteno: #a35200;
-  --tungsteno-vivo: #8a4500;
-  --foco: rgb(163 82 0 / 0.09);
-  --sobre-tungsteno: #ffffff;
-  --poncho: #c42b30;
-  --sobre-poncho: #ffffff;
-  --sombra: 0 0 0 1px rgb(27 23 22 / 0.06), 0 2px 4px rgb(27 23 22 / 0.05), 0 12px 28px rgb(27 23 22 / 0.1);
+  --fondo: #ffffff;
+  --hoja: #ffffff;
+  --tecla: #f2f2f2;
+  --tecla-alta: #e8e8e8;
+  --tecla-luz: #dcdcdc;
+  --hueco: #f4f4f4;
+  --tinta: #000000;
+  --grafito: #474747;
+  --humo: #6b6b6b;
+  --tenue: #a3a3a3;
+  --filo: rgb(0 0 0 / 0.1);
+  --filo-fuerte: rgb(0 0 0 / 0.2);
+  --foco: rgb(0 0 0 / 0.05);
+  --accion: #000000;
+  --accion-viva: #262626;
+  --sobre-accion: #ffffff;
+  --anillo: #000000;
+  --acorde: #9a5800;
+  --acorde-suave: rgb(154 88 0 / 0.1);
+  --sobre-acorde: #ffffff;
+  --vivo: #d70015;
+  --sobre-vivo: #ffffff;
+  --error: #c42b30;
+  --sobre-error: #ffffff;
+  --ok: #1a7f3c;
+  --sombra: 0 0 0 1px rgb(0 0 0 / 0.06), 0 2px 4px rgb(0 0 0 / 0.05), 0 12px 28px rgb(0 0 0 / 0.1);
   color-scheme: light;
 }
 
@@ -70,8 +92,8 @@
 html,
 body {
   margin: 0;
-  background: var(--telon);
-  color: var(--papel);
+  background: var(--fondo);
+  color: var(--tinta);
   font-family: var(--font-letra);
   font-size: 16px;
   line-height: 1.4;
@@ -93,16 +115,27 @@ textarea {
   flex: none;
 }
 :focus-visible {
-  outline: 2px solid var(--tungsteno);
+  outline: 2px solid var(--anillo);
   outline-offset: 2px;
 }
 
 /* ---------------------------------------------------------------- layout */
 
+/* Phones: a bar at the bottom. Tablets and computers: a rail on the left
+   (--side-w), and the bottom bar is gone (--nav-h: 0). */
+.app {
+  --side-w: 0px;
+}
+.app--stage {
+  --nav-h: 0px;
+}
 .app__main {
-  max-width: 820px;
+  max-width: calc(820px + var(--side-w));
   margin: 0 auto;
-  padding: 0 16px calc(var(--nav-h) + 32px + env(safe-area-inset-bottom));
+  /* The slide-in between songs moves the sheet sideways: it must not widen the
+     page, or phones zoom out and the bottom controls end up off screen. */
+  overflow-x: clip;
+  padding: 0 16px calc(var(--nav-h) + 32px + env(safe-area-inset-bottom)) calc(16px + var(--side-w));
 }
 .app--stage .app__main {
   padding-bottom: 0;
@@ -112,32 +145,51 @@ textarea {
   position: fixed;
   inset: auto 0 0 0;
   height: calc(var(--nav-h) + env(safe-area-inset-bottom));
-  padding: 0 12px env(safe-area-inset-bottom);
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  background: color-mix(in srgb, var(--telon) 88%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  padding: 0 8px env(safe-area-inset-bottom);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: var(--fondo);
   border-top: 1px solid var(--filo);
   z-index: 20;
-  transition: transform 0.25s var(--ease);
+  transition: transform var(--t-parte) var(--ease);
 }
 .nav a {
-  flex: 1;
-  max-width: 200px;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
+  min-height: 44px;
   text-decoration: none;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--humo);
+  -webkit-touch-callout: none;
+  transition: color var(--t-toque) var(--ease);
+}
+.nav a:hover {
+  color: var(--grafito);
 }
 .nav a[aria-current='page'] {
-  color: var(--tungsteno);
+  color: var(--tinta);
+}
+/* The section you're in: a short bar on top, like a tab on a binder. */
+.nav a[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 28px;
+  height: 2px;
+  margin-left: -14px;
+  background: var(--tinta);
+}
+.nav__live {
+  color: var(--vivo) !important;
+}
+.nav__brand {
+  display: none !important;
 }
 .nav__icon {
   position: relative;
@@ -150,13 +202,67 @@ textarea {
   right: -4px;
   width: 9px;
   height: 9px;
-  border: 2px solid var(--telon);
+  border: 2px solid var(--fondo);
   border-radius: 50%;
   background: var(--humo);
 }
 /* Something to read or decide on the Banda page. */
 .nav__dot--alert {
-  background: var(--tungsteno);
+  background: var(--tinta);
+}
+
+@media (min-width: 900px) {
+  .app {
+    --side-w: 232px;
+    --nav-h: 0px;
+  }
+  .app--stage {
+    --side-w: 0px;
+  }
+  .nav {
+    inset: 0 auto 0 0;
+    width: var(--side-w);
+    height: auto;
+    padding: 20px 12px calc(20px + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-top: 0;
+    border-right: 1px solid var(--filo);
+  }
+  .nav a {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: var(--r-boton);
+    font-size: 0.95rem;
+  }
+  .nav a:hover {
+    background: var(--tecla);
+  }
+  .nav a[aria-current='page'] {
+    background: var(--tecla);
+  }
+  .nav a[aria-current='page']::before {
+    top: 12px;
+    left: 0;
+    width: 2px;
+    height: 20px;
+    margin-left: 0;
+  }
+  .nav__brand {
+    display: flex !important;
+    margin: 0 0 20px;
+    color: var(--tinta) !important;
+    font-family: var(--font-marca);
+    font-size: 1.3rem !important;
+    font-weight: 700 !important;
+  }
+  .nav__brand:hover {
+    background: none !important;
+  }
 }
 
 /* ------------------------------------------------------------ band page */
@@ -166,7 +272,7 @@ textarea {
   height: 40px;
   border-radius: 10px;
   object-fit: contain;
-  background: var(--case);
+  background: var(--tecla);
 }
 .live__logo {
   width: 30px;
@@ -184,7 +290,7 @@ textarea {
 }
 .band__lead {
   margin: 0 0 20px;
-  color: var(--ceniza);
+  color: var(--grafito);
   line-height: 1.5;
 }
 .band__section {
@@ -192,14 +298,14 @@ textarea {
 }
 .band__title {
   margin: 0 0 10px;
-  font-family: var(--font-cartel);
+  font-family: var(--font-marca);
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 .band__line {
   margin: 0 0 12px;
-  color: var(--ceniza);
+  color: var(--grafito);
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
@@ -214,7 +320,7 @@ textarea {
   padding: 16px;
   border: 1px solid var(--filo-fuerte);
   border-radius: var(--r-panel);
-  background: var(--tarima);
+  background: var(--hoja);
 }
 .band__panel-title {
   margin: 0 0 8px;
@@ -232,10 +338,10 @@ textarea {
   font-weight: 600;
 }
 .band__sync--offline {
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 .band__sync--error {
-  color: var(--poncho);
+  color: var(--error);
 }
 .band__notices {
   margin: 0 0 12px;
@@ -254,7 +360,7 @@ textarea {
   margin: 0 0 6px;
   font-size: 1.6rem;
   font-weight: 700;
-  color: var(--tungsteno);
+  color: var(--tinta);
 }
 .band .list .card {
   min-height: 60px;
@@ -283,7 +389,7 @@ textarea {
   gap: 6px;
   font-size: 0.92rem;
   font-weight: 600;
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 .field input {
   min-height: 48px;
@@ -291,18 +397,18 @@ textarea {
   border: 1px solid var(--filo-fuerte);
   border-radius: var(--r-boton);
   background: var(--hueco);
-  color: var(--papel);
+  color: var(--tinta);
   font: inherit;
   font-size: 1rem;
   font-weight: 400;
 }
 .field input:focus {
   outline: none;
-  border-color: var(--tungsteno);
+  border-color: var(--anillo);
 }
 .form__error {
   margin: 0;
-  color: var(--poncho);
+  color: var(--error);
   font-weight: 600;
   line-height: 1.4;
 }
@@ -339,7 +445,7 @@ textarea {
   margin: 0;
   flex: 1;
   min-width: 0;
-  font-family: var(--font-cartel);
+  font-family: var(--font-marca);
   font-size: 2.1rem;
   font-weight: 700;
   line-height: 1.05;
@@ -366,14 +472,14 @@ textarea {
   margin: 0 -16px;
   padding: 10px 16px;
   min-height: 0;
-  background: color-mix(in srgb, var(--telon) 90%, transparent);
+  background: color-mix(in srgb, var(--fondo) 90%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   transition: transform 0.25s var(--ease), opacity 0.25s var(--ease);
 }
 
 .empty {
-  color: var(--ceniza);
+  color: var(--grafito);
   padding: 48px 16px;
   text-align: center;
   line-height: 1.5;
@@ -382,7 +488,7 @@ textarea {
 /* Floats above the nav: new version ready, or ready to use offline. */
 .update-prompt {
   position: fixed;
-  left: 50%;
+  left: calc(50% + var(--side-w) / 2);
   bottom: calc(var(--nav-h) + 12px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   width: max-content;
@@ -393,7 +499,7 @@ textarea {
   padding: 8px 8px 8px 16px;
   border: 1px solid var(--filo-fuerte);
   border-radius: var(--r-panel);
-  background: var(--tarima);
+  background: var(--hoja);
   box-shadow: var(--sombra);
   z-index: 30;
 }
@@ -414,7 +520,7 @@ textarea {
   padding: 0 16px;
   border: 1px solid var(--filo-fuerte);
   border-radius: var(--r-boton);
-  background: var(--case);
+  background: var(--tecla);
   font-weight: 600;
   font-size: 0.98rem;
   cursor: pointer;
@@ -423,21 +529,21 @@ textarea {
   transition: background-color 0.15s, border-color 0.15s, transform 0.12s var(--ease);
 }
 .btn:hover:not(:disabled) {
-  background: var(--case-alto);
+  background: var(--tecla-alta);
 }
 .btn:active:not(:disabled) {
   transform: scale(0.97);
 }
 .btn--primary {
-  background: var(--tungsteno);
-  border-color: var(--tungsteno);
-  color: var(--sobre-tungsteno);
+  background: var(--accion);
+  border-color: var(--accion);
+  color: var(--sobre-accion);
 }
 .btn--primary:hover:not(:disabled) {
-  background: var(--tungsteno-vivo);
+  background: var(--accion-viva);
 }
 .btn--danger {
-  color: var(--poncho);
+  color: var(--error);
   background: transparent;
 }
 .btn:disabled,
@@ -459,16 +565,16 @@ textarea {
   transition: background-color 0.15s, transform 0.12s var(--ease), color 0.15s;
 }
 .icon-btn:hover:not(:disabled) {
-  background: var(--case-alto);
+  background: var(--tecla-alta);
 }
 .icon-btn:active:not(:disabled) {
   transform: scale(0.95);
 }
 .icon-btn--filled {
-  background: var(--case-alto);
+  background: var(--tecla-alta);
 }
 .icon-btn--danger {
-  color: var(--poncho);
+  color: var(--error);
 }
 .icon-btn--small {
   width: 40px;
@@ -493,7 +599,7 @@ textarea {
   padding: 6px;
   border: 1px solid var(--filo-fuerte);
   border-radius: var(--r-panel);
-  background: var(--tarima);
+  background: var(--hoja);
   box-shadow: var(--sombra);
   z-index: 30;
 }
@@ -510,7 +616,7 @@ textarea {
   cursor: pointer;
 }
 .menu__panel button:hover {
-  background: var(--case);
+  background: var(--tecla);
 }
 
 .search {
@@ -532,7 +638,7 @@ textarea {
   border: 1px solid var(--filo);
   border-radius: var(--r-boton);
   background: var(--hueco);
-  color: var(--papel);
+  color: var(--tinta);
   font-size: 1rem;
 }
 .search input::placeholder {
@@ -540,7 +646,7 @@ textarea {
 }
 .search input:focus {
   outline: none;
-  border-color: var(--tungsteno);
+  border-color: var(--anillo);
 }
 
 /* ------------------------------------------------------------------ lists */
@@ -589,7 +695,7 @@ button.card {
 a.card:hover,
 button.card:hover,
 li.card:hover {
-  background: var(--tarima);
+  background: var(--hoja);
 }
 .card__link {
   flex: 1;
@@ -615,7 +721,7 @@ li.card:hover {
   white-space: nowrap;
 }
 .card__sub {
-  color: var(--ceniza);
+  color: var(--grafito);
   font-size: 0.92rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -628,8 +734,8 @@ li.card:hover {
   display: inline-flex;
   justify-content: flex-end;
   align-items: baseline;
-  color: var(--tungsteno);
-  font-family: var(--font-cartel);
+  color: var(--acorde);
+  font-family: var(--font-letra);
   font-weight: 700;
   font-size: 1.4rem;
   line-height: 1;
@@ -641,7 +747,7 @@ li.card:hover {
   display: grid;
   place-items: center end;
   color: var(--humo);
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-weight: 600;
   font-size: 1.6rem;
   font-variant-numeric: tabular-nums;
@@ -685,10 +791,10 @@ li.card:hover {
 /* Compact bar: two short rows on phones, a single row on wider screens. */
 .toolbar {
   position: fixed;
-  left: 50%;
+  left: calc(50% + var(--side-w) / 2);
   bottom: calc(var(--nav-h) + 8px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  width: min(780px, calc(100% - 16px));
+  width: min(780px, calc(100% - var(--side-w) - 16px));
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -697,7 +803,7 @@ li.card:hover {
   padding: 4px 6px;
   border: 1px solid var(--filo-fuerte);
   border-radius: var(--r-panel);
-  background: color-mix(in srgb, var(--tarima) 94%, transparent);
+  background: color-mix(in srgb, var(--hoja) 94%, transparent);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   box-shadow: var(--sombra);
@@ -769,7 +875,7 @@ li.card:hover {
   border: 1px solid var(--filo-fuerte);
   border-radius: var(--r-chico);
   background: var(--hueco);
-  color: var(--papel);
+  color: var(--tinta);
   font: inherit;
   font-size: 1rem;
   font-weight: 700;
@@ -782,7 +888,7 @@ li.card:hover {
   margin: 0;
 }
 .bpm-field input:focus {
-  outline: 2px solid var(--tungsteno);
+  outline: 2px solid var(--anillo);
   border-color: transparent;
 }
 .tap-btn {
@@ -792,7 +898,7 @@ li.card:hover {
 .toolbar__hint {
   padding: 0 8px;
   font-size: 0.9rem;
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 .toolbar__divider {
   width: 1px;
@@ -814,14 +920,14 @@ li.card:hover {
   border: 0;
   border-radius: 7px;
   background: none;
-  color: var(--ceniza);
+  color: var(--grafito);
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.15s, color 0.15s;
 }
 .segmented button[aria-pressed='true'] {
-  background: var(--case-luz);
-  color: var(--papel);
+  background: var(--tecla-luz);
+  color: var(--tinta);
 }
 
 .key-display {
@@ -841,17 +947,17 @@ li.card:hover {
   cursor: default;
 }
 .key-display:hover:not(:disabled) {
-  background: var(--case);
+  background: var(--tecla);
 }
 .key-display strong {
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--tungsteno);
+  color: var(--acorde);
 }
 .key-display small {
   font-size: 0.72rem;
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 
 .play-btn {
@@ -862,14 +968,14 @@ li.card:hover {
   flex: none;
   border: 0;
   border-radius: 50%;
-  background: var(--tungsteno);
-  color: var(--sobre-tungsteno);
+  background: var(--accion);
+  color: var(--sobre-accion);
   cursor: pointer;
-  box-shadow: 0 4px 18px color-mix(in srgb, var(--tungsteno) 30%, transparent);
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--accion) 30%, transparent);
   transition: transform 0.12s var(--ease), background-color 0.15s;
 }
 .play-btn:hover {
-  background: var(--tungsteno-vivo);
+  background: var(--accion-viva);
 }
 .play-btn:active {
   transform: scale(0.95);
@@ -886,7 +992,7 @@ li.card:hover {
 }
 .speed small {
   font-size: 0.72rem;
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 
 /* While auto-scrolling: hide everything but the song and a pause button. */
@@ -936,8 +1042,8 @@ li.card:hover {
   width: 40px;
   height: 40px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--case) 80%, transparent);
-  color: var(--ceniza);
+  background: color-mix(in srgb, var(--tecla) 80%, transparent);
+  color: var(--grafito);
 }
 
 .player__title {
@@ -950,7 +1056,7 @@ li.card:hover {
 }
 .player__title strong {
   max-width: 100%;
-  font-family: var(--font-cartel);
+  font-family: var(--font-marca);
   font-size: 1.25rem;
   font-weight: 700;
   overflow: hidden;
@@ -958,7 +1064,7 @@ li.card:hover {
   white-space: nowrap;
 }
 .player__title small {
-  color: var(--ceniza);
+  color: var(--grafito);
   font-size: 0.8rem;
 }
 
@@ -992,7 +1098,7 @@ li.card:hover {
 }
 .editor__source:focus {
   outline: none;
-  border-color: var(--tungsteno);
+  border-color: var(--anillo);
 }
 .editor__preview {
   padding: 4px 2px;
@@ -1016,7 +1122,7 @@ li.card:hover {
 }
 .editor__hint {
   font-size: 0.85rem;
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 
 /* "Pegar letra": title fields + one big box for the lyrics. */
@@ -1033,13 +1139,13 @@ li.card:hover {
   border: 1px dashed var(--filo-fuerte);
   border-radius: var(--r-boton);
   background: var(--hueco);
-  color: var(--papel);
+  color: var(--tinta);
   font: inherit;
 }
 .link-import__problem {
   flex-basis: 100%;
   margin: 0;
-  color: var(--ceniza);
+  color: var(--grafito);
   font-size: 0.9rem;
 }
 .paste__fields {
@@ -1055,12 +1161,12 @@ li.card:hover {
   border: 1px solid var(--filo);
   border-radius: var(--r-boton);
   background: var(--hueco);
-  color: var(--papel);
+  color: var(--tinta);
   font: inherit;
 }
 .paste__fields .paste__title {
   flex-basis: 100%;
-  font-family: var(--font-cartel);
+  font-family: var(--font-marca);
   font-size: 1.35rem;
   font-weight: 700;
 }
@@ -1070,7 +1176,7 @@ li.card:hover {
 .paste__fields input:focus,
 .paste__text:focus {
   outline: none;
-  border-color: var(--tungsteno);
+  border-color: var(--anillo);
 }
 .paste__text {
   width: 100%;
@@ -1079,7 +1185,7 @@ li.card:hover {
   border: 1px solid var(--filo);
   border-radius: var(--r-panel);
   background: var(--hueco);
-  color: var(--papel);
+  color: var(--tinta);
   /* Monospace so chords stay over the right syllable. */
   font-family: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
   font-size: 15px;
@@ -1099,7 +1205,7 @@ li.card:hover {
 }
 .paste__note {
   font-size: 0.85rem;
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 .structure {
   display: flex;
@@ -1112,33 +1218,33 @@ li.card:hover {
 .structure__item {
   padding: 3px 10px;
   border-radius: var(--r-chico);
-  background: var(--case-alto);
-  color: var(--ceniza);
+  background: var(--tecla-alta);
+  color: var(--grafito);
   font-size: 0.8rem;
   font-weight: 600;
 }
 .structure__item--chorus {
   background: var(--foco);
-  color: var(--tungsteno);
+  color: var(--tinta);
 }
 .structure__item--prechorus,
 .structure__item--bridge {
-  color: var(--papel);
-  background: var(--case-luz);
+  color: var(--tinta);
+  background: var(--tecla-luz);
 }
 .link-btn {
   align-self: flex-start;
   padding: 4px 0;
   border: 0;
   background: none;
-  color: var(--ceniza);
+  color: var(--grafito);
   font: inherit;
   font-size: 0.85rem;
   text-decoration: underline;
   cursor: pointer;
 }
 .link-btn:hover {
-  color: var(--papel);
+  color: var(--tinta);
 }
 @media (min-width: 960px) {
   .page--editor {
@@ -1174,8 +1280,8 @@ li.card:hover {
   padding: 0 16px 16px;
   border: 1px solid var(--filo-fuerte);
   border-radius: 20px;
-  background: var(--tarima);
-  color: var(--papel);
+  background: var(--hoja);
+  color: var(--tinta);
   box-shadow: var(--sombra);
 }
 .dialog::backdrop {
@@ -1185,7 +1291,7 @@ li.card:hover {
 .picker__status {
   min-height: 1.3em;
   margin: 0 4px 8px;
-  color: var(--tungsteno);
+  color: var(--tinta);
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -1205,10 +1311,10 @@ li.card:hover {
 
 .parts__title {
   margin: 14px 4px 8px;
-  font-family: var(--font-cartel);
+  font-family: var(--font-marca);
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 .parts__head {
   display: flex;
@@ -1229,7 +1335,7 @@ li.card:hover {
   gap: 12px;
   padding: 4px 4px 4px 12px;
   border-radius: var(--r-boton);
-  background: var(--case);
+  background: var(--tecla);
 }
 .parts__row .member {
   font-size: 1rem;
@@ -1240,8 +1346,8 @@ li.card:hover {
   padding: 0 10px;
 }
 .parts__row .segmented button[aria-pressed='true'] {
-  background: var(--tungsteno);
-  color: var(--sobre-tungsteno);
+  background: var(--accion);
+  color: var(--sobre-accion);
 }
 .parts__chips {
   display: flex;
@@ -1256,18 +1362,18 @@ li.card:hover {
   padding: 0 14px;
   border: 1px solid var(--filo-fuerte);
   border-radius: 999px;
-  background: var(--case);
-  color: var(--papel);
+  background: var(--tecla);
+  color: var(--tinta);
   font: inherit;
   cursor: pointer;
 }
 .parts__chip small {
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 .parts__chip[aria-pressed='true'] {
   border-color: var(--m);
-  background: color-mix(in srgb, var(--m) 28%, var(--case));
-  color: var(--papel);
+  background: color-mix(in srgb, var(--m) 28%, var(--tecla));
+  color: var(--tinta);
 }
 .parts__chip[aria-pressed='true'] small {
   color: inherit;
@@ -1293,7 +1399,7 @@ li.card:hover {
   border: 1px solid color-mix(in srgb, var(--m) 60%, transparent);
   border-radius: 999px;
   background: none;
-  color: color-mix(in srgb, var(--m) 75%, var(--papel));
+  color: color-mix(in srgb, var(--m) 75%, var(--tinta));
   font: inherit;
   font-size: 0.88rem;
   font-weight: 700;
@@ -1314,7 +1420,7 @@ li.card:hover {
   font-size: 0.82rem;
   font-style: italic;
   font-weight: 700;
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 .voice-pick--second .voice-pick__btn {
   border-style: dotted;
@@ -1338,7 +1444,7 @@ li.card:hover {
   gap: 4px 12px;
   padding: 8px 12px;
   border-radius: var(--r-boton);
-  background: var(--case);
+  background: var(--tecla);
 }
 .import__row label {
   display: flex;
@@ -1349,17 +1455,17 @@ li.card:hover {
 .import__row input {
   width: 18px;
   height: 18px;
-  accent-color: var(--tungsteno);
+  accent-color: var(--tinta);
 }
 .import__title {
   font-weight: 650;
 }
 .import__status {
   font-size: 0.82rem;
-  color: var(--ceniza);
+  color: var(--grafito);
 }
 .import__status--done {
-  color: var(--tungsteno);
+  color: var(--tinta);
 }
 .import__actions {
   display: flex;
@@ -1379,18 +1485,18 @@ li.card:hover {
   gap: 8px;
   margin-bottom: 12px;
   padding: 8px 8px 8px 16px;
-  border: 1px solid color-mix(in srgb, var(--poncho) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--error) 60%, transparent);
   border-radius: var(--r-panel);
-  background: var(--tarima);
+  background: var(--hoja);
   font-weight: 600;
 }
 .btn--danger-fill {
-  border-color: var(--poncho);
-  background: var(--poncho);
-  color: var(--sobre-poncho);
+  border-color: var(--error);
+  background: var(--error);
+  color: var(--sobre-error);
 }
 .btn--danger-fill:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--poncho) 85%, var(--papel));
+  background: color-mix(in srgb, var(--error) 85%, var(--tinta));
 }
 .card--pick {
   text-align: left;
@@ -1407,12 +1513,12 @@ li.card:hover {
 }
 .card--picked,
 .card--picked:hover {
-  background: color-mix(in srgb, var(--poncho) 10%, transparent);
+  background: color-mix(in srgb, var(--error) 10%, transparent);
 }
 .card--picked .card__check {
-  border-color: var(--poncho);
-  background: var(--poncho);
-  color: var(--sobre-poncho);
+  border-color: var(--error);
+  background: var(--error);
+  color: var(--sobre-error);
 }
 
 .import__setlist {
@@ -1441,8 +1547,8 @@ li.card:hover {
   z-index: 5;
   border-radius: var(--r-boton);
   border-bottom-color: transparent;
-  background: var(--case);
-  box-shadow: 0 0 0 1px var(--tungsteno), var(--sombra);
+  background: var(--tecla);
+  box-shadow: 0 0 0 1px var(--tinta), var(--sombra);
 }
 .list--dragging > li:not(.card--dragged) {
   transition: transform 0.15s var(--ease);
@@ -1456,8 +1562,8 @@ li.card:hover {
   z-index: 50;
   display: flex;
   flex-direction: column;
-  background: var(--telon);
-  color: var(--papel);
+  background: var(--fondo);
+  color: var(--tinta);
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 .stage__bar {
@@ -1473,7 +1579,7 @@ li.card:hover {
   opacity: 1;
 }
 .stage__where {
-  color: var(--ceniza);
+  color: var(--grafito);
   font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
 }
@@ -1494,7 +1600,7 @@ li.card:hover {
 }
 .stage__instrumental p {
   margin: 0.4em 0 0;
-  color: var(--ceniza);
+  color: var(--grafito);
   font-style: italic;
 }
 .stage__next {
@@ -1504,13 +1610,13 @@ li.card:hover {
   gap: 2px;
   padding: 10px clamp(16px, 4vw, 48px) 14px;
   border-top: 1px solid var(--filo);
-  color: var(--ceniza);
+  color: var(--grafito);
   font-size: clamp(0.95rem, 2.4vw, 1.4rem);
   line-height: 1.3;
 }
 .stage__next strong {
-  color: var(--tungsteno);
-  font-family: var(--font-cartel);
+  color: var(--tinta);
+  font-family: var(--font-letra);
   font-size: 0.9em;
   font-weight: 600;
 }
@@ -1526,7 +1632,7 @@ li.card:hover {
   left: 0;
   height: 3px;
   width: 100%;
-  background: var(--tungsteno);
+  background: var(--tinta);
   transform-origin: left;
   animation-name: stage-progress;
   animation-timing-function: linear;
@@ -1553,14 +1659,14 @@ html.stage-open body {
 }
 .ask__title {
   margin: 0 0 6px;
-  font-family: var(--font-cartel);
+  font-family: var(--font-marca);
   font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.3;
 }
 .ask__message {
   margin: 0 0 6px;
-  color: var(--ceniza);
+  color: var(--grafito);
   line-height: 1.45;
   white-space: pre-line;
 }
@@ -1572,7 +1678,7 @@ html.stage-open body {
   border: 1px solid var(--filo-fuerte);
   border-radius: var(--r-boton);
   background: var(--hueco);
-  color: var(--papel);
+  color: var(--tinta);
   font-size: 1rem;
 }
 .ask__input::placeholder {
@@ -1580,7 +1686,7 @@ html.stage-open body {
 }
 .ask__input:focus {
   outline: none;
-  border-color: var(--tungsteno);
+  border-color: var(--anillo);
 }
 .ask__actions {
   display: flex;
@@ -1608,40 +1714,40 @@ html.stage-open body {
   gap: 2px;
   min-height: 56px;
   padding: 8px 14px;
-  border: 1px solid color-mix(in srgb, var(--m, var(--ceniza)) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--m, var(--grafito)) 55%, transparent);
   border-radius: var(--r-boton);
-  background: var(--case);
-  color: var(--papel);
+  background: var(--tecla);
+  color: var(--tinta);
   font: inherit;
   text-align: left;
   cursor: pointer;
   transition: background-color 0.15s var(--ease), border-color 0.15s var(--ease), transform 0.15s var(--ease);
 }
 .who__btn strong {
-  color: color-mix(in srgb, var(--m, var(--papel)) 80%, var(--papel));
+  color: color-mix(in srgb, var(--m, var(--tinta)) 80%, var(--tinta));
   font-weight: 700;
 }
 .who__btn small {
-  color: var(--ceniza);
+  color: var(--grafito);
   font-size: 0.82rem;
 }
 .who__btn:hover {
-  background: var(--case-alto);
+  background: var(--tecla-alta);
 }
 .who__btn:active {
   transform: scale(0.95);
 }
 .who__btn[aria-pressed='true'] {
-  border-color: var(--m, var(--tungsteno));
-  background: color-mix(in srgb, var(--m, var(--tungsteno)) 18%, var(--case));
-  box-shadow: inset 0 0 0 1px var(--m, var(--tungsteno));
+  border-color: var(--m, var(--tinta));
+  background: color-mix(in srgb, var(--m, var(--tinta)) 18%, var(--tecla));
+  box-shadow: inset 0 0 0 1px var(--m, var(--tinta));
 }
 .who__btn--none {
   grid-column: 1 / -1;
   min-height: 44px;
 }
 .who__btn--none strong {
-  color: var(--ceniza);
+  color: var(--grafito);
   font-weight: 600;
 }
 .who__toggle {
@@ -1656,7 +1762,7 @@ html.stage-open body {
 .who__toggle input {
   width: 20px;
   height: 20px;
-  accent-color: var(--tungsteno);
+  accent-color: var(--tinta);
 }
 .who__toggle:has(input:disabled) {
   color: var(--humo);
@@ -1669,7 +1775,7 @@ html.stage-open body {
 /* ------------------------------------------------------ sala en vivo */
 
 .nav__dot--live {
-  background: var(--poncho);
+  background: var(--error);
 }
 .live__header {
   flex-wrap: wrap;
@@ -1688,7 +1794,7 @@ html.stage-open body {
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
-  color: var(--ceniza);
+  color: var(--grafito);
   font-weight: 600;
 }
 .live__who::before {
@@ -1700,17 +1806,17 @@ html.stage-open body {
   background: var(--humo);
 }
 .live__who--lead {
-  color: var(--papel);
+  color: var(--tinta);
 }
 .live__who--lead::before {
-  background: var(--poncho);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--poncho) 25%, transparent);
+  background: var(--error);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--error) 25%, transparent);
 }
 .live__who strong {
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--tungsteno);
+  color: var(--tinta);
 }
 .live__who small,
 .live__people,
@@ -1726,7 +1832,7 @@ html.stage-open body {
   white-space: nowrap;
 }
 .live__offline {
-  color: var(--tungsteno);
+  color: var(--tinta);
 }
 .live__actions {
   flex: 1 1 100%;
@@ -1742,7 +1848,7 @@ html.stage-open body {
   font-size: 1.05rem;
 }
 .btn--primary.live__lead {
-  font-family: var(--font-cartel);
+  font-family: var(--font-marca);
   font-size: 1.25rem;
   font-weight: 700;
 }
@@ -1767,10 +1873,10 @@ html.stage-open body {
   padding: 0 10px;
   border: 1px solid var(--filo-fuerte);
   border-radius: var(--r-boton);
-  background: var(--case-alto);
-  color: var(--papel);
+  background: var(--tecla-alta);
+  color: var(--tinta);
   font: inherit;
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-size: 1.15rem;
   font-weight: 700;
   cursor: pointer;
@@ -1778,9 +1884,9 @@ html.stage-open body {
   transition: background-color 0.15s var(--ease), transform 0.12s var(--ease);
 }
 .live-parts__btn--next {
-  background: var(--tungsteno);
-  border-color: var(--tungsteno);
-  color: var(--sobre-tungsteno);
+  background: var(--accion);
+  border-color: var(--accion);
+  color: var(--sobre-accion);
 }
 .live-parts__btn:active:not(:disabled) {
   transform: scale(0.97);
@@ -1829,13 +1935,13 @@ html.stage-open body {
   padding: 6px 10px 7px;
   border: 1px solid var(--filo);
   border-radius: var(--r-boton);
-  background: var(--case);
+  background: var(--tecla);
   text-align: left;
   cursor: pointer;
   touch-action: manipulation;
 }
 .progress:hover {
-  background: var(--case-alto);
+  background: var(--tecla-alta);
 }
 .progress__text {
   display: flex;
@@ -1849,15 +1955,15 @@ html.stage-open body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--tungsteno);
-  font-family: var(--font-cartel);
+  color: var(--tinta);
+  font-family: var(--font-letra);
   font-size: 1.1rem;
   font-weight: 700;
   line-height: 1.1;
 }
 .progress__song {
   flex: none;
-  color: var(--ceniza);
+  color: var(--grafito);
   font-size: 0.85rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -1875,22 +1981,22 @@ html.stage-open body {
   flex: 1;
   height: 4px;
   border-radius: 2px;
-  background: var(--case-luz);
+  background: var(--tecla-luz);
   transition: background-color 0.3s var(--ease);
 }
 .progress__parts > .is-done {
-  background: var(--tungsteno);
+  background: var(--tinta);
 }
 .progress__setlist {
   height: 2px;
   border-radius: 1px;
-  background: var(--case-luz);
+  background: var(--tecla-luz);
   overflow: hidden;
 }
 .progress__setlist > span {
   display: block;
   height: 100%;
-  background: var(--ceniza);
+  background: var(--grafito);
   transition: width 0.3s var(--ease);
 }
 
@@ -1922,7 +2028,7 @@ html.stage-open body {
   cursor: pointer;
 }
 .live-map__title:hover {
-  background: var(--case);
+  background: var(--tecla);
 }
 .live-map__num {
   flex: none;
@@ -1933,7 +2039,7 @@ html.stage-open body {
 }
 .is-here .live-map__title,
 .live-map__title[aria-current] {
-  color: var(--tungsteno);
+  color: var(--tinta);
 }
 .live-map__parts {
   display: flex;
@@ -1946,18 +2052,18 @@ html.stage-open body {
   padding: 4px 12px;
   border: 1px solid var(--filo-fuerte);
   border-radius: 999px;
-  background: var(--case);
+  background: var(--tecla);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
 }
 .live-map__part:hover {
-  background: var(--case-alto);
+  background: var(--tecla-alta);
 }
 .live-map__part[aria-current] {
-  border-color: var(--tungsteno);
-  background: var(--tungsteno);
-  color: var(--sobre-tungsteno);
+  border-color: var(--accion);
+  background: var(--accion);
+  color: var(--sobre-accion);
 }
 
 /* ------------------------------------------- moving between parts and songs */
@@ -1986,7 +2092,7 @@ html.stage-open body {
 }
 @keyframes part-now {
   from {
-    background-color: color-mix(in srgb, var(--tungsteno) 22%, transparent);
+    background-color: color-mix(in srgb, var(--tinta) 22%, transparent);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2021,8 +2127,8 @@ html.stage-open body {
   padding: 8px 14px 8px 8px;
   border: 1px solid var(--filo-fuerte);
   border-radius: 999px;
-  background: var(--case);
-  color: var(--ceniza);
+  background: var(--tecla);
+  color: var(--grafito);
   font-size: 0.9rem;
   font-weight: 600;
   box-shadow: var(--sombra);
@@ -2033,7 +2139,7 @@ html.stage-open body {
   place-items: center;
   width: 40px;
   height: 40px;
-  color: var(--tungsteno);
+  color: var(--tinta);
 }
 .lock__ring .lock__progress {
   position: absolute;
@@ -2043,16 +2149,16 @@ html.stage-open body {
   stroke-width: 3;
 }
 .lock__track {
-  stroke: var(--case-luz);
+  stroke: var(--tecla-luz);
 }
 .lock__fill {
-  stroke: var(--tungsteno);
+  stroke: var(--tinta);
   stroke-linecap: round;
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
 }
 .lock--holding .lock__hint {
-  color: var(--papel);
+  color: var(--tinta);
 }
 /* Feedback, not decoration: it runs with reduced motion too. */
 .lock--holding .lock__fill {
@@ -2068,24 +2174,32 @@ html.stage-open body {
 
 /* ------------------------------------------------- modo escenario */
 
-/* Pure black, white letters, bright yellow chords: read from far, under lights. */
+/* Pure black, white letters, chords in amber: read from far, under lights. */
 :root.stage-mode,
 :root.stage-mode[data-theme='light'] {
-  --telon: #000;
-  --tarima: #0b0b0b;
-  --case: #151515;
-  --case-alto: #1e1e1e;
-  --case-luz: #2a2a2a;
+  --fondo: #000;
+  --hoja: #0b0b0b;
+  --tecla: #151515;
+  --tecla-alta: #1e1e1e;
+  --tecla-luz: #2a2a2a;
   --hueco: #000;
-  --papel: #fff;
-  --ceniza: #d9d9d9;
+  --tinta: #fff;
+  --grafito: #d9d9d9;
   --humo: #ababab;
+  --tenue: #6e6e6e;
   --filo: rgb(255 255 255 / 0.14);
   --filo-fuerte: rgb(255 255 255 / 0.26);
-  --tungsteno: #ffd43b;
-  --tungsteno-vivo: #ffe27a;
-  --foco: rgb(255 212 59 / 0.16);
-  --sobre-tungsteno: #000;
+  --foco: rgb(255 255 255 / 0.09);
+  --accion: #fff;
+  --accion-viva: #e3e3e3;
+  --sobre-accion: #000;
+  --anillo: #fff;
+  --acorde: #ffb52e;
+  --acorde-suave: rgb(255 181 46 / 0.16);
+  --sobre-acorde: #000;
+  --vivo: #ff3b30;
+  --error: #ff7a70;
+  --ok: #4cd47a;
   --sombra: 0 0 0 1px rgb(255 255 255 / 0.1), 0 12px 32px rgb(0 0 0 / 0.7);
   color-scheme: dark;
 }
@@ -2148,10 +2262,10 @@ html.stage-open body {
   min-height: 46px;
   border: 1px solid var(--filo-fuerte);
   border-radius: var(--r-boton);
-  background: var(--case);
-  color: var(--papel);
+  background: var(--tecla);
+  color: var(--tinta);
   font: inherit;
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-size: 1.05rem;
   font-weight: 700;
   cursor: pointer;
@@ -2173,7 +2287,7 @@ html.stage-open body {
   border: 0;
   border-radius: var(--r-boton);
   background: var(--cue);
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-size: 1.25rem;
   font-weight: 700;
   line-height: 1.1;
@@ -2197,8 +2311,8 @@ html.stage-open body {
   background: rgb(0 0 0 / 0.6);
 }
 .cue__beat {
-  color: var(--tungsteno);
-  font-family: var(--font-cartel);
+  color: var(--tinta);
+  font-family: var(--font-letra);
   font-size: min(62vw, 62vh);
   font-weight: 700;
   line-height: 1;
@@ -2217,7 +2331,7 @@ html.stage-open body {
   padding: clamp(24px, 6vh, 64px) 24px;
   background: var(--cue);
   box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.45);
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-size: clamp(2.6rem, 13vw, 8rem);
   font-weight: 700;
   line-height: 1;
@@ -2271,16 +2385,16 @@ html.stage-open body {
   border: 0;
   border-radius: var(--r-chico);
   background: var(--cue);
-  font-family: var(--font-cartel);
+  font-family: var(--font-letra);
   font-size: 1.1rem;
   font-weight: 700;
 }
 .signals-edit__vibrate {
-  accent-color: var(--tungsteno);
+  accent-color: var(--tinta);
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--ceniza);
+  color: var(--grafito);
   font-size: 0.85rem;
 }
 
@@ -2296,7 +2410,7 @@ html.stage-open body {
   position: relative;
 }
 .capo-btn--on {
-  color: var(--tungsteno);
+  color: var(--acorde);
 }
 .capo-btn__fret {
   position: absolute;
@@ -2306,8 +2420,8 @@ html.stage-open body {
   height: 16px;
   padding: 0 3px;
   border-radius: 8px;
-  background: var(--tungsteno);
-  color: var(--sobre-tungsteno);
+  background: var(--acorde);
+  color: var(--sobre-acorde);
   font-size: 0.68rem;
   font-weight: 700;
   line-height: 16px;
@@ -2334,7 +2448,7 @@ html.stage-open body {
   border: 1px solid var(--filo-fuerte);
   border-radius: 999px;
   background: none;
-  color: var(--ceniza);
+  color: var(--grafito);
   font: inherit;
   font-size: 0.86rem;
   font-weight: 700;
@@ -2342,9 +2456,9 @@ html.stage-open body {
   cursor: pointer;
 }
 .arrangements__item[aria-current='page'] {
-  border-color: var(--tungsteno);
+  border-color: var(--accion);
   background: var(--foco);
-  color: var(--tungsteno);
+  color: var(--accion);
 }
 .arrangements__tool {
   border-style: dashed;
@@ -2352,7 +2466,7 @@ html.stage-open body {
 }
 .arrangements__item:hover,
 .arrangements__tool:hover {
-  color: var(--papel);
+  color: var(--tinta);
 }
 
 /* Setlist: which arrangement plays. */
@@ -2362,8 +2476,8 @@ html.stage-open body {
   padding: 0 6px;
   border: 1px solid var(--filo-fuerte);
   border-radius: 999px;
-  background: var(--case);
-  color: var(--papel);
+  background: var(--tecla);
+  color: var(--tinta);
   font: inherit;
   font-size: 0.8rem;
   font-weight: 700;

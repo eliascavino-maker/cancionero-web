@@ -211,7 +211,7 @@ export function LivePage() {
             <Icon name="more" />
           </summary>
           <div className="menu__panel">
-            <button onClick={closeRoom} style={{ color: 'var(--poncho)' }}>
+            <button onClick={closeRoom} style={{ color: 'var(--error)' }}>
               <Icon name="close" /> Cerrar la sala
             </button>
           </div>

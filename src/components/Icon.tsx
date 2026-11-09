@@ -48,6 +48,12 @@ const PATHS = {
   // Three strings with a capo across them.
   capo: 'M7 3v18M12 3v18M17 3v18M4 9h16v3H4z',
   print: 'M7 9V3h10v6M7 18H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M7 14h10v7H7z',
+  // A point with waves on both sides: on air.
+  live: 'M12 11a1 1 0 1 0 0 2a1 1 0 1 0 0-2zM16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19a10 10 0 0 1 0-14',
+  star: 'M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z',
+  grid: 'M4 4h6.5v6.5H4zM13.5 4H20v6.5h-6.5zM4 13.5h6.5V20H4zM13.5 13.5H20V20h-6.5z',
+  home: 'M4 11l8-7 8 7v9h-5v-6H9v6H4z',
+  settings: 'M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4',
 } as const;
 
 export type IconName = keyof typeof PATHS;

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { BrandMark } from '../components/BrandMark';
 import { Icon } from '../components/Icon';
 import { useCloud } from '../cloud/CloudProvider';
 import { BandPage, syncSummary } from './pages/BandPage';
@@ -53,7 +54,9 @@ export function App() {
       ? 'setlists'
       : route.startsWith('/banda') || route.startsWith('/invitacion')
         ? 'band'
-        : 'library';
+        : route.startsWith('/vivo')
+          ? 'live'
+          : 'library';
   // A dot on "Banda" when something waits or needs attention.
   const s = cloud.sync;
   const alert = !!cloud.needsLink || !!s?.notices.length || s?.state === 'error';
@@ -67,7 +70,7 @@ export function App() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = prefs.theme;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', prefs.theme === 'dark' ? '#131011' : '#faf8f5');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', prefs.theme === 'dark' ? '#000000' : '#ffffff');
   }, [prefs.theme]);
 
   return (
@@ -79,36 +82,41 @@ export function App() {
       {askWho && <WhoAreYouDialog />}
       {!stage && (
         <nav className="nav" aria-label="Secciones">
+          <a className="nav__brand" href="#/" aria-label={cloud.band?.bandName ?? 'En Contra'}>
+            <BrandMark size={28} />
+            <span>{cloud.band?.bandName ?? 'En Contra'}</span>
+          </a>
           <a href="#/" aria-current={section === 'library' ? 'page' : undefined}>
             <Icon name="music" />
-            Canciones
+            <span>Biblioteca</span>
           </a>
           <a href="#/setlists" aria-current={section === 'setlists' ? 'page' : undefined}>
             <Icon name="list" />
-            Setlists
+            <span>Setlists</span>
           </a>
-          {live && (
-            <a href="#/vivo" className="nav__live">
-              <span className="nav__icon">
-                <Icon name="play" />
-                <span className="nav__dot nav__dot--live" />
-              </span>
-              En vivo
-            </a>
-          )}
-          {cloud.configured && (
-            <a
-              href="#/banda"
-              aria-current={section === 'band' ? 'page' : undefined}
-              title={s ? syncSummary(s) : undefined}
-            >
-              <span className="nav__icon">
-                <Icon name="band" />
-                {(alert || waiting) && <span className={`nav__dot${alert ? ' nav__dot--alert' : ''}`} />}
-              </span>
-              Banda
-            </a>
-          )}
+          <a
+            href="#/vivo"
+            className={live ? 'nav__live' : undefined}
+            aria-current={section === 'live' ? 'page' : undefined}
+            aria-label={live ? 'En vivo: hay una sala abierta' : undefined}
+          >
+            <span className="nav__icon">
+              <Icon name="live" />
+              {live && <span className="nav__dot nav__dot--live" />}
+            </span>
+            <span>En vivo</span>
+          </a>
+          <a
+            href="#/banda"
+            aria-current={section === 'band' ? 'page' : undefined}
+            title={s ? syncSummary(s) : undefined}
+          >
+            <span className="nav__icon">
+              <Icon name="band" />
+              {(alert || waiting) && <span className={`nav__dot${alert ? ' nav__dot--alert' : ''}`} />}
+            </span>
+            <span>Banda</span>
+          </a>
         </nav>
       )}
     </div>

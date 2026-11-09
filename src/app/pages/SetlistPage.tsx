@@ -105,7 +105,7 @@ export function SetlistPage({ id }: { id: string }) {
               >
                 <Icon name="print" /> Exportar PDF
               </button>
-              <button onClick={remove} style={{ color: 'var(--poncho)' }}>
+              <button onClick={remove} style={{ color: 'var(--error)' }}>
                 <Icon name="trash" /> Borrar setlist
               </button>
             </div>
